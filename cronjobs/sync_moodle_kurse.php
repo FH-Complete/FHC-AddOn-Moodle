@@ -79,7 +79,6 @@ $qry = "SELECT
 			tbl_lehrveranstaltung.studiengang_kz, tbl_lehrveranstaltung.orgform_kurzbz, tbl_lehrveranstaltung.semester,
 			tbl_lehreinheit.lehreinheit_id
 		ORDER BY lehrveranstaltung_id
-		LIMIT 20
 		";
 
 if($result = $db->db_query($qry))

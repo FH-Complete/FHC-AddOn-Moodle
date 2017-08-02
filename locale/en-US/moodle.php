@@ -25,4 +25,8 @@ $this->phrasen['moodle/meineKurse']='My Courses';
 $this->phrasen['moodle/vorhandeneKurse']='Available Courses';
 $this->phrasen['moodle/wartung']='Maintenance';
 $this->phrasen['moodle/bezeichnungMussEingegebenWerden']='A name must be entered';
+$this->phrasen['moodle/handbuch']='Manual';
+$this->phrasen['moodle/moodle']='Moodle';
+$this->phrasen['moodle/kursfuerganzeLV']='one single Moodle course for all groups';
+$this->phrasen['moodle/kursfuerLE']='one Moodle course for selected groups';
 ?>

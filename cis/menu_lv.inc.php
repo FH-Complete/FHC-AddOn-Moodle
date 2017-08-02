@@ -87,7 +87,7 @@ if ($angemeldet)
 
 			$handbuchPath = APP_ROOT.'cms/dms.php?id='.$p->t('dms_link/moodleHandbuch24');
 			$text.= '<a href="'.$wartungPath.'" class="Item">'.$p->t('moodle/wartung').'</a>
-				<br /><a href="'.$handbuchPath.'" class="Item" target="_blank">'.$p->t('lehre/moodleHandbuch').'</a>';
+				<br /><a href="'.$handbuchPath.'" class="Item" target="_blank">'.$p->t('moodle/handbuch').'</a>';
 		}
 	}
 }
@@ -98,7 +98,7 @@ if ($showmoodle)
 	(
 		'id' => 'addon_moodle_menu_moodle',
 		'position' => '70',
-		'name' => $p->t('lehre/moodle'),
+		'name' => $p->t('moodle/moodle'),
 		'icon' => '../../../addons/moodle/skin/images/button_moodle.png',
 		'link' => $link,
 		'link_target' => $link_target,

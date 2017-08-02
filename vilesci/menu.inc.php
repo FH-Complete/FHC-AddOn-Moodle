@@ -21,10 +21,9 @@
  */
 $menu_addon=array
 (
-	'Moodle'=>array
+	'AddonMoodle'=>array
 	(
-		'name'=>'Moodle', 'opener'=>'true', 'hide'=>'true', 'permissions'=>array('basis/cronjob'), 'image'=>'../../addons/moodle/skin/images/button_moodle.png',
-		'link'=>'left.php?categorie=Moodle', 'target'=>'nav',
+		'name'=>'Moodle', 'permissions'=>array('basis/moodle'),
 		'Account'=>array('name'=>'Account Moodle', 'link'=>'../addons/moodle/vilesci/account_verwaltung.php', 'target'=>'main'),
 		'Kursentfernen'=>array('name'=>'Kurs entfernen', 'link'=>'../addons/moodle/vilesci/kurs_verwaltung.php', 'target'=>'main'),
 		'Rollenzuteilung'=>array('name'=>'Rollenzuteilung', 'link'=>'../addons/moodle/vilesci/rollenzuteilung.php', 'target'=>'main'),
@@ -33,6 +32,5 @@ $menu_addon=array
 	)
 );
 
-//$menu['Addons']=array_merge($menu['Addons'],$menu_addon);
-$menu=array_merge($menu,$menu_addon);
+$menu['Lehre']=array_merge($menu['Lehre'],$menu_addon);
 ?>
