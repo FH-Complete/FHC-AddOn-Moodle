@@ -902,7 +902,7 @@ class moodle_course extends basis_db
 				AND moodle.lehreinheit_id is null
 			UNION
 			SELECT
-				distinct on(mdl_course_id) mdl_course_id, moodle.moodle_id, moodle.lehreinheit_id, moodle.lehrveranstaltung_id,
+				mdl_course_id, moodle.moodle_id, moodle.lehreinheit_id, moodle.lehrveranstaltung_id,
 				moodle.studiensemester_kurzbz, moodle.insertamum, moodle.insertvon, gruppen
 			FROM addon.tbl_moodle moodle
 				JOIN lehre.tbl_lehreinheit le ON(moodle.lehreinheit_id = le.lehreinheit_id)
@@ -939,6 +939,46 @@ class moodle_course extends basis_db
 		}
 	}
 
+	/**
+	 * gibt alle Moodlekurseinträge der Zwischentabelle für den uebergebenen Moodle Kurs zurueck
+	 * @param type $mdl_course_id ID des Moodle Kurses
+	 */
+	public function getAllMoodleForMoodleCourse($mdl_course_id)
+	{
+		$qry = '
+			SELECT
+				mdl_course_id, moodle_id, lehreinheit_id, lehrveranstaltung_id,
+				studiensemester_kurzbz, insertamum, insertvon, gruppen
+			FROM
+				addon.tbl_moodle
+			WHERE
+				mdl_course_id='.$this->db_add_param($mdl_course_id);
+
+		if ($result = $this->db_query($qry))
+		{
+			while ($row = $this->db_fetch_object($result))
+			{
+				$obj = new stdClass();
+
+				$obj->moodle_id = $row->moodle_id;
+				$obj->mdl_course_id = $row->mdl_course_id;
+				$obj->lehreinheit_id = $row->lehreinheit_id;
+				$obj->lehrveranstaltung_id = $row->lehrveranstaltung_id;
+				$obj->studiensemester_kurzbz = $row->studiensemester_kurzbz;
+				$obj->insertamum = $row->insertamum;
+				$obj->insertvon = $row->insertvon;
+				$obj->gruppen = $this->db_parse_bool($row->gruppen);
+
+				$this->result[] = $obj;
+			}
+			return true;
+		}
+		else
+		{
+			$this->errormsg = 'Fehler beim Laden der Daten';
+			return false;
+		}
+	}
 
 	/**
 	 * Löscht den Zuordnungseintrag in der Moodletablle
@@ -947,6 +987,23 @@ class moodle_course extends basis_db
 	public function deleteZuordnung($mdl_course_id)
 	{
 		$qry = "DELETE FROM addon.tbl_moodle WHERE mdl_course_id=".$this->db_add_param($mdl_course_id, FHC_INTEGER).';';
+
+		if ($result = $this->db_query($qry))
+			return true;
+		else
+		{
+			$this->errormsg = "Fehler beim Löschen der Daten";
+			return false;
+		}
+	}
+
+	/**
+	 * Löscht einen Eintrag aus der Zuordnungstabelle
+	 * @param type $moodle_id
+	 */
+	public function delete($moodle_id)
+	{
+		$qry = "DELETE FROM addon.tbl_moodle WHERE moodle_id=".$this->db_add_param($moodle_id, FHC_INTEGER).';';
 
 		if ($result = $this->db_query($qry))
 			return true;
