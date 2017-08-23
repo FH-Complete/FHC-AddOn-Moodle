@@ -1172,7 +1172,6 @@ class moodle_course extends basis_db
 						{
 							$obj = new stdClass();
 							$obj->mdl_course_id = $row->mdl_course_id;
-							$obj->moodle_version = $row->moodle_version;
 							$this->result[] = $obj;
 						}
 					}

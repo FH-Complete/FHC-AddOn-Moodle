@@ -198,6 +198,8 @@ if (isset($_POST['neu']))
 					if (!$mdl_user->sync_studenten($mdl_course->mdl_course_id))
 						echo $mdl_user->errormsg;
 				}
+				else
+					echo '<span class="error">Failed:'.$mdl_course->errormsg.'</span>';
 			}
 			else
 			{
