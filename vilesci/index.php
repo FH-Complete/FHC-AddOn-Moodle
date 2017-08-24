@@ -45,7 +45,7 @@ echo '
 	<li><a href="account_verwaltung.php">Einzelne Accounts anlegen</a></li>
 	<li><a href="account_masscreate.php">Liste an Accounts anlegen</a></li>
 	<li><a href="rollenzuteilung.php">Person in mehrere Kurse einschreiben</a></li>
-	<li><a href="user_sync.php">Teilneher eines Kurses manuell synchronisieren</a></li>
+	<li><a href="user_sync.php">Teilnehmer eines Kurses manuell synchronisieren</a></li>
 </ul>
 
 <h2>Kurse</h2>
