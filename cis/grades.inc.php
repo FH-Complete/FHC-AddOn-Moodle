@@ -87,11 +87,14 @@ if (isset($moodle) && count($moodle->result) > 0)
 		else
 			$note_bezeichnung = $moodle_noten->note;
 
-		$grades[$moodle_noten->uid]['grades'][] = array(
-			'grade' => $grade,
-			'points' => $points,
-			'weight' => $gewichtung,
-			'text' => $note_bezeichnung.' ('.$moodle_course_bezeichnung[$moodle_noten->mdl_course_id].')'
-		);
+		if(isset($grades[$moodle_noten->uid]))
+		{
+			$grades[$moodle_noten->uid]['grades'][] = array(
+				'grade' => $grade,
+				'points' => $points,
+				'weight' => $gewichtung,
+				'text' => $note_bezeichnung.' ('.$moodle_course_bezeichnung[$moodle_noten->mdl_course_id].')'
+			);
+		}
 	}
 }
