@@ -35,4 +35,14 @@ define('ADDON_MOODLE_SYNC_FACHBEREICHSLEITUNG', false);
  * Definiert die Rollen ID für Fachbereichsleitungen
  */
 define('ADDON_MOODLE_FACHBEREICHSLEITUNG_ROLEID', 11);
+
+/**
+ * Definiert ob das Personenkennzeichen ins Moodle Uebertragen wird
+ * Wenn aktiviert, wird dieses ins CustomField "pkz" geschrieben
+ *
+ * Mögliche Werte:
+ * true
+ * false (default)
+ */
+define('ADDON_MOODLE_SYNC_PERSONENKENNZEICHEN', false);
 ?>

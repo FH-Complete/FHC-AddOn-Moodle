@@ -24,6 +24,7 @@
  * Webservice Funktion 'fhcomplete_user_get_users'
  */
 require_once(dirname(__FILE__).'/../../../include/basis_db.class.php');
+require_once(dirname(__FILE__).'/../../../include/student.class.php');
 
 class moodle_user extends basis_db
 {
@@ -658,6 +659,21 @@ class moodle_user extends basis_db
 				$user->auth = 'manual';
 				$user->idnumber = $username;
 				$user->lang = 'en';
+
+				// Wenn im Config aktiviert, wird bei Studierenden das Personenkennzeichen in das
+				// CustomField pkz im Moodle geschrieben
+				if(defined('ADDON_MOODLE_SYNC_PERSONENKENNZEICHEN') && ADDON_MOODLE_SYNC_PERSONENKENNZEICHEN)
+				{
+					$student = new student();
+					if($student->load($username))
+					{
+						$pkz = new stdClass();
+						$pkz->type = 'pkz';
+						$pkz->value = $student->matrikelnr;
+
+						$user->customfields = array($pkz);
+					}
+				}
 
 				try
 				{
