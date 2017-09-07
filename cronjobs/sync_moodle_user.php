@@ -161,7 +161,7 @@ if ($stsem_kurzbz = $stsem->getakt())
 			}
 			else
 			{
-				$message .= "\nFehler: in der Tabelle addon.tbl_moodle wird auf den Kurs $row->mdl_course_id verwiesen, dieser existiert jedoch nicht im Moodle!";
+				$message .= "\nFehler beim Laden des Kurses $row->mdl_course_id: ".$course->errormsg;
 				$fehler++;
 			}
 		}
@@ -199,6 +199,7 @@ if ($stsem_kurzbz = $stsem->getakt())
 				echo "Mail wurde an $to versandt:".$nl.$header;
 			else
 				echo "Fehler beim Senden des Mails an $to:".$nl.$header;
+			echo $message;
 		}
 		else
 		{
