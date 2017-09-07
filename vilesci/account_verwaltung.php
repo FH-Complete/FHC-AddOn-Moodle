@@ -98,7 +98,7 @@ if($searchstr!='' && $searchstr!='?'  && $searchstr!='*')
 	// SQL Select-String
 	$qry = "SELECT
 				distinct tbl_person.person_id,tbl_person.nachname,tbl_person.vorname,
-				tbl_person.aktiv,tbl_benutzer.uid
+				tbl_benutzer.aktiv,tbl_benutzer.uid
 			FROM
 				public.tbl_person
 				JOIN public.tbl_benutzer USING(person_id)
