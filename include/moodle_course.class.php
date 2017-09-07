@@ -95,7 +95,7 @@ class moodle_course extends basis_db
 		}
 		catch (SoapFault $E)
 		{
-			$this->errormsg .= "SOAP Fehler beim Anlegen des Kurses: ".$E->faultstring;
+			$this->errormsg .= "SOAP Fehler beim Laden des Kurses: ".$E->faultstring;
 			return false;
 		}
 
@@ -382,11 +382,20 @@ class moodle_course extends basis_db
 		{
 			$client = new SoapClient($this->serverurl);
 
+
 			$data = new stdClass();
 			$data->fullname = $this->mdl_fullname;
 			$data->shortname = $this->mdl_shortname;
 			$data->categoryid = $categoryid;
 			$data->format = 'topics';
+
+			if(defined('ADDON_MOODLE_NUM_SECTIONS') && !is_null(ADDON_MOODLE_NUM_SECTIONS))
+			{
+				$numsections_option = new stdClass();
+				$numsections_option->name = 'numsections';
+				$numsections_option->value = ADDON_MOODLE_NUM_SECTIONS;
+				$data->courseformatoptions = array($numsections_option);
+			}
 
 			$stsem = new studiensemester();
 			$stsem->load($this->studiensemester_kurzbz);

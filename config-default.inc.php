@@ -45,4 +45,14 @@ define('ADDON_MOODLE_FACHBEREICHSLEITUNG_ROLEID', 11);
  * false (default)
  */
 define('ADDON_MOODLE_SYNC_PERSONENKENNZEICHEN', false);
+
+/**
+ * Definiert die Anzahl der Themen die bei neuen Kursen
+ * standardmaeßig vorhanden sein sollen.
+ *
+ * Mögliche Werte:
+ * null (Option wird nicht gesetzt bei der Neuanlage)
+ * ganze Zahl (1, 5, 10, ...)
+ */
+define('ADDON_MOODLE_NUM_SECTIONS',null);
 ?>
