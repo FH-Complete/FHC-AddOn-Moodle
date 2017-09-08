@@ -49,13 +49,19 @@ if ($angemeldet)
 		{
 			if (!$is_lector)
 			{
-				$moodle->result=array();
-				$moodle->getCourse($lvid, $angezeigtes_stsem, $user);
+				$mdl_user_course = new moodle_course();
+				$mdl_user_course->getCourse($lvid, $angezeigtes_stsem, $user);
 
-				if(count($moodle->result)==1)
-					$link = ADDON_MOODLE_PATH.'course/view.php?id='.urlencode($moodle->result[0]->mdl_course_id);
+				if(count($moodle->result)==1 || count($mdl_user_course->result)==1)
+				{
+					if(count($mdl_user_course->result)==1)
+						$mdl_course_id = $mdl_user_course->result[0]->mdl_course_id;
+					else
+						$mdl_course_id = $moodle->result[0]->mdl_course_id;
+					$link = ADDON_MOODLE_PATH.'course/view.php?id='.urlencode($mdl_course_id);
+				}
 				else
-					$link = "moodle_choice.php?lvid=".urlencode($lvid)."&stsem=".urlencode($angezeigtes_stsem);
+					$link = APP_ROOT."addons/moodle/cis/moodle_choice.php?lvid=".urlencode($lvid)."&stsem=".urlencode($angezeigtes_stsem);
 			}
 			else
 			{
