@@ -346,7 +346,7 @@ else
 	$longbezeichnung = $studiengang->kuerzel.'-'.$orgform.'-'.$lv->semester.'-'.$stsem.' - '.$lv->bezeichnung;
 
 	echo '<br>'.$p->t('moodle/kursbezeichnung').': <input type="text" name="bezeichnung" maxlength="254" size="40" value="'.$db->convert_html_chars($longbezeichnung).'">';
-	echo '<br>'.$p->t('moodle/gruppenUebernehmen').': <input type="checkbox" name="gruppen" checked>';
+	echo '<br>'.$p->t('moodle/gruppenUebernehmen').': <input type="checkbox" name="gruppen">';
 	echo '<br><br><input type="submit" name="neu" value="'.$p->t('moodle/kursAnlegen').'">
 			</form>';
 }
