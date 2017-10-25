@@ -502,7 +502,7 @@ echo '
 		</tr>
 		<tr>
 			<td>Gruppen</td>
-			<td><input type="checkbox" name="gruppen" checked></td>
+			<td><input type="checkbox" name="gruppen"></td>
 		</tr>
 		<tr>
 			<td></td>
