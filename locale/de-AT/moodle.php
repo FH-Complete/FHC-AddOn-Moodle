@@ -23,10 +23,12 @@ $this->phrasen['moodle/kursUebersicht']='Moodle - Kursübersicht';
 $this->phrasen['moodle/weiterleitung']='Sie werden automatisch weitergeleitet. Sollte die Weiterleitung nicht automatisch funktionieren klicken Sie <a href="%s">hier</a>';
 $this->phrasen['moodle/meineKurse']='Meine Kurse';
 $this->phrasen['moodle/vorhandeneKurse']='Vorhandene Kurse';
-$this->phrasen['moodle/wartung']='Wartung';
+$this->phrasen['moodle/wartung']='Kurse anlegen';
 $this->phrasen['moodle/bezeichnungMussEingegebenWerden']='Bezeichnung muss eingegeben werden';
 $this->phrasen['moodle/handbuch']='Handbuch';
 $this->phrasen['moodle/moodle']='Moodle';
 $this->phrasen['moodle/kursfuerganzeLV']='einen Moodle Kurs für die gesamte LV anlegen';
 $this->phrasen['moodle/kursfuerLE']='einen Moodle Kurs für einzelne Lehreinheiten anlegen';
+$this->phrasen['moodle/zusatztextWartung']='';
+$this->phrasen['moodle/subTextIcon']='<a href="'.APP_ROOT.'addons/moodle/cis/moodle_wartung.php?lvid=%s&stsem=%s" class="Item">Kurse anlegen</a>';
 ?>

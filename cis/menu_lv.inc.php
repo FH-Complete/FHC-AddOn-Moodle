@@ -88,12 +88,7 @@ if ($angemeldet)
 				|| (defined('ADDON_MOODLE_LECTOR_CREATE_COURSE') && ADDON_MOODLE_LECTOR_CREATE_COURSE)
 			))
 		{
-			$wartungPath = APP_ROOT.'addons/moodle/cis/moodle_wartung.php';
-			$wartungPath .= '?lvid='.urlencode($lvid).'&stsem='.urlencode($angezeigtes_stsem);
-
-			$handbuchPath = APP_ROOT.'cms/dms.php?id='.$p->t('dms_link/moodleHandbuch24');
-			$text.= '<a href="'.$wartungPath.'" class="Item">'.$p->t('moodle/wartung').'</a>
-				<br /><a href="'.$handbuchPath.'" class="Item" target="_blank">'.$p->t('moodle/handbuch').'</a>';
+			$text .=  $p->t('moodle/subTextIcon', array(urlencode($lvid),urlencode($angezeigtes_stsem)));
 		}
 	}
 }

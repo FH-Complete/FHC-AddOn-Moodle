@@ -23,10 +23,12 @@ $this->phrasen['moodle/kursUebersicht']='Moodle - Course Overview';
 $this->phrasen['moodle/weiterleitung']='You will be forwarded automatically. If you are not forwarded automatically, click <a href="%s">here</a>';
 $this->phrasen['moodle/meineKurse']='My Courses';
 $this->phrasen['moodle/vorhandeneKurse']='Available Courses';
-$this->phrasen['moodle/wartung']='Maintenance';
+$this->phrasen['moodle/wartung']='Create course';
 $this->phrasen['moodle/bezeichnungMussEingegebenWerden']='A name must be entered';
 $this->phrasen['moodle/handbuch']='Manual';
 $this->phrasen['moodle/moodle']='Moodle';
 $this->phrasen['moodle/kursfuerganzeLV']='one single Moodle course for all groups';
 $this->phrasen['moodle/kursfuerLE']='one Moodle course for selected groups';
+$this->phrasen['moodle/zusatztextWartung']='';
+$this->phrasen['moodle/subTextIcon']='<a href="'.APP_ROOT.'addons/moodle/cis/moodle_wartung.php?lvid=%s&stsem=%s" class="Item">Create course</a>';
 ?>

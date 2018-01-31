@@ -65,7 +65,7 @@ if ($lem->existsLV($lvid, $stsem, $user))
 $rechte = new benutzerberechtigung();
 $rechte->getBerechtigungen($user);
 
-if ($rechte->isBerechtigt('admin'))
+if ($rechte->isBerechtigt('addon/moodle'))
 	$berechtigt = true;
 
 if(!$berechtigt)
@@ -366,8 +366,8 @@ foreach ($moodle->result as $course)
 }
 echo '</table>';
 echo '</td></tr></table>';
-
-echo '<br><br><br>';
+echo $p->t('moodle/zusatztextWartung');
+// echo '<br><br><br>';
 echo '<b>'.$p->t('moodle/testkurse').'</b><br><br>';
 $mdlcourse = new moodle_course();
 if ($mdlcourse->loadTestkurs($lvid, $stsem))
