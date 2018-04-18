@@ -55,4 +55,13 @@ define('ADDON_MOODLE_SYNC_PERSONENKENNZEICHEN', false);
  * ganze Zahl (1, 5, 10, ...)
  */
 define('ADDON_MOODLE_NUM_SECTIONS',null);
+
+/**
+ * Definiert die Default Sprache von neuen Usern im Moodle
+ *
+ * Mögliche Werte:
+ * en
+ * de
+ */
+define('ADDON_MOODLE_DEFAULT_LANGUAGE','en');
 ?>

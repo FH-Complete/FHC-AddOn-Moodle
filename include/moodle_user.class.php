@@ -658,7 +658,11 @@ class moodle_user extends basis_db
 				//$user->auth = 'ldap';
 				$user->auth = 'manual';
 				$user->idnumber = $username;
-				$user->lang = 'en';
+
+				if(defined('ADDON_MOODLE_DEFAULT_LANGUAGE'))
+					$user->lang = ADDON_MOODLE_DEFAULT_LANGUAGE;
+				else
+					$user->lang = 'en';
 
 				// Wenn im Config aktiviert, wird bei Studierenden das Personenkennzeichen in das
 				// CustomField pkz im Moodle geschrieben
