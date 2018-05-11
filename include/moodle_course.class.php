@@ -401,7 +401,9 @@ class moodle_course extends basis_db
 			$stsem->load($this->studiensemester_kurzbz);
 			$datum_obj = new datum();
 			$data->startdate = $datum_obj->mktime_fromdate($stsem->start);
-			$data->enddate = $datum_obj->mktime_fromdate($stsem->ende);
+
+			if(defined('ADDON_MOODLE_SET_END_DATE') && ADDON_MOODLE_SET_END_DATE)
+				$data->enddate = $datum_obj->mktime_fromdate($stsem->ende);
 
 			$response = $client->core_course_create_courses(array($data));
 			if (isset($response[0]))

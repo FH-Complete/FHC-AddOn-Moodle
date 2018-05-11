@@ -64,4 +64,14 @@ define('ADDON_MOODLE_NUM_SECTIONS',null);
  * de
  */
 define('ADDON_MOODLE_DEFAULT_LANGUAGE','en');
+
+/**
+ * Wenn gesetzt, wird das Ende Datum des Kurses gesetzt mit Semesterende
+ * (erst ab Moodle Version 3.3 verfuegbar)
+ *
+ * Mögliche Werte:
+ * true
+ * false
+ */
+define('ADDON_MOODLE_SET_END_DATE', true);
 ?>
