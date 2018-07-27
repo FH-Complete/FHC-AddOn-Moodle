@@ -327,7 +327,9 @@ else
 
 		foreach ($lehreinheitmitarbeiter->lehreinheitmitarbeiter as $ma)
 		{
-			$lektoren .= ' '.$ma->mitarbeiter_uid;
+			$benutzer = new benutzer();
+			$benutzer->load($ma->mitarbeiter_uid);
+			$lektoren .= ' '.$benutzer->vorname.' '.$benutzer->nachname;
 		}
 
 		if ($moodle->course_exists_for_le($row->lehreinheit_id))
