@@ -30,6 +30,8 @@ class MoodleClient
 	private $_error;				// true if an error occurred
 	private $_errorMessage;			// contains the error message
 
+	private $_hasData;				// indicates if there are data in the response or not
+
     /**
      * Object initialization
      */
@@ -97,6 +99,22 @@ class MoodleClient
 		return $this->_error === true;
 	}
 
+	/**
+	 *
+	 */
+	public function isSuccess()
+	{
+		return !$this->isError();
+	}
+
+	/**
+	 *
+	 */
+	public function hasData()
+	{
+		return $this->_hasData === true;
+	}
+
     // --------------------------------------------------------------------------------------------
     // Private methods
 
@@ -141,6 +159,8 @@ class MoodleClient
 		$this->_error = false;
 
 		$this->_errorMessage = '';
+
+		$this->_hasData = false;
 	}
 
     /**
@@ -274,8 +294,8 @@ class MoodleClient
     {
         return \Httpful\Request::post($uri)
             ->expectsJson() // parse response as json
-            ->body(json_encode($this->_callParametersArray)) // post parameters
-            ->sendsJson() // Content-Type JSON
+            ->body(http_build_query($this->_callParametersArray)) // post parameters
+			->sendsType(\Httpful\Mime::FORM)
             ->send();
     }
 
@@ -318,17 +338,19 @@ class MoodleClient
 						|| (is_array($response->body) && count($response->body) == 0)
                         || (is_object($response->body) && count((array)$response->body) == 0))
                     {
-						$this->_error(NO_DATA);
+						$this->_hasData = false; // set property _hasData to false
                     }
-                    else // otherwise is a total success!!!
+                    else
                     {
-                        $checkResponse = $response->body; // returns a success
+						$this->_hasData = true; // set property _hasData to true
                     }
+
+					$checkResponse = $response->body; // returns a success
                 }
             }
             else // if the response has no body
             {
-				$this->_error(NO_RESPONSE_BODY);
+				$this->_error(NO_RESPONSE_BODY, 'Response without body');
             }
         }
 
