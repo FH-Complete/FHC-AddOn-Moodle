@@ -18,9 +18,6 @@ define('WRONG_WS_PARAMETERS',			'ERR0007');
 define('INVALID_WS_FUNCTION',			'ERR0008');
 define('INVALID_WS_PARAMETER',			'ERR0009');
 
-// Non blocking errors (warnings)
-define('NO_DATA',               		'WAR0001');
-
 // Connection parameters names
 define('PROTOCOL',			'protocol');
 define('HOST',				'host');
