@@ -1,0 +1,27 @@
+{
+	"name": "fh-complete/FHC-AddOn-Moodle",
+	"type": "app",
+	"description": "FH-Complete AddOn for Moodle integration",
+	"keywords": [
+		"fhc",
+		"fh-complete",
+		"campusmanagement"
+	],
+	"homepage": "https://github.com/FH-Complete/FHC-AddOn-Moodle",
+	"license": "GPLv3",
+	"authors": [
+		{
+			"name": "Bison Paolo",
+			"email": "bison@technikum-wien.at",
+			"homepage": "http://fhcomplete.org"
+		}
+	],
+	"support": {
+		"email": "info@fhcomplete.org",
+		"forum": "https://plus.google.com/communities/113278802529782592610",
+		"wiki": "http://wiki.fhcomplete.org/"
+	},
+    "require": {
+        "nategood/httpful": "^0.2.20"
+    }
+}
