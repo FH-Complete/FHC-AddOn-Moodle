@@ -69,7 +69,7 @@ class MoodleClient
 
 		if (is_array($callParametersArray))
 		{
-			$this->_parseParameters($callParametersArray);
+			$this->_callParametersArray = $callParametersArray;
 		}
 		else
 		{
@@ -155,28 +155,6 @@ class MoodleClient
 
 		$this->_debug = $debug;
 		$this->_connectionArray = $connection[$activeConnection];
-    }
-
-    /**
-     *
-     */
-    private function _parseParameters($callParametersArray)
-    {
-		// Loops through the parameters
-        foreach ($callParametersArray as $parameterName => $parameterValue)
-        {
-			// Workaroud for boolean values
-			if (strcasecmp($parameterValue, 'true') == 0)
-			{
-				$parameterValue = true;
-			}
-			elseif (strcasecmp($parameterValue, 'false') == 0)
-			{
-				$parameterValue = false;
-			}
-
-            $this->_callParametersArray[$parameterName] = $parameterValue;
-        }
     }
 
     /**
