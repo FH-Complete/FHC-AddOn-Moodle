@@ -90,7 +90,7 @@ class moodle_course extends basis_db
 
 		try
 		{
-			$client = new SoapClient($this->serverurl);
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 			$response = $client->core_course_get_courses(array('ids' => array($this->mdl_course_id)));
 		}
 		catch (SoapFault $E)
@@ -380,7 +380,7 @@ class moodle_course extends basis_db
 
 		try
 		{
-			$client = new SoapClient($this->serverurl);
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 
 
 			$data = new stdClass();
@@ -406,6 +406,7 @@ class moodle_course extends basis_db
 				$data->enddate = $datum_obj->mktime_fromdate($stsem->ende);
 
 			$response = $client->core_course_create_courses(array($data));
+
 			if (isset($response[0]))
 			{
 				$this->mdl_course_id = $response[0]['id'];
@@ -449,7 +450,7 @@ class moodle_course extends basis_db
 
 		try
 		{
-			$client = new SoapClient($this->serverurl);
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 			$response = $client->core_course_get_categories(array(array('key'=>'name','value'=>$bezeichnung),array('key'=>'parent','value'=>$parent)));
 
 			if (isset($response[0]))
@@ -489,7 +490,7 @@ class moodle_course extends basis_db
 
 		try
 		{
-			$client = new SoapClient($this->serverurl);
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 			$response = $client->core_course_create_categories(array(array('name'=>$bezeichnung,'parent'=>$parent)));
 
 			if (isset($response[0]))
@@ -602,7 +603,7 @@ class moodle_course extends basis_db
 			}
 		}
 
-		$client = new SoapClient($this->serverurl);
+		$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 
 		$data = new stdClass();
 		$data->fullname = $this->mdl_fullname;
@@ -677,7 +678,7 @@ class moodle_course extends basis_db
 			return false;
 		}
 
-		$client = new SoapClient($this->serverurl);
+		$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 		$response = $client->fhcomplete_courses_by_shortname(array('shortnames'=>array($shortname)));
 
 		if (isset($response[0]))
@@ -743,7 +744,7 @@ class moodle_course extends basis_db
 		{
 			try
 			{
-				$client = new SoapClient($this->serverurl);
+				$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 				if(CIS_GESAMTNOTE_PUNKTE)
 					$type = 2; // Prozentpunkte
 				else
@@ -790,7 +791,7 @@ class moodle_course extends basis_db
 	 */
 	public function deleteKurs($mdl_course_id)
 	{
-		$client = new SoapClient($this->serverurl);
+		$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 
 		$data = array($mdl_course_id);
 

@@ -59,7 +59,7 @@ class moodle_user extends basis_db
 	{
 		try
 		{
-			$client = new SoapClient($this->serverurl);
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 			$response = $client->fhcomplete_user_get_users(array(array('key'=>'username', 'value'=>$uid)));
 
 			if (is_object($response))
@@ -177,7 +177,7 @@ class moodle_user extends basis_db
 
 		try
 		{
-			$client = new SoapClient($this->serverurl);
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 			$enrolled_users = $client->core_enrol_get_enrolled_users($mdl_course_id,array(array('name'=>'userfields','value'=>'id,username')));
 		}
 		catch (SoapFault $E)
@@ -230,7 +230,7 @@ class moodle_user extends basis_db
 
 						try
 						{
-							$client = new SoapClient($this->serverurl);
+							$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 							$client->enrol_manual_enrol_users(array($data));
 
 							$this->log .= "\nLektorIn $this->mdl_user_firstname $this->mdl_user_lastname wurde zum Kurs hinzugefügt";
@@ -288,7 +288,7 @@ class moodle_user extends basis_db
 
 		try
 		{
-			$client = new SoapClient($this->serverurl);
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 			$enrolled_users = $client->core_enrol_get_enrolled_users($mdl_course_id, array(array('name'=>'userfields','value'=>'id,username')));
 		}
 		catch (SoapFault $E)
@@ -451,7 +451,7 @@ class moodle_user extends basis_db
 			{
 				try
 				{
-					$client = new SoapClient($this->serverurl);
+					$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 					$client->enrol_manual_enrol_users($userstoenroll);
 					// Wenn User zum Kurs hinzugefuegt werden, muss eine kleine Pause eingelegt werden
 					// Die User werden nicht gleich zugeordnet, diese werden nach
@@ -471,7 +471,7 @@ class moodle_user extends basis_db
 			{
 				try
 				{
-					$client = new SoapClient($this->serverurl);
+					$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 					$groupresult = $client->core_group_add_group_members($groupmembertoadd);
 				}
 				catch (SoapFault $E)
@@ -503,7 +503,7 @@ class moodle_user extends basis_db
 		{
 			try
 			{
-				$client = new SoapClient($this->serverurl);
+				$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 				$response = $client->core_group_get_group_members(array($groupid));
 
 				if (isset($response[0]['userids']))
@@ -540,7 +540,7 @@ class moodle_user extends basis_db
 	{
 		try
 		{
-			$client = new SoapClient($this->serverurl);
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 			$response = $client->core_group_add_group_members(array(array('groupid'=>$groupid, 'userid'=>$userid)));
 			if (isset($response[0]))
 				return true;
@@ -564,7 +564,7 @@ class moodle_user extends basis_db
 	{
 		try
 		{
-			$client = new SoapClient($this->serverurl);
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 			$response = $client->core_group_get_course_groups($mdl_course_id);
 			foreach($response as $row)
 			{
@@ -592,7 +592,7 @@ class moodle_user extends basis_db
 	{
 		try
 		{
-			$client = new SoapClient($this->serverurl);
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 			$data = new stdClass();
 			$data->courseid = $mdl_course_id;
 			$data->name = $gruppenbezeichnung;
@@ -682,7 +682,7 @@ class moodle_user extends basis_db
 				try
 				{
 
-					$client = new SoapClient($this->serverurl);
+					$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 					$response = $client->core_user_create_users(array($user));
 
 					if (isset($response[0]))
@@ -693,7 +693,7 @@ class moodle_user extends basis_db
 						$user = new stdClass();
 						$user->id = $this->mdl_user_id;
 						$user->auth = 'ldap';
-						$client = new SoapClient($this->serverurl);
+						$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 						$response = $client->core_user_update_users(array($user));
 
 						return true;
@@ -750,7 +750,7 @@ class moodle_user extends basis_db
 
 			try
 			{
-				$client = new SoapClient($this->serverurl);
+				$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 				$client->enrol_manual_enrol_users(array($data));
 				// WS-Funktion enrol_manual_enrol_users liefert immer null zurück
 				// Fehler bei der Zuordnung koennen daher nicht abgefangen werden.
@@ -795,7 +795,7 @@ class moodle_user extends basis_db
 
 		try
 		{
-			$client = new SoapClient($this->serverurl);
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 			$client->enrol_manual_enrol_users($param);
 		}
 		catch (SoapFault $E)
@@ -850,7 +850,7 @@ class moodle_user extends basis_db
 
 		try
 		{
-			$client = new SoapClient($this->serverurl);
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 			$enrolled_users = $client->core_enrol_get_enrolled_users($mdl_course_id,array(array('name'=>'userfields','value'=>'id,username')));
 		}
 		catch (SoapFault $E)
@@ -904,7 +904,7 @@ class moodle_user extends basis_db
 						try
 						{
 
-							$client = new SoapClient($this->serverurl);
+							$client = new SoapClient($this->serverurl, array('keep_alive' => false));
 							$client->enrol_manual_enrol_users(array($data));
 
 							$this->log .= "\nFachbereitsleiterIn $this->mdl_user_firstname $this->mdl_user_lastname wurde zum Kurs hinzugefügt";
