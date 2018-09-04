@@ -11,12 +11,11 @@ define('SUCCESS', 'OK'); // success code in the addon
 define('MOODLE_ERROR',					'ERR0001');
 define('CONNECTION_ERROR',  			'ERR0002');
 define('JSON_PARSE_ERROR',    			'ERR0003');
-define('NO_RESPONSE_BODY',    			'ERR0004');
-define('UNAUTHORIZED',          		'ERR0005');
-define('MISSING_REQUIRED_PARAMETERS',	'ERR0006');
-define('WRONG_WS_PARAMETERS',			'ERR0007');
-define('INVALID_WS_FUNCTION',			'ERR0008');
-define('INVALID_WS_PARAMETER',			'ERR0009');
+define('UNAUTHORIZED',          		'ERR0004');
+define('MISSING_REQUIRED_PARAMETERS',	'ERR0005');
+define('WRONG_WS_PARAMETERS',			'ERR0006');
+define('INVALID_WS_FUNCTION',			'ERR0007');
+define('INVALID_WS_PARAMETER',			'ERR0008');
 
 // Connection parameters names
 define('PROTOCOL',			'protocol');

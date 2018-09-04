@@ -29,6 +29,8 @@ require_once(dirname(__FILE__).'/../../../include/datum.class.php');
 require_once(dirname(__FILE__).'/../../../include/studiensemester.class.php');
 require_once(dirname(__FILE__).'/../../../config/global.config.inc.php');
 
+require_once('../lib/MoodleClient.php');
+
 class moodle_course extends basis_db
 {
 	public $result = array();
@@ -60,9 +62,7 @@ class moodle_course extends basis_db
 	 */
 	public function __construct()
 	{
-		$this->serverurl = ADDON_MOODLE_PATH.'/webservice/soap/server.php?wsdl=1&wstoken='.ADDON_MOODLE_TOKEN;
-		if(ADDON_MOODLE_DEBUGLEVEL>0)
-			$this->serverurl.='&'.microtime(true);
+		$this->serverurl = '';
 	}
 
 	/**
@@ -88,35 +88,35 @@ class moodle_course extends basis_db
 			return false;
 		}
 
-		try
-		{
-			$client = new SoapClient($this->serverurl);
-			$response = $client->core_course_get_courses(array('ids' => array($this->mdl_course_id)));
-		}
-		catch (SoapFault $E)
-		{
-			$this->errormsg .= "SOAP Fehler beim Laden des Kurses: ".$E->faultstring;
-			return false;
-		}
+		$moodleClient = new MoodleClient();
 
-		if ($response)
+		$response = $moodleClient->call(
+			'core_course_get_courses',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'options' => array(
+					'ids' => array(
+						$this->mdl_course_id
+					)
+				)
+			)
+		);
+
+		if ($moodleClient->isSuccess() && $moodleClient->hasData())
 		{
-			if (isset($response[0]))
-			{
-				$this->mdl_fullname = $response[0]['fullname'];
-				$this->mdl_shortname = $response[0]['shortname'];
-				$this->mdl_course_id = $response[0]['id'];
-				return true;
-			}
-			else
-			{
-				$this->errormsg = 'Kurs wurde nicht gefunden';
-				return false;
-			}
+			$this->mdl_course_id = $response[0]->id;
+			$this->mdl_shortname = $response[0]->shortname;
+			$this->mdl_fullname = $response[0]->fullname;
+			return true;
+		}
+		elseif (!$moodleClient->hasData())
+		{
+			$this->errormsg = 'No courses have been found with mdl_course_id: '.$this->mdl_course_id;
+			return false;
 		}
 		else
 		{
-			$this->errormsg = 'Fehler beim Laden des Kurses';
+			$this->errormsg = $moodleClient->getError();
 			return false;
 		}
 	}
@@ -378,52 +378,51 @@ class moodle_course extends basis_db
 			$categoryid = $id_sem;
 		}
 
-		try
+		// data
+		$data = array();
+		$data['fullname'] = $this->mdl_fullname;
+		$data['shortname'] = $this->mdl_shortname;
+		$data['categoryid'] = $categoryid;
+		$data['format'] = 'topics';
+
+		if(defined('ADDON_MOODLE_NUM_SECTIONS') && !is_null(ADDON_MOODLE_NUM_SECTIONS))
 		{
-			$client = new SoapClient($this->serverurl);
-
-
-			$data = new stdClass();
-			$data->fullname = $this->mdl_fullname;
-			$data->shortname = $this->mdl_shortname;
-			$data->categoryid = $categoryid;
-			$data->format = 'topics';
-
-			if(defined('ADDON_MOODLE_NUM_SECTIONS') && !is_null(ADDON_MOODLE_NUM_SECTIONS))
-			{
-				$numsections_option = new stdClass();
-				$numsections_option->name = 'numsections';
-				$numsections_option->value = ADDON_MOODLE_NUM_SECTIONS;
-				$data->courseformatoptions = array($numsections_option);
-			}
-
-			$stsem = new studiensemester();
-			$stsem->load($this->studiensemester_kurzbz);
-			$datum_obj = new datum();
-			$data->startdate = $datum_obj->mktime_fromdate($stsem->start);
-
-			if(defined('ADDON_MOODLE_SET_END_DATE') && ADDON_MOODLE_SET_END_DATE)
-				$data->enddate = $datum_obj->mktime_fromdate($stsem->ende);
-
-			$response = $client->core_course_create_courses(array($data));
-			if (isset($response[0]))
-			{
-				$this->mdl_course_id = $response[0]['id'];
-				return true;
-			}
-			else
-			{
-				$this->errormsg = 'Fehler beim Anlegen des Kurses';
-				return false;
-			}
+			$numsections_option = new stdClass();
+			$numsections_option->name = 'numsections';
+			$numsections_option->value = ADDON_MOODLE_NUM_SECTIONS;
+			$data['courseformatoptions'] = array($numsections_option);
 		}
-		catch (SoapFault $E)
+
+		$stsem = new studiensemester();
+		$stsem->load($this->studiensemester_kurzbz);
+		$datum_obj = new datum();
+		$data['startdate'] = $datum_obj->mktime_fromdate($stsem->start);
+
+		if(defined('ADDON_MOODLE_SET_END_DATE') && ADDON_MOODLE_SET_END_DATE)
+			$data['enddate'] = $datum_obj->mktime_fromdate($stsem->ende);
+
+		$moodleClient = new MoodleClient();
+
+		$response = $moodleClient->call(
+			'core_course_create_courses',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'courses' => array(
+					$data
+				)
+			)
+		);
+
+		if ($moodleClient->isSuccess() && $moodleClient->hasData())
 		{
-			$this->errormsg .= "SOAP Fehler beim Anlegen des Kurses: ".$E->faultstring;
+			$this->mdl_course_id = $response[0]->id;
+			return true;
+		}
+		else
+		{
+			$this->errormsg = $moodleClient->getError();
 			return false;
 		}
-
-		return true;
 	}
 
 	/**
@@ -447,24 +446,37 @@ class moodle_course extends basis_db
 			return false;
 		}
 
-		try
-		{
-			$client = new SoapClient($this->serverurl);
-			$response = $client->core_course_get_categories(array(array('key'=>'name','value'=>$bezeichnung),array('key'=>'parent','value'=>$parent)));
+		$moodleClient = new MoodleClient();
 
-			if (isset($response[0]))
-			{
-				return $response[0]['id'];
-			}
-			else
-			{
-				$this->errormsg = 'Fehler beim Laden der Kurskategorie';
-				return -1;
-			}
-		}
-		catch (SoapFault $E)
+		$response = $moodleClient->call(
+			'core_course_get_categories',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'criteria' => array(
+					array(
+						'key' => 'name',
+						'value' => $bezeichnung
+					),
+					array(
+						'key' => 'parent',
+						'value' => $parent
+					)
+				)
+			)
+		);
+
+		if ($moodleClient->isSuccess() && $moodleClient->hasData())
 		{
-			$this->errormsg .= "SOAP Fehler beim Laden der Kurskategorie: ".$E->faultstring;
+			return $response[0]->id;
+		}
+		elseif (!$moodleClient->hasData())
+		{
+			$this->errormsg = 'No category found with: '.$bezeichnung.' - '.$parent;
+			return -1;
+		}
+		else
+		{
+			$this->errormsg = $moodleClient->getError();
 			return false;
 		}
 	}
@@ -487,24 +499,28 @@ class moodle_course extends basis_db
 			return false;
 		}
 
-		try
-		{
-			$client = new SoapClient($this->serverurl);
-			$response = $client->core_course_create_categories(array(array('name'=>$bezeichnung,'parent'=>$parent)));
+		$moodleClient = new MoodleClient();
 
-			if (isset($response[0]))
-			{
-				return $response[0]['id'];
-			}
-			else
-			{
-				$this->errormsg = 'Fehler beim Anlegen der Kategorie';
-				return false;
-			}
-		}
-		catch (SoapFault $E)
+		$response = $moodleClient->call(
+			'core_course_create_categories',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'categories' => array(
+					array(
+						'name' => $bezeichnung,
+						'parent' => $parent
+					)
+				)
+			)
+		);
+
+		if ($moodleClient->isSuccess() && $moodleClient->hasData())
 		{
-			$this->errormsg .= "SOAP Fehler beim Anlegen der Kategorie: ".$E->faultstring;
+			return $response[0]->id;
+		}
+		else
+		{
+			$this->errormsg = $moodleClient->getError();
 			return false;
 		}
 	}
@@ -602,23 +618,33 @@ class moodle_course extends basis_db
 			}
 		}
 
-		$client = new SoapClient($this->serverurl);
 
-		$data = new stdClass();
-		$data->fullname = $this->mdl_fullname;
-		$data->shortname = $this->mdl_shortname;
-		$data->categoryid = $id_stsem;
-		$data->format = 'topics';
+		$data = array();
+		$data['fullname'] = $this->mdl_fullname;
+		$data['shortname'] = $this->mdl_shortname;
+		$data['categoryid'] = $id_stsem;
+		$data['format'] = 'topics';
 
-		$response = $client->core_course_create_courses(array($data));
-		if (isset($response[0]))
+		$moodleClient = new MoodleClient();
+
+		$response = $moodleClient->call(
+			'core_course_create_courses',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'categories' => array(
+					$data
+				)
+			)
+		);
+
+		if ($moodleClient->isSuccess() && $moodleClient->hasData())
 		{
-			$this->mdl_course_id = $response[0]['id'];
+			$this->mdl_course_id = $response[0]->id;
 			return true;
 		}
 		else
 		{
-			$this->errormsg = 'Fehler beim Anlegen des Testkurses';
+			$this->errormsg = $moodleClient->getError();
 			return false;
 		}
 	}
@@ -677,19 +703,31 @@ class moodle_course extends basis_db
 			return false;
 		}
 
-		$client = new SoapClient($this->serverurl);
-		$response = $client->fhcomplete_courses_by_shortname(array('shortnames'=>array($shortname)));
 
-		if (isset($response[0]))
+		$moodleClient = new MoodleClient();
+
+		$response = $moodleClient->call(
+			'fhcomplete_courses_by_shortname',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'options' => array(
+					'shortnames' => array(
+						$shortname
+					)
+				)
+			)
+		);
+
+		if ($moodleClient->isSuccess() && $moodleClient->hasData())
 		{
-			$this->mdl_fullname = $response[0]['fullname'];
-			$this->mdl_shortname = $response[0]['shortname'];
-			$this->mdl_course_id = $response[0]['id'];
+			$this->mdl_course_id = $response[0]->id;
+			$this->mdl_fullname = $response[0]->fullname;
+			$this->mdl_shortname = $response[0]->shortname;
 			return true;
 		}
 		else
 		{
-			$this->errormsg = 'Es wurde kein Testkurs gefunden';
+			$this->errormsg = $moodleClient->getError();
 			return false;
 		}
 	}
@@ -741,43 +779,50 @@ class moodle_course extends basis_db
 
 		while ($row_moodle = $this->db_fetch_object($result_moodle))
 		{
-			try
+			if(CIS_GESAMTNOTE_PUNKTE)
+				$type = 2; // Prozentpunkte
+			else
+				$type = 3; // Noten aufgrund Skala
+			// 1 = Punkte, 2 = Prozentpunkte, 3 = Note laut Skala
+
+			// $client = new SoapClient($this->serverurl);
+			// $response = $client->fhcomplete_get_course_grades($row_moodle->mdl_course_id, $type);
+
+			$moodleClient = new MoodleClient();
+
+			$response = $moodleClient->call(
+				'fhcomplete_get_course_grades',
+				MoodleClient::HTTP_POST_METHOD,
+				array(
+					'courseid' => $row_moodle->mdl_course_id,
+					'type' => $type
+				)
+			);
+
+			if ($moodleClient->isSuccess() && $moodleClient->hasData())
 			{
-				$client = new SoapClient($this->serverurl);
-				if(CIS_GESAMTNOTE_PUNKTE)
-					$type = 2; // Prozentpunkte
-				else
-					$type = 3; // Noten aufgrund Skala
-				// 1 = Punkte, 2 = Prozentpunkte, 3 = Note laut Skala
-
-				$response = $client->fhcomplete_get_course_grades($row_moodle->mdl_course_id, $type);
-
-				if (count($response) > 0)
+				foreach ($response as $row)
 				{
-
-					foreach ($response as $row)
+					if ($row->note != '-')
 					{
-						if ($row['note'] != '-')
-						{
-							$userobj = new stdClass();
-							$userobj->mdl_course_id = $row_moodle->mdl_course_id;
-							$userobj->vorname = $row['vorname'];
-							$userobj->nachname = $row['nachname'];
-							$userobj->idnummer = $row['idnummer'];
-							$userobj->uid = $row['username'];
-							$userobj->note = $row['note'];
-							$this->result[] = $userobj;
-						}
+						$userobj = new stdClass();
+						$userobj->mdl_course_id = $row_moodle->mdl_course_id;
+						$userobj->vorname = $row->vorname;
+						$userobj->nachname = $row->nachname;
+						$userobj->idnummer = $row->idnummer;
+						$userobj->uid = $row->username;
+						$userobj->note = $row->note;
+						$this->result[] = $userobj;
 					}
 				}
 			}
-			catch(SoapFault $e)
+			else
 			{
-				//echo print_r($e, true);
-				//return false;
+				$this->errormsg = $moodleClient->getError();
+				return false;
 			}
-
 		}
+
 		return true;
 	}
 
@@ -790,23 +835,29 @@ class moodle_course extends basis_db
 	 */
 	public function deleteKurs($mdl_course_id)
 	{
-		$client = new SoapClient($this->serverurl);
+		$moodleClient = new MoodleClient();
 
-		$data = array($mdl_course_id);
+		$response = $moodleClient->call(
+			'core_course_delete_courses',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'courseids' => array(
+					$mdl_course_id
+				)
+			)
+		);
 
-		$response = $client->core_course_delete_courses(array($mdl_course_id));
-
-		if (is_object($response))
+		if ($moodleClient->isSuccess() && $moodleClient->hasData())
 		{
-			$response_obj = $response;
-			unset($response);
-			if (isset($response_obj->warnings) && isset($response_obj->warnings->message))
-				$response[0] = $response_obj->warnings->message;
+			if (isset($response->warnings) && isset($response->warnings->message))
+			{
+				$this->errormsg = $response->warnings->message;
+			}
+			return false;
 		}
-
-		if (isset($response[0]))
+		else
 		{
-			$this->errormsg = $response[0];
+			$this->errormsg = $moodleClient->getError();
 			return false;
 		}
 

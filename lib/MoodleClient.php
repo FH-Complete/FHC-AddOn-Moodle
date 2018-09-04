@@ -4,8 +4,7 @@ require_once '../vendor/autoload.php';
 require_once 'constants.php';
 
 /**
- * Manages the communications between the web interface of the user and the FHC core
- * Taking care of the session of the user
+ * Manages REST API calls
  */
 class MoodleClient
 {
@@ -15,8 +14,6 @@ class MoodleClient
     const HTTP_GET_METHOD = 'GET'; // http get method name
     const HTTP_POST_METHOD = 'POST'; // http post method name
 	const URI_TEMPLATE = '%s://%s/%s?%s=%s&%s=%s&%s=%s'; // URI format
-
-	private $_debug;				// contains the debug configuration parameter
 
 	private $_connectionArray;		// contains the connection parameters configuration array
 
@@ -31,6 +28,7 @@ class MoodleClient
 	private $_errorMessage;			// contains the error message
 
 	private $_hasData;				// indicates if there are data in the response or not
+	private $_emptyResponse;		// indicates if the response is empty or not
 
     /**
      * Object initialization
@@ -84,7 +82,7 @@ class MoodleClient
     }
 
 	/**
-	 *
+	 * Returns the error message stored in property _errorMessage
 	 */
 	public function getError()
 	{
@@ -92,15 +90,15 @@ class MoodleClient
 	}
 
 	/**
-	 *
+	 * Returns true if an error occurred, otherwise false
 	 */
 	public function isError()
 	{
-		return $this->_error === true;
+		return $this->_error;
 	}
 
 	/**
-	 *
+	 * Returns false if an error occurred, otherwise true
 	 */
 	public function isSuccess()
 	{
@@ -108,44 +106,29 @@ class MoodleClient
 	}
 
 	/**
-	 *
+	 * Returns true if the response contains data, otherwise false
 	 */
 	public function hasData()
 	{
-		return $this->_hasData === true;
+		return $this->_hasData;
+	}
+
+	/**
+	 * Returns true if the response was empty, otherwise false
+	 */
+	public function hasEmptyResponse()
+	{
+		return $this->_emptyResponse;
 	}
 
     // --------------------------------------------------------------------------------------------
     // Private methods
 
 	/**
-	 * Method to log debug infos to the apache error log
-	 */
-	private function _printDebug()
-	{
-		if ($this->_debug === true) // if debug is enabled in the configuration file
-		{
-			error_log("HTTP method: ".$this->_httpMethod);
-			error_log("Called alias: ".$this->_remoteWSAlias);
-			error_log("Called remote WS: ".$this->_remoteWSName);
-			error_log("Call parameters: ".json_encode($this->_callParametersArray));
-			error_log("Session parameters: ".json_encode($this->_sessionParamsArray));
-			error_log("Auth required: ".($this->_loginRequired ? 'true' : 'false'));
-			error_log("Cache mode: ".$this->_cache);
-			error_log("Cache permanent overwrite mode: ".(!$this->_cacheEnabled ? 'true' : 'false'));
-			error_log("Called hook: ".($this->_hook != null ? $this->_hook : "none"));
-			error_log("Remote WS response: ".json_encode($this->_callResult));
-			error_log("-----------------------------------------------------------------------------------------------------");
-		}
-	}
-
-	/**
      * Initialization of the properties of this object
      */
 	private function _setPropertiesDefault()
 	{
-		$this->_debug = false; // by default doesn't log debug infos
-
 		$this->_connectionArray = null;
 
 		$this->_wsFunction = null;
@@ -161,6 +144,8 @@ class MoodleClient
 		$this->_errorMessage = '';
 
 		$this->_hasData = false;
+
+		$this->_emptyResponse = false;
 	}
 
     /**
@@ -171,9 +156,8 @@ class MoodleClient
      */
     private function _loadConfig()
     {
-        require_once MoodleClient::CONFIG_DIR.'/'.MoodleClient::CONFIG_FILENAME;
+        require MoodleClient::CONFIG_DIR.'/'.MoodleClient::CONFIG_FILENAME;
 
-		$this->_debug = $debug;
 		$this->_connectionArray = $connection[$activeConnection];
     }
 
@@ -301,7 +285,6 @@ class MoodleClient
 
     /**
      * Checks the response from the remote web service
-	 *
      */
     private function _checkResponse($response)
     {
@@ -350,7 +333,7 @@ class MoodleClient
             }
             else // if the response has no body
             {
-				$this->_error(NO_RESPONSE_BODY, 'Response without body');
+				$this->_emptyResponse = true; // set property _hasData to false
             }
         }
 
@@ -358,7 +341,7 @@ class MoodleClient
     }
 
 	/**
-	 *
+	 * Sets property _error to true and stores an error message in property _errorMessage
 	 */
 	private function _error($code, $message = 'Generic error')
 	{
