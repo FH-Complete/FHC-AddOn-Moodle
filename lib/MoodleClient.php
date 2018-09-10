@@ -333,6 +333,7 @@ class MoodleClient
             }
             else // if the response has no body
             {
+				// NOTE: moodle RestAPI could have an empty response even if the call was a success (so lame)
 				$this->_emptyResponse = true; // set property _hasData to false
             }
         }
