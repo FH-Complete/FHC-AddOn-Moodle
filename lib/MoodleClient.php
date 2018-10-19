@@ -1,16 +1,13 @@
 <?php
 
-require_once '../vendor/autoload.php';
-require_once 'constants.php';
+require_once '../../../vendor/autoload.php';
+require_once 'MoodleClientConstants.php';
 
 /**
  * Manages REST API calls
  */
 class MoodleClient
 {
-    const CONFIG_DIR = '../config'; // config directory name
-    const CONFIG_FILENAME = 'config-client.php'; // config file name
-
     const HTTP_GET_METHOD = 'GET'; // http get method name
     const HTTP_POST_METHOD = 'POST'; // http post method name
 	const URI_TEMPLATE = '%s://%s/%s?%s=%s&%s=%s&%s=%s'; // URI format
@@ -37,7 +34,7 @@ class MoodleClient
     {
 		$this->_setPropertiesDefault(); // properties initialization
 
-        $this->_loadConfig(); // loads the configurations
+        $this->_setConnection(); // loads the configurations
     }
 
     // --------------------------------------------------------------------------------------------
@@ -149,14 +146,11 @@ class MoodleClient
 	}
 
     /**
-     * Loads the config file present in the config directory and sets the properties:
-	 * - _routeArray
-	 * - _connectionArray
-	 * - _cacheEnabled
+     * Sets the connection
      */
-    private function _loadConfig()
+    private function _setConnection()
     {
-        require MoodleClient::CONFIG_DIR.'/'.MoodleClient::CONFIG_FILENAME;
+		global $connection, $activeConnection;
 
 		$this->_connectionArray = $connection[$activeConnection];
     }
