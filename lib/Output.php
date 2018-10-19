@@ -52,28 +52,6 @@ class Output
 		}
 	}
 
-	/**
-	 * Indented by 1
-	 */
-	public static function printDebugI1($message)
-	{
-		if (ADDON_MOODLE_DEBUG_ENABLED === true)
-		{
-			echo self::_getNewLine().'DEBUG: --> '.$message;
-		}
-	}
-
-	/**
-	 *
-	 */
-	public static function printDebugNewline()
-	{
-		if (ADDON_MOODLE_DEBUG_ENABLED === true)
-		{
-			echo self::_getNewLine();
-		}
-	}
-
 	// --------------------------------------------------------------------------------------------
     // Private methods
 

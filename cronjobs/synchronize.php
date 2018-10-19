@@ -43,20 +43,13 @@ foreach ($moodleCourses as $moodleCourse)
 	// Get all the enrolled users in this course from moodle
 	$moodleEnrolledUsers = Logic::core_enrol_get_enrolled_users($moodleCourse->id);
 
-	Output::printDebugI1('Number of enrolled users in moodle: '.count($moodleEnrolledUsers));
-	Output::printDebugNewline();
-
 	// Synchronizes lectors
 	Logic::synchronizeLektoren($moodleCourse->id, $moodleEnrolledUsers);
-
-	Output::printDebugNewline();
 
 	// Synchronizes management staff
 	if (ADDON_MOODLE_SYNC_FACHBEREICHSLEITUNG === true)
 	{
 		Logic::synchronizeFachbereichsleitung($moodleCourse->id, $moodleEnrolledUsers);
-
-		Output::printDebugNewline();
 	}
 
 	// Synchronizes students

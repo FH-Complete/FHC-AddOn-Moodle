@@ -122,22 +122,22 @@ class Database extends basis_db
 	public function getLehreinheiten($moodleCourseId)
 	{
 		$query = 'SELECT
-					studiengang_kz, semester, verband, gruppe, gruppe_kurzbz, tbl_moodle.studiensemester_kurzbz, tbl_moodle.gruppen
+					lg.studiengang_kz, lg.semester, lg.verband, lg.gruppe, lg.gruppe_kurzbz, m.studiensemester_kurzbz, m.gruppen
 				FROM
-					lehre.tbl_lehreinheitgruppe
-					JOIN addon.tbl_moodle USING(lehreinheit_id)
+					lehre.tbl_lehreinheitgruppe lg
+					JOIN addon.tbl_moodle m USING(lehreinheit_id)
 				WHERE
-					mdl_course_id = '.$this->db_add_param($moodleCourseId).'
+					m.mdl_course_id = '.$this->db_add_param($moodleCourseId).'
 				UNION
 				SELECT
-					studiengang_kz, semester, verband, gruppe, gruppe_kurzbz, tbl_moodle.studiensemester_kurzbz, tbl_moodle.gruppen
+					lg.studiengang_kz, lg.semester, lg.verband, lg.gruppe, lg.gruppe_kurzbz, m.studiensemester_kurzbz, m.gruppen
 				FROM
-					lehre.tbl_lehreinheitgruppe
-					JOIN lehre.tbl_lehreinheit USING(lehreinheit_id)
-					JOIN addon.tbl_moodle USING(lehrveranstaltung_id)
+					lehre.tbl_lehreinheitgruppe lg
+					JOIN lehre.tbl_lehreinheit l USING(lehreinheit_id)
+					JOIN addon.tbl_moodle m USING(lehrveranstaltung_id)
 				WHERE
-					tbl_lehreinheit.studiensemester_kurzbz = tbl_moodle.studiensemester_kurzbz
-					AND mdl_course_id = '.$this->db_add_param($moodleCourseId);
+					l.studiensemester_kurzbz = m.studiensemester_kurzbz
+					AND m.mdl_course_id = '.$this->db_add_param($moodleCourseId);
 
 		return $this->_execQuery($query);
 	}
@@ -178,15 +178,15 @@ class Database extends basis_db
 	public function getSpezialGruppe($gruppe_kurzbz, $studiensemester_kurzbz)
 	{
 		$query = 'SELECT DISTINCT
-					uid as student_uid, tbl_person.vorname, tbl_person.nachname
+					b.uid as student_uid, p.vorname, p.nachname
 				FROM
-					public.tbl_benutzergruppe
-					JOIN public.tbl_benutzer USING(uid)
-					JOIN public.tbl_person USING(person_id)
+					public.tbl_benutzergruppe bg
+					JOIN public.tbl_benutzer b USING(uid)
+					JOIN public.tbl_person p USING(person_id)
 				WHERE
-					tbl_benutzer.aktiv
-					AND gruppe_kurzbz = '.$this->db_add_param($gruppe_kurzbz).'
-					AND studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz);
+					b.aktiv
+					AND bg.gruppe_kurzbz = '.$this->db_add_param($gruppe_kurzbz).'
+					AND bg.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz);
 
 		return $this->_execQuery($query);
 	}

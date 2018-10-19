@@ -94,11 +94,16 @@ class Logic
 	 */
 	public static function core_enrol_get_enrolled_users($moodleCourseId)
 	{
-		return self::_moodleAPICall(
+		$moodleEnrolledUsers = self::_moodleAPICall(
 			'core_enrol_get_enrolled_users',
 			array($moodleCourseId),
 			'An error occurred while retriving enrolled users from moodle'
 		);
+
+		self::_printDebugI1('Number of enrolled users in moodle: '.count($moodleEnrolledUsers));
+		self::_printDebugEmptyline();
+
+		return $moodleEnrolledUsers;
 	}
 
 	// --------------------------------------------------------------------------------------------
@@ -112,7 +117,7 @@ class Logic
 		//
 		$employees = self::_getMitarbeiter($moodleCourseId);
 
-		Output::printDebugI1('Number of lectors in database: '.Database::rowsNumber($employees));
+		self::_printDebugI1('Number of lectors in database: '.Database::rowsNumber($employees));
 
 		//
 		while ($employee = Database::fetchRow($employees))
@@ -135,17 +140,26 @@ class Logic
 			//
 			if (!$userFound)
 			{
-				//
-				$users = self::_getOrCreateMoodleUser($employee->mitarbeiter_uid);
+				if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
+				{
+					//
+					$users = self::_getOrCreateMoodleUser($employee->mitarbeiter_uid);
 
-				//
-				self::_enrol_manual_enrol_user(ADDON_MOODLE_LEKTOREN_ROLEID, $users[0]->id, $moodleCourseId);
+					//
+					self::_enrol_manual_enrol_user(ADDON_MOODLE_LEKTOREN_ROLEID, $users[0]->id, $moodleCourseId);
 
-				$debugMessage .= ' >> just enrolled in moodle';
+					$debugMessage .= ' >> just enrolled in moodle';
+				}
+				else
+				{
+					$debugMessage .= ' >> dry run mode';
+				}
 			}
 
-			Output::printDebugI1($debugMessage);
+			self::_printDebugI1($debugMessage);
 		}
+
+		self::_printDebugEmptyline();
 	}
 
 	/**
@@ -156,7 +170,7 @@ class Logic
 		//
 		$employees = self::_getFachbereichsleitung($moodleCourseId);
 
-		Output::printDebugI1('Number of members of management staff in database: '.Database::rowsNumber($employees));
+		self::_printDebugI1('Number of members of management staff in database: '.Database::rowsNumber($employees));
 
 		//
 		while ($employee = Database::fetchRow($employees))
@@ -178,17 +192,26 @@ class Logic
 
 			if (!$userFound)
 			{
-				//
-				$users = self::_getOrCreateMoodleUser($employee->mitarbeiter_uid);
+				if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
+				{
+					//
+					$users = self::_getOrCreateMoodleUser($employee->mitarbeiter_uid);
 
-				//
-				self::_enrol_manual_enrol_user(ADDON_MOODLE_FACHBEREICHSLEITUNG_ROLEID, $users[0]->id, $moodleCourseId);
+					//
+					self::_enrol_manual_enrol_user(ADDON_MOODLE_FACHBEREICHSLEITUNG_ROLEID, $users[0]->id, $moodleCourseId);
 
-				$debugMessage .= ' >> just enrolled in moodle';
+					$debugMessage .= ' >> just enrolled in moodle';
+				}
+				else
+				{
+					$debugMessage .= ' >> dry run mode';
+				}
 			}
 
-			Output::printDebugI1($debugMessage);
+			self::_printDebugI1($debugMessage);
 		}
+
+		self::_printDebugEmptyline();
 	}
 
 	/**
@@ -199,8 +222,8 @@ class Logic
 		//
 		$lehreinheiten = self::_getLehreinheiten($moodleCourseId);
 
-		Output::printDebugI1('Number of teaching units in database: '.Database::rowsNumber($lehreinheiten));
-		Output::printDebugNewline();
+		self::_printDebugI1('Number of teaching units in database: '.Database::rowsNumber($lehreinheiten));
+		self::_printDebugEmptyline();
 
 		//
 		while ($lehreinheit = Database::fetchRow($lehreinheiten))
@@ -226,8 +249,8 @@ class Logic
 				$groupName = $lehreinheit->gruppe_kurzbz;
 			}
 
-			Output::printDebugI1('Syncing teaching unit '.$lehreinheit->studiengang_kz.'-'.$groupName);
-			Output::printDebugI1('Number of students in database: '.Database::rowsNumber($studenten));
+			self::_printDebugI1('Syncing teaching unit '.$lehreinheit->studiengang_kz.'-'.$groupName);
+			self::_printDebugI1('Number of students in database: '.Database::rowsNumber($studenten));
 
 			$usersToEnroll = array(); //
 			$groupsMembersToAdd = array(); //
@@ -253,35 +276,49 @@ class Logic
 				//
 				if (!$userFound)
 				{
-					//
-					$users = self::_getOrCreateMoodleUser($student->student_uid);
+					if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
+					{
+						//
+						$users = self::_getOrCreateMoodleUser($student->student_uid);
 
-					//
-					$usersToEnroll[] = array(
-						'roleid' => ADDON_MOODLE_STUDENT_ROLEID,
-						'userid' => $users[0]->id,
-						'courseid' => $moodleCourseId
-					);
+						//
+						$usersToEnroll[] = array(
+							'roleid' => ADDON_MOODLE_STUDENT_ROLEID,
+							'userid' => $users[0]->id,
+							'courseid' => $moodleCourseId
+						);
 
-					$debugMessage .= ' >> will be enrolled in moodle in a later step';
+						$debugMessage .= ' >> will be enrolled in moodle in a later step';
+					}
+					else
+					{
+						$debugMessage .= ' >> dry run mode';
+					}
 				}
 
 				//
 				if ($synchronizeGroup)
 				{
-					//
-					$group = self::_getOrCreateMoodleGroup($moodleCourseId, $groupName);
-
-					//
-					if (!self::_isMoodleUserMemberMoodleGroup($users[0]->id, $group->id))
+					if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 					{
-						$groupsMembersToAdd[] = array('groupid' => $group->id, 'userid' => $users[0]->id);
+						//
+						$group = self::_getOrCreateMoodleGroup($moodleCourseId, $groupName);
 
-						$debugMessage .= ' >> will be added to moodle group '.$groupName.' in a later step';
+						//
+						if (!self::_isMoodleUserMemberMoodleGroup($users[0]->id, $group->id))
+						{
+							$groupsMembersToAdd[] = array('groupid' => $group->id, 'userid' => $users[0]->id);
+
+							$debugMessage .= ' >> will be added to moodle group '.$groupName.' in a later step';
+						}
+					}
+					else
+					{
+						$debugMessage .= ' >> dry run mode';
 					}
 				}
 
-				Output::printDebugI1($debugMessage);
+				self::_printDebugI1($debugMessage);
 			}
 
 			//
@@ -289,7 +326,7 @@ class Logic
 			{
 				self::_enrol_manual_enrol_users($usersToEnroll);
 
-				Output::printDebugI1('Number of students enrolled in moodle: '.count($usersToEnroll));
+				self::_printDebugI1('Number of students enrolled in moodle: '.count($usersToEnroll));
 			}
 
 			//
@@ -297,10 +334,10 @@ class Logic
 			{
 				self::_core_group_add_group_members($groupsMembersToAdd);
 
-				Output::printDebugI1('Number of students added to a moodle group: '.count($groupsMembersToAdd));
+				self::_printDebugI1('Number of students added to a moodle group: '.count($groupsMembersToAdd));
 			}
 
-			Output::printDebugNewline();
+			self::_printDebugEmptyline();
 		}
 	}
 
@@ -330,6 +367,22 @@ class Logic
 		}
 
 		return $isAdmin;
+	}
+
+	/**
+	 * Indented by 1
+	 */
+	private static function _printDebugI1($message)
+	{
+		Output::printDebug('--> '.$message);
+	}
+
+	/**
+	 *
+	 */
+	private static function _printDebugEmptyline()
+	{
+		Output::printDebug('---');
 	}
 
 	// --------------------------------------------------------------------------------------------

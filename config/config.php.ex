@@ -19,6 +19,9 @@ define('ADDON_MOODLE_FACHBEREICHSLEITUNG_ROLEID', 10);
 // Enable or disable debug messages
 define('ADDON_MOODLE_DEBUG_ENABLED', false);
 
+// Read only
+define('ADDON_MOODLE_DRY_RUN', false);
+
 $activeConnection = 'DEFAULT'; // the used configuration set of the chosen connection
 
 // Example of a configuration set, all parameters are required!
