@@ -55,9 +55,9 @@ foreach ($moodleCourses as $moodleCourse)
 	if (ADDON_MOODLE_SYNC_FACHBEREICHSLEITUNG === true)
 	{
 		Logic::synchronizeFachbereichsleitung($moodleCourse->id, $moodleEnrolledUsers);
-	}
 
-	Output::printDebugNewline();
+		Output::printDebugNewline();
+	}
 
 	// Synchronizes students
 	Logic::synchronizeStudenten($moodleCourse->id, $moodleEnrolledUsers);
@@ -67,5 +67,3 @@ foreach ($moodleCourses as $moodleCourse)
 
 Output::printInfo('Ended synchronize script on '.date('Y-m-d H:m:s'));
 Output::printLineSeparator();
-
-echo "\n";

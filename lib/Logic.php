@@ -27,7 +27,7 @@ class Logic
 	{
 		if (!self::_commandLine() && !self::_isAdmin())
 		{
-			Output::printError('To call this script from browser you need "admin" permission');
+			Output::printError('To call this script from browser you need "admin" permission!');
 			die();
 		}
 	}
@@ -139,7 +139,7 @@ class Logic
 				$users = self::_getOrCreateMoodleUser($employee->mitarbeiter_uid);
 
 				//
-				// self::_enrol_manual_enrol_user(ADDON_MOODLE_LEKTOREN_ROLEID, $users[0]->id, $moodleCourseId);
+				self::_enrol_manual_enrol_user(ADDON_MOODLE_LEKTOREN_ROLEID, $users[0]->id, $moodleCourseId);
 
 				$debugMessage .= ' >> just enrolled in moodle';
 			}
@@ -182,7 +182,7 @@ class Logic
 				$users = self::_getOrCreateMoodleUser($employee->mitarbeiter_uid);
 
 				//
-				// self::_enrol_manual_enrol_user(ADDON_MOODLE_FACHBEREICHSLEITUNG_ROLEID, $users[0]->id, $moodleCourseId);
+				self::_enrol_manual_enrol_user(ADDON_MOODLE_FACHBEREICHSLEITUNG_ROLEID, $users[0]->id, $moodleCourseId);
 
 				$debugMessage .= ' >> just enrolled in moodle';
 			}
@@ -287,7 +287,7 @@ class Logic
 			//
 			if (count($usersToEnroll) > 0)
 			{
-				// self::_enrol_manual_enrol_users($usersToEnroll);
+				self::_enrol_manual_enrol_users($usersToEnroll);
 
 				Output::printDebugI1('Number of students enrolled in moodle: '.count($usersToEnroll));
 			}
@@ -295,7 +295,7 @@ class Logic
 			//
 			if (count($groupsMembersToAdd) > 0)
 			{
-				// self::_core_group_add_group_members($groupsMembersToAdd);
+				self::_core_group_add_group_members($groupsMembersToAdd);
 
 				Output::printDebugI1('Number of students added to a moodle group: '.count($groupsMembersToAdd));
 			}
