@@ -182,4 +182,18 @@ class MoodleAPI extends MoodleClient
 			)
 		);
 	}
+
+	/**
+	 *
+	 */
+	public function enrol_manual_unenrol_users($users)
+	{
+		return $this->call(
+			'enrol_manual_unenrol_users',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'enrolments' => $users
+			)
+		);
+	}
 }

@@ -39,19 +39,23 @@ class Database extends basis_db
 	public function getMitarbeiter($moodleCourseId)
 	{
 		$query = 'SELECT
-					mitarbeiter_uid
+					mitarbeiter_uid, p.vorname, p.nachname
 				FROM
-					lehre.tbl_lehreinheitmitarbeiter
+					lehre.tbl_lehreinheitmitarbeiter l
 					JOIN addon.tbl_moodle USING(lehreinheit_id)
+					JOIN public.tbl_benutzer b ON(l.mitarbeiter_uid = b.uid)
+					JOIN public.tbl_person p USING(person_id)
 				WHERE
 					mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER).'
 				UNION
 				SELECT
-					mitarbeiter_uid
+					mitarbeiter_uid, p.vorname, p.nachname
 				FROM
-					lehre.tbl_lehreinheitmitarbeiter
+					lehre.tbl_lehreinheitmitarbeiter l
 					JOIN lehre.tbl_lehreinheit USING(lehreinheit_id)
 					JOIN addon.tbl_moodle USING(lehrveranstaltung_id)
+					JOIN public.tbl_benutzer b ON(l.mitarbeiter_uid = b.uid)
+					JOIN public.tbl_person p USING(person_id)
 				WHERE
 					tbl_lehreinheit.studiensemester_kurzbz = tbl_moodle.studiensemester_kurzbz
 					AND mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER);
@@ -82,19 +86,22 @@ class Database extends basis_db
 	public function getFachbereichsleitung($moodleCourseId)
 	{
 		$query = 'SELECT DISTINCT
-					tbl_benutzer.uid AS mitarbeiter_uid
+					b.uid AS mitarbeiter_uid,
+					p.vorname,
+					p.nachname
 				FROM
 					public.tbl_organisationseinheit
-					JOIN public.tbl_benutzerfunktion USING(oe_kurzbz)
+					JOIN public.tbl_benutzerfunktion bf USING(oe_kurzbz)
 					JOIN lehre.tbl_lehrveranstaltung USING(oe_kurzbz)
 					JOIN lehre.tbl_lehreinheit USING(lehrveranstaltung_id)
-					JOIN public.tbl_benutzer ON(tbl_benutzerfunktion.uid = tbl_benutzer.uid)
+					JOIN public.tbl_benutzer b ON(bf.uid = b.uid)
+					JOIN public.tbl_person p USING(person_id)
 				WHERE
-					tbl_benutzer.aktiv
+					b.aktiv
 					AND organisationseinheittyp_kurzbz IN(\'Institut\', \'Fachbereich\')
 					AND funktion_kurzbz = \'Leitung\'
-					AND (tbl_benutzerfunktion.datum_von <= NOW() OR tbl_benutzerfunktion.datum_von IS NULL)
-					AND (tbl_benutzerfunktion.datum_bis >= NOW() OR tbl_benutzerfunktion.datum_bis IS NULL)
+					AND (bf.datum_von <= NOW() OR bf.datum_von IS NULL)
+					AND (bf.datum_bis >= NOW() OR bf.datum_bis IS NULL)
 					AND tbl_lehrveranstaltung.lehrveranstaltung_id IN (
 						SELECT
 							lehrveranstaltung_id
@@ -190,6 +197,51 @@ class Database extends basis_db
 
 		return $this->_execQuery($query);
 	}
+
+	/**
+	 *
+	 */
+	public function getCourseGroups($moodleCourseId, $studiensemester_kurzbz)
+	{
+		$query = 'SELECT DISTINCT
+					bg.gruppe_kurzbz
+				FROM
+					addon.tbl_moodle m
+					JOIN public.tbl_benutzergruppe bg USING(gruppe_kurzbz)
+				WHERE
+					m.mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER).'
+					AND (
+						bg.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+						OR bg.studiensemester_kurzbz IS NULL
+					)
+				ORDER BY 1';
+
+		return $this->_execQuery($query);
+	}
+
+	/**
+	 *
+	 */
+	public function getGroupsMembers($studiensemester_kurzbz, $gruppe_kurzbz)
+	{
+		$query = 'SELECT
+					bg.uid, p.vorname, p.nachname
+				FROM
+					public.tbl_benutzergruppe bg
+					JOIN public.tbl_benutzer b USING(uid)
+					JOIN public.tbl_person p USING(person_id)
+				WHERE
+					bg.gruppe_kurzbz = '.$this->db_add_param($gruppe_kurzbz).'
+					AND (
+						bg.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+						OR bg.studiensemester_kurzbz IS NULL
+					)';
+
+		return $this->_execQuery($query);
+	}
+
+	// --------------------------------------------------------------------------------------------
+    // Public static methods
 
 	/**
 	 *

@@ -19,9 +19,10 @@ define('ADDON_MOODLE_FACHBEREICHSLEITUNG_ROLEID', 10);
 // Enable or disable debug messages
 define('ADDON_MOODLE_DEBUG_ENABLED', false);
 
-// Read only
+// Perform a dry run (= do NOT write in moodle or database)
 define('ADDON_MOODLE_DRY_RUN', false);
 
+// Connection configuration
 $activeConnection = 'DEFAULT'; // the used configuration set of the chosen connection
 
 // Example of a configuration set, all parameters are required!
