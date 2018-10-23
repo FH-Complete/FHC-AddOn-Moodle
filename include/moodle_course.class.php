@@ -625,6 +625,14 @@ class moodle_course extends basis_db
 		$data['categoryid'] = $id_stsem;
 		$data['format'] = 'topics';
 
+		if (defined('ADDON_MOODLE_NUM_SECTIONS') && is_numeric(ADDON_MOODLE_NUM_SECTIONS))
+		{
+			$numsections_option = new stdClass();
+			$numsections_option->name = 'numsections';
+			$numsections_option->value = ADDON_MOODLE_NUM_SECTIONS;
+			$data['courseformatoptions'] = array($numsections_option);
+		}
+
 		$moodleClient = new MoodleClient();
 
 		$response = $moodleClient->call(
