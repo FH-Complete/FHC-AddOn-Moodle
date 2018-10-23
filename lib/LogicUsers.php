@@ -71,17 +71,53 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	public static function synchronizeLektoren($moodleCourseId, $moodleEnrolledUsers)
+	public static function getUsersToUnenrol($moodleCourseId, $moodleEnrolledUsers, $studiensemester_kurzbz)
+	{
+		$uidsToUnenrol = array();
+		$allGroupsMembers = self::_getAllGroupsMembers($moodleCourseId, $studiensemester_kurzbz);
+
+		if (is_array($allGroupsMembers))
+		{
+			foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
+			{
+				$userFound = false;
+
+				foreach ($allGroupsMembers as $groupsMember)
+				{
+					//
+					if ($moodleEnrolledUser->username == $groupsMember['uid'])
+					{
+						$userFound = true;
+						unset($uidsToUnenrol[$moodleEnrolledUser->username]);
+						break;
+					}
+				}
+
+				if (!$userFound)
+				{
+					$uidsToUnenrol[$moodleEnrolledUser->username] = $moodleEnrolledUser->username;
+				}
+			}
+		}
+
+		return $uidsToUnenrol;
+	}
+
+	/**
+	 *
+	 */
+	public static function synchronizeLektoren($moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol)
 	{
 		$usersToEnroll = array(); //
 		$employees = self::_getMitarbeiter($moodleCourseId); //
 
 		Output::printDebug('Number of lectors in database: '.Database::rowsNumber($employees));
 
-
 		//
 		while ($employee = Database::fetchRow($employees))
 		{
+			unset($uidsToUnenrol[$employee->mitarbeiter_uid]); // Removes this user from the list of users to be unenrolled
+
 			$debugMessage = 'Syncing lector '.$employee->mitarbeiter_uid.':"'.$employee->vorname.' '.$employee->nachname.'"';
 			$userFound = false; //
 
@@ -136,17 +172,17 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	public static function synchronizeFachbereichsleitung($moodleCourseId, $moodleEnrolledUsers)
+	public static function synchronizeFachbereichsleitung($moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol)
 	{
 		$usersToEnroll = array(); //
 		$employees = self::_getFachbereichsleitung($moodleCourseId); //
 
 		Output::printDebug('Number of members of management staff in database: '.Database::rowsNumber($employees));
 
-
 		//
 		while ($employee = Database::fetchRow($employees))
 		{
+			unset($uidsToUnenrol[$employee->mitarbeiter_uid]); // Removes this user from the list of users to be unenrolled
 			$debugMessage = 'Syncing management staff member '.$employee->mitarbeiter_uid.':"'.$employee->vorname.' '.$employee->nachname.'"';
 			$userFound = false; //
 
@@ -200,7 +236,7 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	public static function synchronizeStudenten($moodleCourseId, $moodleEnrolledUsers)
+	public static function synchronizeStudenten($moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol)
 	{
 		//
 		$lehreinheiten = self::_getLehreinheiten($moodleCourseId);
@@ -241,6 +277,7 @@ class LogicUsers extends Logic
 			//
 			while ($student = Database::fetchRow($studenten))
 			{
+				unset($uidsToUnenrol[$student->student_uid]); // Removes this user from the list of users to be unenrolled
 				$debugMessage = 'Syncing student '.$student->student_uid.':"'.$student->vorname.' '.$student->nachname.'"';
 				$userFound = false; //
 
@@ -330,7 +367,6 @@ class LogicUsers extends Logic
 	 */
 	public static function synchronizeGroupsMembers($moodleCourseId, $moodleEnrolledUsers, $studiensemester_kurzbz)
 	{
-		$usersToEnroll = array(); //
 		$courseGroups = self::_getCourseGroups($moodleCourseId, $studiensemester_kurzbz); //
 
 		Output::printDebug('Number of groups in database: '.Database::rowsNumber($courseGroups));
@@ -339,23 +375,25 @@ class LogicUsers extends Logic
 		//
 		while ($courseGroup = Database::fetchRow($courseGroups))
 		{
+			$usersToEnroll = array(); //
+
 			Output::printDebug('Syncing group '.$courseGroup->gruppe_kurzbz);
 
-			$groupsMembers = self::_getGroupsMembers($studiensemester_kurzbz, $courseGroup->gruppe_kurzbz); //
+			$groupMembers = self::_getGroupsMembers($studiensemester_kurzbz, $courseGroup->gruppe_kurzbz); //
 
-			Output::printDebug('Number of groups members in database: '.Database::rowsNumber($groupsMembers));
+			Output::printDebug('Number of groups members in database: '.Database::rowsNumber($groupMembers));
 
 			//
-			while ($groupsMember = Database::fetchRow($groupsMembers))
+			while ($groupMember = Database::fetchRow($groupMembers))
 			{
-				$debugMessage = 'Syncing group member '.$groupsMember->uid.':"'.$groupsMember->vorname.' '.$groupsMember->nachname.'"';
+				$debugMessage = 'Syncing group member '.$groupMember->uid.':"'.$groupMember->vorname.' '.$groupMember->nachname.'"';
 				$userFound = false; //
 
 				//
 				foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
 				{
 					//
-					if ($groupsMember->uid == $moodleEnrolledUser->username)
+					if ($groupMember->uid == $moodleEnrolledUser->username)
 					{
 						$debugMessage .= ' >> already enrolled in moodle';
 						$userFound = true;
@@ -369,7 +407,7 @@ class LogicUsers extends Logic
 					if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 					{
 						//
-						$users = self::_getOrCreateMoodleUser($groupsMember->uid);
+						$users = self::_getOrCreateMoodleUser($groupMember->uid);
 
 						//
 						$usersToEnroll[] = array(
@@ -399,6 +437,45 @@ class LogicUsers extends Logic
 
 			self::_printDebugEmptyline();
 		}
+	}
+
+	/**
+	 *
+	 */
+	public static function unenrolUsers($moodleCourseId, $uidsToUnenrol)
+	{
+		$usersToUnenrol = array(); //
+
+		Output::printDebug('Number of group members to be unenrolled in database: '.count($uidsToUnenrol));
+
+		//
+		foreach ($uidsToUnenrol as $uidToUnenrol)
+		{
+			//
+			$users = self::_fhcomplete_user_get_users($uidToUnenrol);
+			if (count($users) > 0) //
+			{
+				//
+				$usersToUnenrol[] = array(
+					'userid' => $users[0]->id,
+					'courseid' => $moodleCourseId
+				);
+
+				Output::printDebug(
+					'Group member '.$uidToUnenrol.':"'.$users[0]->firstname.' '.$users[0]->lastname.
+					'" >> will be unenrolled from moodle in a later step'
+				);
+			}
+		}
+
+		if (count($usersToUnenrol) > 0)
+		{
+			self::_enrol_manual_unenrol_users($usersToUnenrol);
+
+			Output::printDebug('Number of group members unenrolled from moodle: '.count($usersToUnenrol));
+		}
+
+		self::_printDebugEmptyline();
 	}
 
 	// --------------------------------------------------------------------------------------------
@@ -434,6 +511,8 @@ class LogicUsers extends Logic
 		if (is_array($users) && count($users) == 0)
 		{
 			$users = self::_createMoodleUser($uid);
+
+			Output::printDebug('User '.$uid.' does not exist, it has been created');
 		}
 
 		return $users;
@@ -577,6 +656,20 @@ class LogicUsers extends Logic
 			array($gruppe_kurzbz, $studiensemester_kurzbz),
 			'An error occurred while retriving the spezial gruppe'
 		);
+	}
+
+	/**
+	 *
+	 */
+	private static function _getAllGroupsMembers($moodleCourseId, $studiensemester_kurzbz)
+	{
+		$allGroupsMembers = parent::_dbCall(
+			'getAllGroupsMembers',
+			array($moodleCourseId, $studiensemester_kurzbz),
+			'An error occurred while retriving all the groups members'
+		);
+
+		return Database::fetchAll($allGroupsMembers);
 	}
 
 	/**
