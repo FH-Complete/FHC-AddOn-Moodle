@@ -38,7 +38,7 @@ class Database extends basis_db
 	/**
 	 *
 	 */
-	public function getMitarbeiter($moodleCourseId)
+	public function getCourseMitarbeiter($moodleCourseId)
 	{
 		$query = 'SELECT * FROM (
 					SELECT
@@ -89,7 +89,7 @@ class Database extends basis_db
 	/**
 	 *
 	 */
-	public function getFachbereichsleitung($moodleCourseId)
+	public function getCourseFachbereichsleitung($moodleCourseId)
 	{
 		$query = 'SELECT DISTINCT
 					b.uid AS mitarbeiter_uid,
@@ -135,7 +135,7 @@ class Database extends basis_db
 	/**
 	 *
 	 */
-	public function getLehreinheiten($moodleCourseId)
+	public function getCourseLehreinheiten($moodleCourseId)
 	{
 		$query = 'SELECT
 					lg.studiengang_kz, lg.semester, lg.verband, lg.gruppe, lg.gruppe_kurzbz, m.studiensemester_kurzbz, m.gruppen
@@ -257,7 +257,26 @@ class Database extends basis_db
 		return $this->_execQuery($query);
 	}
 
+	/**
+	 *
+	 */
+	public function getCourseAngerechnet($moodleCourseId)
+	{
+		$query = 'SELECT DISTINCT
+					z.student_uid AS student_uid
+				FROM
+					addon.tbl_moodle m
+					JOIN lehre.tbl_lehreinheit l USING(lehreinheit_id, studiensemester_kurzbz)
+					JOIN lehre.tbl_zeugnisnote z ON(z.lehrveranstaltung_id = l.lehrveranstaltung_id)
+					JOIN lehre.tbl_note n USING(note)
+				WHERE
+					n.lkt_ueberschreibbar = FALSE
+					AND m.mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER).'
+				ORDER BY
+					student_uid';
 
+		return $this->_execQuery($query);
+	}
 
 	// --------------------------------------------------------------------------------------------
     // Public static methods
@@ -278,6 +297,15 @@ class Database extends basis_db
 	public static function rowsNumber(&$result)
 	{
 		return pg_num_rows($result);
+	}
+
+	/**
+	 *
+	 * NOTE: PostgreSQL dependent
+	 */
+	public static function fetchAll(&$result)
+	{
+		return pg_fetch_all($result);
 	}
 
 	// --------------------------------------------------------------------------------------------

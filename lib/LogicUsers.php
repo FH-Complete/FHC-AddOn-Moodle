@@ -110,7 +110,7 @@ class LogicUsers extends Logic
 	public static function synchronizeLektoren($moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol)
 	{
 		$usersToEnroll = array(); //
-		$employees = self::_getMitarbeiter($moodleCourseId); //
+		$employees = self::_getCourseMitarbeiter($moodleCourseId); //
 
 		Output::printDebug('Number of lectors in database: '.Database::rowsNumber($employees));
 
@@ -176,7 +176,7 @@ class LogicUsers extends Logic
 	public static function synchronizeFachbereichsleitung($moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol)
 	{
 		$usersToEnroll = array(); //
-		$employees = self::_getFachbereichsleitung($moodleCourseId); //
+		$employees = self::_getCourseFachbereichsleitung($moodleCourseId); //
 
 		Output::printDebug('Number of members of management staff in database: '.Database::rowsNumber($employees));
 
@@ -240,7 +240,10 @@ class LogicUsers extends Logic
 	public static function synchronizeStudenten($moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol)
 	{
 		//
-		$lehreinheiten = self::_getLehreinheiten($moodleCourseId);
+		$lehreinheiten = self::_getCourseLehreinheiten($moodleCourseId);
+
+		//
+		$courseAngerechnet = self::_getCourseAngerechnet($moodleCourseId);
 
 		Output::printDebug('Number of teaching units in database: '.Database::rowsNumber($lehreinheiten));
 		self::_printDebugEmptyline();
@@ -303,8 +306,15 @@ class LogicUsers extends Logic
 						$users = self::_getOrCreateMoodleUser($student->student_uid);
 
 						//
+						$roleId = ADDON_MOODLE_STUDENT_ROLEID;
+						if (array_search($student->student_uid, $courseAngerechnet) !== false)
+						{
+							$roleId = ADDON_MOODLE_LV_ANGERECHNET_ROLEID;
+						}
+
+						//
 						$usersToEnroll[] = array(
-							'roleid' => ADDON_MOODLE_STUDENT_ROLEID,
+							'roleid' => $roleId,
 							'userid' => $users[0]->id,
 							'courseid' => $moodleCourseId
 						);
@@ -457,16 +467,24 @@ class LogicUsers extends Logic
 			$users = self::_fhcomplete_user_get_users($uidToUnenrol);
 			if (count($users) > 0) //
 			{
-				//
-				$usersToUnenrol[] = array(
-					'userid' => $users[0]->id,
-					'courseid' => $moodleCourseId
-				);
+				$debugMessage = 'Group member '.$uidToUnenrol.':"'.$users[0]->firstname.' '.$users[0]->lastname.'"';
 
-				Output::printDebug(
-					'Group member '.$uidToUnenrol.':"'.$users[0]->firstname.' '.$users[0]->lastname.
-					'" >> will be unenrolled from moodle in a later step'
-				);
+				if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
+				{
+					//
+					$usersToUnenrol[] = array(
+						'userid' => $users[0]->id,
+						'courseid' => $moodleCourseId
+					);
+
+					$debugMessage .= ' >> will be unenrolled from moodle in a later step';
+				}
+				else
+				{
+					$debugMessage .= ' >> dry run >> should be unenrolled from moodle in a later step';
+				}
+
+				Output::printDebug($debugMessage);
 			}
 		}
 
@@ -591,10 +609,10 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	private static function _getMitarbeiter($moodleCourseId)
+	private static function _getCourseMitarbeiter($moodleCourseId)
 	{
 		return parent::_dbCall(
-			'getMitarbeiter',
+			'getCourseMitarbeiter',
 			array($moodleCourseId),
 			'An error occurred while retriving the mitarbeiter'
 		);
@@ -615,10 +633,10 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	private static function _getFachbereichsleitung($moodleCourseId)
+	private static function _getCourseFachbereichsleitung($moodleCourseId)
 	{
 		return parent::_dbCall(
-			'getFachbereichsleitung',
+			'getCourseFachbereichsleitung',
 			array($moodleCourseId),
 			'An error occurred while retriving the fachbereichsleitung'
 		);
@@ -627,10 +645,10 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	private static function _getLehreinheiten($moodleCourseId)
+	private static function _getCourseLehreinheiten($moodleCourseId)
 	{
 		return parent::_dbCall(
-			'getLehreinheiten',
+			'getCourseLehreinheiten',
 			array($moodleCourseId),
 			'An error occurred while retriving lehreinheiten'
 		);
@@ -682,6 +700,32 @@ class LogicUsers extends Logic
 			array($gruppe_kurzbz),
 			'An error occurred while retriving groups members'
 		);
+	}
+
+	/**
+	 *
+	 */
+	private static function _getCourseAngerechnet($moodleCourseId)
+	{
+		$courseAngerechnet = array();
+
+		$courseAngerechnetDataset = parent::_dbCall(
+			'getCourseAngerechnet',
+			array($moodleCourseId),
+			'An error occurred while retriving angerechnet students'
+		);
+
+		if (Database::rowsNumber($courseAngerechnetDataset) > 0)
+		{
+			$courseAngerechnetAll = Database::fetchAll($courseAngerechnetDataset);
+
+			foreach ($courseAngerechnetAll as $ca)
+			{
+				$courseAngerechnet[] = $ca['student_uid'];
+			}
+		}
+
+		return $courseAngerechnet;
 	}
 
 	// --------------------------------------------------------------------------------------------
