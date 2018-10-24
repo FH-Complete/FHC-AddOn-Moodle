@@ -38,7 +38,7 @@ if (count($moodleCourses) > 0) Output::printDebug('-----------------------------
 // Loops through the courses retrived from moodle
 foreach ($moodleCourses as $moodleCourse)
 {
-	Output::printInfo('>>> Syncing moodle course '.$moodleCourse->id.':"'.$moodleCourse->shortname.'" <<<');
+	Output::printDebug('>>> Syncing moodle course '.$moodleCourse->id.':"'.$moodleCourse->shortname.'" <<<');
 
 	// Get all the enrolled users in this course from moodle
 	$moodleEnrolledUsers = LogicUsers::core_enrol_get_enrolled_users($moodleCourse->id);
