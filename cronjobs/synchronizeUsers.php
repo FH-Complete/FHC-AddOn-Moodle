@@ -44,27 +44,25 @@ foreach ($moodleCourses as $moodleCourse)
 	$moodleEnrolledUsers = LogicUsers::core_enrol_get_enrolled_users($moodleCourse->id);
 
 	// Retrives a list of UIDs of users to be unenrolled
-	$usersToUnenrol = LogicUsers::getUsersToUnenrol(
-		$moodleCourse->id, $moodleEnrolledUsers, $currentOrNextStudiensemester
-	);
+	$uidsToUnenrol = LogicUsers::getUsersToUnenrol($moodleEnrolledUsers);
 
 	// Synchronizes lectors
-	LogicUsers::synchronizeLektoren($moodleCourse->id, $moodleEnrolledUsers, $usersToUnenrol);
+	LogicUsers::synchronizeLektoren($moodleCourse->id, $moodleEnrolledUsers, $uidsToUnenrol);
 
 	// Synchronizes management staff
 	if (ADDON_MOODLE_SYNC_FACHBEREICHSLEITUNG === true)
 	{
-		LogicUsers::synchronizeFachbereichsleitung($moodleCourse->id, $moodleEnrolledUsers, $usersToUnenrol);
+		LogicUsers::synchronizeFachbereichsleitung($moodleCourse->id, $moodleEnrolledUsers, $uidsToUnenrol);
 	}
 
 	// Synchronizes students
-	LogicUsers::synchronizeStudenten($moodleCourse->id, $moodleEnrolledUsers, $usersToUnenrol);
+	LogicUsers::synchronizeStudenten($moodleCourse->id, $moodleEnrolledUsers, $uidsToUnenrol);
 
 	// Synchronizes groups members
-	LogicUsers::synchronizeGroupsMembers($moodleCourse->id, $moodleEnrolledUsers, $currentOrNextStudiensemester);
+	LogicUsers::synchronizeGroupsMembers($moodleCourse->id, $moodleEnrolledUsers, $currentOrNextStudiensemester, $uidsToUnenrol);
 
 	// Unenrol users
-	LogicUsers::unenrolUsers($moodleCourse->id, $usersToUnenrol);
+	LogicUsers::unenrolUsers($moodleCourse->id, $uidsToUnenrol);
 
 	Output::printDebug('------------------------------------------------------------');
 }

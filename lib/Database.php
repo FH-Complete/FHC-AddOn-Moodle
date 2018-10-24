@@ -214,30 +214,6 @@ class Database extends basis_db
 	/**
 	 *
 	 */
-	public function getAllGroupsMembers($moodleCourseId, $studiensemester_kurzbz)
-	{
-		$query = 'SELECT DISTINCT
-					bg.uid, p.vorname, p.nachname, m.gruppe_kurzbz
-				FROM
-					addon.tbl_moodle m
-					JOIN public.tbl_benutzergruppe bg USING(gruppe_kurzbz)
-					JOIN public.tbl_benutzer b USING(uid)
-					JOIN public.tbl_person p USING(person_id)
-				WHERE
-					m.mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER).'
-					AND (
-						bg.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
-						OR bg.studiensemester_kurzbz IS NULL
-					)
-				ORDER BY
-					p.vorname, p.nachname';
-
-		return $this->_execQuery($query);
-	}
-
-	/**
-	 *
-	 */
 	public function getCourseGroups($moodleCourseId, $studiensemester_kurzbz)
 	{
 		$query = 'SELECT DISTINCT
@@ -299,15 +275,6 @@ class Database extends basis_db
 	public static function rowsNumber(&$result)
 	{
 		return pg_num_rows($result);
-	}
-
-	/**
-	 *
-	 * NOTE: PostgreSQL dependent
-	 */
-	public static function fetchAll(&$result)
-	{
-		return pg_fetch_all($result);
 	}
 
 	// --------------------------------------------------------------------------------------------

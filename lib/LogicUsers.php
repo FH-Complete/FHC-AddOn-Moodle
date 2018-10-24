@@ -71,33 +71,13 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	public static function getUsersToUnenrol($moodleCourseId, $moodleEnrolledUsers, $studiensemester_kurzbz)
+	public static function getUsersToUnenrol($moodleEnrolledUsers)
 	{
 		$uidsToUnenrol = array();
-		$allGroupsMembers = self::_getAllGroupsMembers($moodleCourseId, $studiensemester_kurzbz);
 
-		if (is_array($allGroupsMembers))
+		foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
 		{
-			foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
-			{
-				$userFound = false;
-
-				foreach ($allGroupsMembers as $groupsMember)
-				{
-					//
-					if ($moodleEnrolledUser->username == $groupsMember['uid'])
-					{
-						$userFound = true;
-						unset($uidsToUnenrol[$moodleEnrolledUser->username]);
-						break;
-					}
-				}
-
-				if (!$userFound)
-				{
-					$uidsToUnenrol[$moodleEnrolledUser->username] = $moodleEnrolledUser->username;
-				}
-			}
+			$uidsToUnenrol[$moodleEnrolledUser->username] = $moodleEnrolledUser->username;
 		}
 
 		return $uidsToUnenrol;
@@ -365,7 +345,7 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	public static function synchronizeGroupsMembers($moodleCourseId, $moodleEnrolledUsers, $studiensemester_kurzbz)
+	public static function synchronizeGroupsMembers($moodleCourseId, $moodleEnrolledUsers, $studiensemester_kurzbz, &$uidsToUnenrol)
 	{
 		$courseGroups = self::_getCourseGroups($moodleCourseId, $studiensemester_kurzbz); //
 
@@ -386,6 +366,7 @@ class LogicUsers extends Logic
 			//
 			while ($groupMember = Database::fetchRow($groupMembers))
 			{
+				unset($uidsToUnenrol[$groupMember->uid]); // Removes this user from the list of users to be unenrolled
 				$debugMessage = 'Syncing group member '.$groupMember->uid.':"'.$groupMember->vorname.' '.$groupMember->nachname.'"';
 				$userFound = false; //
 
@@ -656,20 +637,6 @@ class LogicUsers extends Logic
 			array($gruppe_kurzbz, $studiensemester_kurzbz),
 			'An error occurred while retriving the spezial gruppe'
 		);
-	}
-
-	/**
-	 *
-	 */
-	private static function _getAllGroupsMembers($moodleCourseId, $studiensemester_kurzbz)
-	{
-		$allGroupsMembers = parent::_dbCall(
-			'getAllGroupsMembers',
-			array($moodleCourseId, $studiensemester_kurzbz),
-			'An error occurred while retriving all the groups members'
-		);
-
-		return Database::fetchAll($allGroupsMembers);
 	}
 
 	/**
