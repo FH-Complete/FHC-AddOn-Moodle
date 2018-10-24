@@ -59,7 +59,7 @@ foreach ($moodleCourses as $moodleCourse)
 	LogicUsers::synchronizeStudenten($moodleCourse->id, $moodleEnrolledUsers, $uidsToUnenrol);
 
 	// Synchronizes groups members
-	LogicUsers::synchronizeGroupsMembers($moodleCourse->id, $moodleEnrolledUsers, $currentOrNextStudiensemester, $uidsToUnenrol);
+	LogicUsers::synchronizeGroupsMembers($moodleCourse->id, $moodleEnrolledUsers, $uidsToUnenrol);
 
 	// Unenrol users
 	LogicUsers::unenrolUsers($moodleCourse->id, $uidsToUnenrol);

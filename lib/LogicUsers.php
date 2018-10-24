@@ -69,15 +69,36 @@ class LogicUsers extends Logic
     // Public business logic methods
 
 	/**
-	 *
+	 * Copies all the students enrolled for a moodle course to a new array
+	 * which keys are the UIDs of these students
+	 * These students will be eventually unenrolled later
 	 */
 	public static function getUsersToUnenrol($moodleEnrolledUsers)
 	{
 		$uidsToUnenrol = array();
 
+		// Loops through all the enrolled users
 		foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
 		{
-			$uidsToUnenrol[$moodleEnrolledUser->username] = $moodleEnrolledUser->username;
+			$studentRoleFound = false; // a student is still not found
+
+			// // Loops through all the user's roles
+			foreach ($moodleEnrolledUser->roles as $role)
+			{
+				// If one of the user's roles is "student"
+				if ($role->roleid == ADDON_MOODLE_STUDENT_ROLEID)
+				{
+					$studentRoleFound = true; // found!
+					break; // quit from the previous loop
+				}
+			}
+
+			// A student was found
+			if ($studentRoleFound)
+			{
+				// Save the user's uid into array uidsToUnenrol
+				$uidsToUnenrol[$moodleEnrolledUser->username] = $moodleEnrolledUser->username;
+			}
 		}
 
 		return $uidsToUnenrol;
@@ -345,9 +366,9 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	public static function synchronizeGroupsMembers($moodleCourseId, $moodleEnrolledUsers, $studiensemester_kurzbz, &$uidsToUnenrol)
+	public static function synchronizeGroupsMembers($moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol)
 	{
-		$courseGroups = self::_getCourseGroups($moodleCourseId, $studiensemester_kurzbz); //
+		$courseGroups = self::_getCourseGroups($moodleCourseId); //
 
 		Output::printDebug('Number of groups in database: '.Database::rowsNumber($courseGroups));
 		self::_printDebugEmptyline();
@@ -359,7 +380,7 @@ class LogicUsers extends Logic
 
 			Output::printDebug('Syncing group '.$courseGroup->gruppe_kurzbz);
 
-			$groupMembers = self::_getGroupsMembers($studiensemester_kurzbz, $courseGroup->gruppe_kurzbz); //
+			$groupMembers = self::_getGroupsMembers($courseGroup->gruppe_kurzbz); //
 
 			Output::printDebug('Number of groups members in database: '.Database::rowsNumber($groupMembers));
 
@@ -642,11 +663,11 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	private static function _getCourseGroups($moodleCourseId, $studiensemester_kurzbz)
+	private static function _getCourseGroups($moodleCourseId)
 	{
 		return parent::_dbCall(
 			'getCourseGroups',
-			array($moodleCourseId, $studiensemester_kurzbz),
+			array($moodleCourseId),
 			'An error occurred while retriving course groups'
 		);
 	}
@@ -654,11 +675,11 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	private static function _getGroupsMembers($studiensemester_kurzbz, $gruppe_kurzbz)
+	private static function _getGroupsMembers($gruppe_kurzbz)
 	{
 		return parent::_dbCall(
 			'getGroupsMembers',
-			array($studiensemester_kurzbz, $gruppe_kurzbz),
+			array($gruppe_kurzbz),
 			'An error occurred while retriving groups members'
 		);
 	}

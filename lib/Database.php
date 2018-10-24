@@ -44,9 +44,9 @@ class Database extends basis_db
 					SELECT
 						mitarbeiter_uid, p.vorname, p.nachname
 					FROM
-						lehre.tbl_lehreinheitmitarbeiter l
-						JOIN addon.tbl_moodle USING(lehreinheit_id)
-						JOIN public.tbl_benutzer b ON(l.mitarbeiter_uid = b.uid)
+						lehre.tbl_lehreinheitmitarbeiter lm
+						JOIN addon.tbl_moodle m USING(lehreinheit_id)
+						JOIN public.tbl_benutzer b ON(lm.mitarbeiter_uid = b.uid)
 						JOIN public.tbl_person p USING(person_id)
 					WHERE
 						mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER).'
@@ -54,13 +54,13 @@ class Database extends basis_db
 					SELECT
 						mitarbeiter_uid, p.vorname, p.nachname
 					FROM
-						lehre.tbl_lehreinheitmitarbeiter l
-						JOIN lehre.tbl_lehreinheit USING(lehreinheit_id)
-						JOIN addon.tbl_moodle USING(lehrveranstaltung_id)
-						JOIN public.tbl_benutzer b ON(l.mitarbeiter_uid = b.uid)
+						lehre.tbl_lehreinheitmitarbeiter lm
+						JOIN lehre.tbl_lehreinheit l USING(lehreinheit_id)
+						JOIN addon.tbl_moodle m USING(lehrveranstaltung_id)
+						JOIN public.tbl_benutzer b ON(lm.mitarbeiter_uid = b.uid)
 						JOIN public.tbl_person p USING(person_id)
 					WHERE
-						tbl_lehreinheit.studiensemester_kurzbz = tbl_moodle.studiensemester_kurzbz
+						l.studiensemester_kurzbz = m.studiensemester_kurzbz
 						AND mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER).'
 				) employees
 				ORDER BY
@@ -214,7 +214,7 @@ class Database extends basis_db
 	/**
 	 *
 	 */
-	public function getCourseGroups($moodleCourseId, $studiensemester_kurzbz)
+	public function getCourseGroups($moodleCourseId)
 	{
 		$query = 'SELECT DISTINCT
 					bg.gruppe_kurzbz
@@ -224,7 +224,7 @@ class Database extends basis_db
 				WHERE
 					m.mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER).'
 					AND (
-						bg.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+						bg.studiensemester_kurzbz = m.studiensemester_kurzbz
 						OR bg.studiensemester_kurzbz IS NULL
 					)
 				ORDER BY
@@ -236,18 +236,19 @@ class Database extends basis_db
 	/**
 	 *
 	 */
-	public function getGroupsMembers($studiensemester_kurzbz, $gruppe_kurzbz)
+	public function getGroupsMembers($gruppe_kurzbz)
 	{
 		$query = 'SELECT
 					bg.uid, p.vorname, p.nachname
 				FROM
-					public.tbl_benutzergruppe bg
+					addon.tbl_moodle m
+					JOIN public.tbl_benutzergruppe bg USING(gruppe_kurzbz)
 					JOIN public.tbl_benutzer b USING(uid)
 					JOIN public.tbl_person p USING(person_id)
 				WHERE
 					bg.gruppe_kurzbz = '.$this->db_add_param($gruppe_kurzbz).'
 					AND (
-						bg.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+						bg.studiensemester_kurzbz = m.studiensemester_kurzbz
 						OR bg.studiensemester_kurzbz IS NULL
 					)
 				ORDER BY
@@ -255,6 +256,8 @@ class Database extends basis_db
 
 		return $this->_execQuery($query);
 	}
+
+
 
 	// --------------------------------------------------------------------------------------------
     // Public static methods

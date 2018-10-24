@@ -47,7 +47,7 @@ class MoodleAPI extends MoodleClient
 				'options' => array(
 					array(
 						'name' => 'userfields',
-						'value' => 'id,username'
+						'value' => 'id,username,roles'
 					),
 					array(
 						'name' => 'sortby',
