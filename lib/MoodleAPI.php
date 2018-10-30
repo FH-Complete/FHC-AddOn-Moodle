@@ -200,4 +200,89 @@ class MoodleAPI extends MoodleClient
 			)
 		);
 	}
+
+	/**
+	 *
+	 */
+	public function core_course_get_categories($name, $parent)
+	{
+		return $this->call(
+			'core_course_get_categories',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'criteria' => array(
+					array(
+						'key' => 'name',
+						'value' => $name
+					),
+					array(
+						'key' => 'parent',
+						'value' => $parent
+					)
+				)
+			)
+		);
+	}
+
+	/**
+	 *
+	 */
+	public function core_course_create_categories($name, $parent)
+	{
+		return $this->call(
+			'core_course_create_categories',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'categories' => array(
+					array(
+						'name' => $name,
+						'parent' => $parent
+					)
+				)
+			)
+		);
+	}
+
+	/**
+	 *
+	 */
+	public function core_course_create_courses($fullname, $shortname, $categoryId, $format, $courseFormatOptions, $startDate, $endDate)
+	{
+		return $this->call(
+			'core_course_create_courses',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'courses' => array(
+					array(
+						'fullname' => $fullname,
+						'shortname' => $shortname,
+						'categoryid' => $categoryId,
+						'format' => $format,
+						'courseformatoptions' => $courseFormatOptions,
+						'startdate' => $startDate,
+						'enddate' => $endDate
+					)
+				)
+			)
+		);
+	}
+
+	/**
+	 *
+	 */
+	public function core_course_get_courses_by_field($shortname, $categoryId)
+	{
+		return $this->call(
+			'core_course_get_courses_by_field',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'categories' => array(
+					array(
+						'name' => $name,
+						'parent' => $parent
+					)
+				)
+			)
+		);
+	}
 }

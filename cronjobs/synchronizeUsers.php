@@ -2,6 +2,8 @@
 
 /**
  * This script adds all the users (lectors, students and management staff) present on FHComplete to moodle
+ * It also adds all the users from groups linked to a moodle course, into the linked moodle course
+ * The database table used to link users to moodle courses is addon.tbl_moodle
  */
 
 require_once('../lib/LogicUsers.php');
@@ -10,7 +12,7 @@ require_once('../lib/LogicUsers.php');
 LogicUsers::isExecutionAllowed();
 
 Output::printLineSeparator();
-Output::printInfo('Starting synchronize users script on '.date('Y-m-d H:m:s'));
+Output::printInfo('Starting synchronize users script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 
 // Retrives the current studiensemester
 $currentOrNextStudiensemester = LogicUsers::getCurrentOrNextStudiensemester();
@@ -67,5 +69,5 @@ foreach ($moodleCourses as $moodleCourse)
 	Output::printDebug('------------------------------------------------------------');
 }
 
-Output::printInfo('Ended synchronize users script on '.date('Y-m-d H:m:s'));
+Output::printInfo('Ended synchronize users script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 Output::printLineSeparator();

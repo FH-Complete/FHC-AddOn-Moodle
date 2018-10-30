@@ -278,6 +278,82 @@ class Database extends basis_db
 		return $this->_execQuery($query);
 	}
 
+	/**
+	 *
+	 */
+	public function getCourses($studiensemester_kurzbz)
+	{
+		$query = 'SELECT DISTINCT
+					lv.lehrveranstaltung_id,
+					lv.bezeichnung,
+					lv.kurzbz,
+					lv.studiengang_kz,
+					lv.orgform_kurzbz,
+					lv.semester,
+					l.lehreinheit_id,
+					TRIM(STRING_AGG(vorname || nachname, \'_\')) AS lektoren,
+					UPPER(s.typ || s.kurzbz) AS studiengang,
+					s.oe_kurzbz,
+					o.bezeichnung AS oe_bezeichnung
+				FROM
+					lehre.tbl_lehreinheit l
+					JOIN lehre.tbl_lehrveranstaltung lv USING(lehrveranstaltung_id)
+					JOIN lehre.tbl_lehreinheitmitarbeiter lm USING(lehreinheit_id)
+					JOIN public.tbl_mitarbeiter USING(mitarbeiter_uid)
+					JOIN public.tbl_benutzer b ON(uid = mitarbeiter_uid)
+					JOIN public.tbl_person USING(person_id)
+					JOIN public.tbl_studiengang s USING(studiengang_kz)
+					JOIN public.tbl_organisationseinheit o ON(o.oe_kurzbz = s.oe_kurzbz)
+				WHERE
+					l.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+					AND lv.semester IS NOT NULL
+					AND lv.semester != 0
+					AND l.lehrform_kurzbz = lv.lehrform_kurzbz
+					AND b.uid NOT LIKE \'_Dummy%\'
+					AND l.lehreinheit_id NOT IN (
+							SELECT DISTINCT lehreinheit_id FROM addon.tbl_moodle
+						)
+				GROUP BY
+					lv.lehrveranstaltung_id,
+					lv.bezeichnung,
+					lv.kurzbz,
+					lv.studiengang_kz,
+					lv.orgform_kurzbz,
+					lv.semester,
+					l.lehreinheit_id,
+					s.typ,
+					s.kurzbz,
+					s.oe_kurzbz,
+					o.bezeichnung
+				ORDER BY
+					lv.lehrveranstaltung_id';
+
+		return $this->_execQuery($query);
+	}
+
+	/**
+	 *
+	 */
+	public function insertMoodleTable(
+		$moodleCourseId, $lehreinheit_id, $lehrveranstaltung_id, $studiensemester_kurzbz, $insertamum, $insertvon, $gruppen
+	)
+	{
+		$query = 'INSERT INTO addon.tbl_moodle(
+					mdl_course_id, lehreinheit_id, lehrveranstaltung_id, studiensemester_kurzbz, insertamum, insertvon, gruppen
+				)
+				VALUES('.
+					$this->db_add_param($moodleCourseId, FHC_INTEGER).', '.
+					$this->db_add_param($lehreinheit_id, FHC_INTEGER).', '.
+					$this->db_add_param($lehrveranstaltung_id, FHC_INTEGER).', '.
+					$this->db_add_param($studiensemester_kurzbz).', '.
+					$this->db_add_param($insertamum).', '.
+					$this->db_add_param($insertvon).', '.
+					$this->db_add_param($gruppen, FHC_BOOLEAN).
+				')';
+
+		return $this->_execQuery($query);
+	}
+
 	// --------------------------------------------------------------------------------------------
     // Public static methods
 

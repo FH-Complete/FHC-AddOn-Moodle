@@ -562,11 +562,11 @@ class LogicUsers extends Logic
 			// Anlegen eines Users ohne Passwortuebergabe ist jedoch nicht moeglich-
 			// Deshalb wird die Authentifizierungsmethode beim Anlegen auf manual
 			// gesetzt und nach dem anlegen auf ldap geändert
-			$user->password = "FHCv!A2".hash('sha512', rand());
+			$user->password = ADDON_MOODLE_USER_PWD_PREFIX.hash('sha512', rand());
 			$user->firstname = $benutzer->vorname;
 			$user->lastname = $benutzer->nachname;
 			$user->email = $benutzer->uid.'@'.DOMAIN;
-			$user->auth = 'manual';
+			$user->auth = ADDON_MOODLE_USER_MANUAL_AUTH;
 			$user->idnumber = $benutzer->uid;
 			$user->lang = ADDON_MOODLE_DEFAULT_LANGUAGE;
 
@@ -578,7 +578,7 @@ class LogicUsers extends Logic
 				if ($student->load($benutzer->uid))
 				{
 					$pkz = new stdClass();
-					$pkz->type = 'pkz';
+					$pkz->type = ADDON_MOODLE_USER_PKZ_TYPE;
 					$pkz->value = $student->matrikelnr;
 
 					$user->customfields = array($pkz);
@@ -590,7 +590,7 @@ class LogicUsers extends Logic
 			{
 				$user = array();
 				$user['id'] = $users[0]->id;
-				$user['auth'] = 'ldap';
+				$user['auth'] = ADDON_MOODLE_USER_LDAP_AUTH;
 
 				self::_core_user_update_users($user);
 			}
