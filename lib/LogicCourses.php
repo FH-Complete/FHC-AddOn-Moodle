@@ -98,13 +98,17 @@ class LogicCourses extends Logic
 	/**
 	 *
 	 */
-	public static function core_course_get_courses_by_field($shortname, $categoryId)
+	public static function core_course_get_courses_by_field($shortname)
 	{
-		return parent::_moodleAPICall(
+		$courses = parent::_moodleAPICall(
 			'core_course_get_courses_by_field',
-			array($shortname, $categoryId),
-			'An error occurred while retriving a course from moodle'
+			array('shortname', $shortname),
+			'An error occurred while retriving a course from moodle by shortname'
 		);
+
+		if (count($courses->courses) == 0) return null;
+
+		return $courses->courses[0];
 	}
 
 	// --------------------------------------------------------------------------------------------

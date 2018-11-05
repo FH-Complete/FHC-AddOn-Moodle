@@ -210,6 +210,7 @@ class MoodleAPI extends MoodleClient
 			'core_course_get_categories',
 			MoodleClient::HTTP_POST_METHOD,
 			array(
+				'addsubcategories' => '0',
 				'criteria' => array(
 					array(
 						'key' => 'name',
@@ -270,18 +271,14 @@ class MoodleAPI extends MoodleClient
 	/**
 	 *
 	 */
-	public function core_course_get_courses_by_field($shortname, $categoryId)
+	public function core_course_get_courses_by_field($field, $value)
 	{
 		return $this->call(
 			'core_course_get_courses_by_field',
 			MoodleClient::HTTP_POST_METHOD,
 			array(
-				'categories' => array(
-					array(
-						'name' => $name,
-						'parent' => $parent
-					)
-				)
+				'field' => $field,
+				'value' => $value
 			)
 		);
 	}
