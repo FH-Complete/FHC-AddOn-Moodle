@@ -1,9 +1,10 @@
 <?php
 
 /**
- * This script populates the database table addon.tbl_moodle
+ * WARNING: JUST FOR TESTING DO NOT USE IN A PRODUCTION ENVIRONMENT
  *
- * NOTE: JUST FOR TESTING
+ * The purpose of this script is merely to populate quickly the table addon.tbl_moodle
+ * and moodle with categories and courses
  */
 
 require_once('../lib/LogicCourses.php');
@@ -19,63 +20,61 @@ $currentOrNextStudiensemester = LogicCourses::getCurrentOrNextStudiensemester();
 
 Output::printInfo('Working studiensemester: '.$currentOrNextStudiensemester);
 
-$coursesCounter = 0; //
-$rootCategoryId = ADDON_MOODLE_ROOT_CATEGORY_ID; //
+$rootCategoryId = ADDON_MOODLE_ROOT_CATEGORY_ID; // used to create the groups course in moodle
 
-//
+// To load useful infos about the studiensemester
 $studiensemester = new studiensemester();
 $studiensemester->load($currentOrNextStudiensemester);
 
-//
-$courses = LogicCourses::getCourses($currentOrNextStudiensemester); //
-$courseFormatOptions = LogicCourses::getCourseFormatOptions(); //
-$startDate = LogicCourses::getStartDate($studiensemester); //
-$endDate = LogicCourses::getEndDate($studiensemester); //
+$courses = LogicCourses::getCourses($currentOrNextStudiensemester); // Loads courses to be synch with moodle
+$courseFormatOptions = LogicCourses::getCourseFormatOptions(); // Generates the parameter courseformatoptions for all courses
+$startDate = LogicCourses::getStartDate($studiensemester); // Generates the parameter startdate for all courses
+$endDate = LogicCourses::getEndDate($studiensemester); // Generates the parameter enddate for all courses
 
-$numberOfCourses = Database::rowsNumber($courses); //
+$numberOfCourses = Database::rowsNumber($courses); // Contains the total number of courses to be synchronized
 
 Output::printInfo('Number of courses in the database to be synchronized: '.$numberOfCourses);
 Output::printDebug('----------------------------------------------------------------------');
 
-//
+// Counters variables used by the summary
 $numGroupsAddedToDB = 0;
 $numCoursesAddedToDB = 0;
 $numCoursesAddedToMoodle = 0;
 $numCategoriesAddedToMoodle = 0;
 
-//
+// Loops through courses
 while ($course = Database::fetchRow($courses))
 {
-	//
+	// Generates the short and full name for the current course
 	$shortname = LogicCourses::getCourseShortname($course, $currentOrNextStudiensemester);
 	$fullname = LogicCourses::getCourseFullname($course, $currentOrNextStudiensemester);
 
 	Output::printDebug('Shortname: '.$shortname);
 	Output::printDebug('Fullname: '.$fullname);
 
-	//
+	// Creates the course if does not exist, otherwise retrives its ID in moodle
 	$moodleCourseId = LogicCourses::getOrCreateMoodleCourse(
 		$course, $currentOrNextStudiensemester,
 		$fullname, $shortname, $startDate, $courseFormatOptions, $endDate,
 		$numCoursesAddedToMoodle, $numCategoriesAddedToMoodle
 	);
 
-	//
+	// Adds a new record in addon.tbl_moodle with the course infos
 	LogicCourses::addCourseToDatabase($moodleCourseId, $course, $currentOrNextStudiensemester, $numCoursesAddedToDB); //
 
 	Output::printDebug('----------------------------------------------------------------------');
 }
 
-// Groups
+// >>> Addig groups <<<
 
 $numberOfCourses++; // +1 for groups course
 
-//
+// Adds a course in moodle for all the groups users
 $moodleCourseId = LogicCourses::addGroupsCourseToMoodle(
 	$currentOrNextStudiensemester, $startDate, $courseFormatOptions, $endDate, $numCategoriesAddedToMoodle
 );
 
-//
+// // Adds new records in addon.tbl_moodle with the groups and course infos
 LogicCourses::addGroupsToDatabase($moodleCourseId, $currentOrNextStudiensemester, $numGroupsAddedToDB); //
 
 // Summary
