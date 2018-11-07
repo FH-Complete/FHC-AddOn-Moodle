@@ -282,4 +282,16 @@ class MoodleAPI extends MoodleClient
 			)
 		);
 	}
+
+	/**
+	 *
+	 */
+	public function core_webservice_get_site_info()
+	{
+		return $this->call(
+			'core_webservice_get_site_info',
+			MoodleClient::HTTP_POST_METHOD,
+			array()
+		);
+	}
 }

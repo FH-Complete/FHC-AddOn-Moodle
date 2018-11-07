@@ -335,11 +335,13 @@ class Database extends basis_db
 	 *
 	 */
 	public function insertMoodleTable(
-		$moodleCourseId, $lehreinheit_id, $lehrveranstaltung_id, $studiensemester_kurzbz, $insertamum, $insertvon, $gruppen
+		$moodleCourseId, $lehreinheit_id, $lehrveranstaltung_id, $studiensemester_kurzbz,
+		$insertamum, $insertvon, $gruppen, $gruppe_kurzbz
 	)
 	{
 		$query = 'INSERT INTO addon.tbl_moodle(
-					mdl_course_id, lehreinheit_id, lehrveranstaltung_id, studiensemester_kurzbz, insertamum, insertvon, gruppen
+					mdl_course_id, lehreinheit_id, lehrveranstaltung_id, studiensemester_kurzbz,
+					insertamum, insertvon, gruppen, gruppe_kurzbz
 				)
 				VALUES('.
 					$this->db_add_param($moodleCourseId, FHC_INTEGER).', '.
@@ -348,8 +350,26 @@ class Database extends basis_db
 					$this->db_add_param($studiensemester_kurzbz).', '.
 					$this->db_add_param($insertamum).', '.
 					$this->db_add_param($insertvon).', '.
-					$this->db_add_param($gruppen, FHC_BOOLEAN).
+					$this->db_add_param($gruppen, FHC_BOOLEAN).', '.
+					$this->db_add_param($gruppe_kurzbz).
 				')';
+
+		return $this->_execQuery($query);
+	}
+
+	/**
+	 *
+	 */
+	public function getMoodleCoursesByGroup($studiensemester_kurzbz, $mdl_course_id, $gruppe_kurzbz)
+	{
+		$query = 'SELECT DISTINCT
+					gruppe_kurzbz AS group
+				FROM
+					addon.tbl_moodle
+				WHERE
+					studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+					AND mdl_course_id = '.$this->db_add_param($mdl_course_id, FHC_INTEGER).'
+					AND gruppe_kurzbz = '.$this->db_add_param($gruppe_kurzbz);
 
 		return $this->_execQuery($query);
 	}

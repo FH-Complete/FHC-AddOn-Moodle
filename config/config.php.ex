@@ -13,17 +13,25 @@ define('ADDON_MOODLE_COURSE_SCHEMA', 'STSEM-STG-SEM');
 define('ADDON_MOODLE_NUMSECTIONS_VALUE', 0);
 define('ADDON_MOODLE_NUMSECTIONS_NAME', 'numsections');
 
-// If TRUE then the end date of the course will be set at the end of the semester
-// NOTE: can be set as TRUE only from Moodle version >= 3.3
-define('ADDON_MOODLE_SET_END_DATE', true);
+// Used to set or not the end date parameter when creating a new course
+define('ADDON_MOODLE_VERSION_SET_END_DATE', '3.3');
+define('ADDON_MOODLE_VERSION_LENGTH', 5);
 
+// Default category root ID
 define('ADDON_MOODLE_ROOT_CATEGORY_ID', '0');
 
+// Default course format
 define('ADDON_MOODLE_COURSE_FORMAT', 'topics');
 
 define('ADDON_MOODLE_JAHRGANG_CATEGORY_NAME' , 'Jahrgang ');
-
 define('ADDON_MOODLE_INSERTVON' , 'Courses synchronization job');
+
+// Groups to be added to the table addon.tbl_moodle
+define('ADDON_MOODLE_GROUPS_TO_SYNCH_DELIMITER', ';');
+define('ADDON_MOODLE_GROUPS_TO_SYNCH', 'TW_ITSERVICE;TW_FIX_LKT');
+// Course name that will contains all users from groups
+define('ADDON_MOODLE_GROUPS_COURSE_SHORTNAME', 'TW_FIX');
+define('ADDON_MOODLE_GROUPS_COURSE_FULLNAME', 'TW - FIX');
 
 // ------------------------------------------------------------------------------------------------------------
 // Users synching options
@@ -43,6 +51,7 @@ define('ADDON_MOODLE_STUDENT_ROLEID', 5);
 define('ADDON_MOODLE_FACHBEREICHSLEITUNG_ROLEID', 10);
 define('ADDON_MOODLE_LV_ANGERECHNET_ROLEID', 11);
 
+// Parameters used to create a new user in moodle
 define('ADDON_MOODLE_USER_MANUAL_AUTH', 'manual');
 define('ADDON_MOODLE_USER_PWD_PREFIX', 'FHCv!A2');
 define('ADDON_MOODLE_USER_LDAP_AUTH', 'ldap');
