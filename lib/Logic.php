@@ -45,7 +45,7 @@ abstract class Logic
 		$currentOrNextStudiensemester = $studiensemester->getAktOrNext();
 		if (!$currentOrNextStudiensemester)
 		{
-			Output::printError('An error occurred while retriving the current or the next studiensemester');
+			Output::printError('An error occurred while retrieving the current or the next studiensemester');
  			die();
 		}
 

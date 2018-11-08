@@ -14,18 +14,18 @@ LogicUsers::isExecutionAllowed();
 Output::printLineSeparator();
 Output::printInfo('Starting synchronize users script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 
-// Retrives the current studiensemester
+// Retrieves the current studiensemester
 $currentOrNextStudiensemester = LogicUsers::getCurrentOrNextStudiensemester();
 
 Output::printInfo('Working studiensemester: '.$currentOrNextStudiensemester);
 
-// Retrives the courses to be synchronized from database (addon.tbl_moodle)
+// Retrieves the courses to be synchronized from database (addon.tbl_moodle)
 $dbMoodleCoursesIDsArray = LogicUsers::getDBMoodleCoursesIDsArray($currentOrNextStudiensemester);
 
 Output::printInfo('Number of courses in the database: '.count($dbMoodleCoursesIDsArray));
 
-// Retrives the courses from moodle using the course ids retrived from the database
-$moodleCourses = LogicUsers::core_course_get_courses($dbMoodleCoursesIDsArray);
+// Retrieves the courses from moodle using the course ids retrieved from the database
+$moodleCourses = LogicUsers::getMoodleCourses($dbMoodleCoursesIDsArray);
 
 Output::printInfo('Number of courses in moodle: '.count($moodleCourses));
 
@@ -37,7 +37,7 @@ if (count($dbMoodleCoursesIDsArray) != count($moodleCourses))
 
 if (count($moodleCourses) > 0) Output::printDebug('------------------------------------------------------------');
 
-// Loops through the courses retrived from moodle
+// Loops through the courses retrieved from moodle
 foreach ($moodleCourses as $moodleCourse)
 {
 	Output::printDebug('>>> Syncing moodle course '.$moodleCourse->id.':"'.$moodleCourse->shortname.'" <<<');
@@ -45,7 +45,7 @@ foreach ($moodleCourses as $moodleCourse)
 	// Get all the enrolled users in this course from moodle
 	$moodleEnrolledUsers = LogicUsers::core_enrol_get_enrolled_users($moodleCourse->id);
 
-	// Retrives a list of UIDs of users to be unenrolled
+	// Retrieves a list of UIDs of users to be unenrolled
 	$uidsToUnenrol = LogicUsers::getUsersToUnenrol($moodleEnrolledUsers);
 
 	// Synchronizes lectors

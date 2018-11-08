@@ -15,7 +15,7 @@ LogicCourses::isExecutionAllowed();
 Output::printLineSeparator();
 Output::printInfo('Starting synchronize courses script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 
-// Retrives the current studiensemester
+// Retrieves the current studiensemester
 $currentOrNextStudiensemester = LogicCourses::getCurrentOrNextStudiensemester();
 
 Output::printInfo('Working studiensemester: '.$currentOrNextStudiensemester);
@@ -52,7 +52,7 @@ while ($course = Database::fetchRow($courses))
 	Output::printDebug('Shortname: '.$shortname);
 	Output::printDebug('Fullname: '.$fullname);
 
-	// Creates the course if does not exist, otherwise retrives its ID in moodle
+	// Creates the course if does not exist, otherwise retrieves its ID in moodle
 	$moodleCourseId = LogicCourses::getOrCreateMoodleCourse(
 		$course, $currentOrNextStudiensemester,
 		$fullname, $shortname, $startDate, $courseFormatOptions, $endDate,

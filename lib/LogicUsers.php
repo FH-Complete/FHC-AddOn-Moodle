@@ -20,7 +20,7 @@ class LogicUsers extends Logic
 		$moodleCoursesIDs = parent::_dbCall(
 			'getMoodleCoursesIDs',
 			array($currentOrNextStudiensemester),
-			'An error occurred while retriving the moodle courses'
+			'An error occurred while retrieving the moodle courses'
 		);
 
 		//
@@ -38,24 +38,12 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	public static function core_course_get_courses($moodleCoursesIDsArray)
-	{
-		return parent::_moodleAPICall(
-			'core_course_get_courses',
-			array($moodleCoursesIDsArray),
-			'An error occurred while retriving courses from moodle'
-		);
-	}
-
-	/**
-	 *
-	 */
 	public static function core_enrol_get_enrolled_users($moodleCourseId)
 	{
 		$moodleEnrolledUsers = parent::_moodleAPICall(
 			'core_enrol_get_enrolled_users',
 			array($moodleCourseId),
-			'An error occurred while retriving enrolled users from moodle'
+			'An error occurred while retrieving enrolled users from moodle'
 		);
 
 		self::_printDebugEmptyline();
@@ -67,6 +55,37 @@ class LogicUsers extends Logic
 
 	// --------------------------------------------------------------------------------------------
     // Public business logic methods
+
+	/**
+	 * Returns all the courses from moodle identified by a list of IDs given
+	 * with the parameter $moodleCoursesIDsArray
+	 * The call is divided by chunks, the size of these chunks is given
+	 * by the config entry ADDON_MOODLE_POST_PARAMS_NUMBER
+	 * This is because apache + php by default limits the number of post paraters
+	 */
+	public static function getMoodleCourses($moodleCoursesIDsArray)
+	{
+		$offset = 0; //
+		$moodleCourses = array(); //
+
+		// Needed at least once
+		do
+		{
+			// Retrieves a chunk of courses from moodle
+			$tmpMoodleCourses = self::_core_course_get_courses(
+				array_slice($moodleCoursesIDsArray, $offset, ADDON_MOODLE_POST_PARAMS_NUMBER)
+			);
+
+			// Adds this chunk to array $moodleCourses
+			$moodleCourses = array_merge($moodleCourses, $tmpMoodleCourses);
+
+			// Increments the offset
+			$offset += ADDON_MOODLE_POST_PARAMS_NUMBER;
+		}
+		while (count($moodleCourses) < count($moodleCoursesIDsArray)); // Until all the courses are retrieved
+
+		return $moodleCourses;
+	}
 
 	/**
 	 * Copies all the students enrolled for a moodle course to a new array
@@ -458,7 +477,7 @@ class LogicUsers extends Logic
 	{
 		$usersToUnenrol = array(); //
 
-		Output::printDebug('Number of group members to be unenrolled in database: '.count($uidsToUnenrol));
+		Output::printDebug('Number of group members to be UNenrolled in database: '.count($uidsToUnenrol));
 
 		//
 		foreach ($uidsToUnenrol as $uidToUnenrol)
@@ -477,11 +496,11 @@ class LogicUsers extends Logic
 						'courseid' => $moodleCourseId
 					);
 
-					$debugMessage .= ' >> will be unenrolled from moodle in a later step';
+					$debugMessage .= ' >> will be UNenrolled from moodle in a later step';
 				}
 				else
 				{
-					$debugMessage .= ' >> dry run >> should be unenrolled from moodle in a later step';
+					$debugMessage .= ' >> dry run >> should be UNenrolled from moodle in a later step';
 				}
 
 				Output::printDebug($debugMessage);
@@ -492,7 +511,7 @@ class LogicUsers extends Logic
 		{
 			self::_enrol_manual_unenrol_users($usersToUnenrol);
 
-			Output::printDebug('Number of group members unenrolled from moodle: '.count($usersToUnenrol));
+			Output::printDebug('Number of group members UNenrolled from moodle: '.count($usersToUnenrol));
 		}
 
 		self::_printDebugEmptyline();
@@ -614,7 +633,7 @@ class LogicUsers extends Logic
 		return parent::_dbCall(
 			'getCourseMitarbeiter',
 			array($moodleCourseId),
-			'An error occurred while retriving the mitarbeiter'
+			'An error occurred while retrieving the mitarbeiter'
 		);
 	}
 
@@ -626,7 +645,7 @@ class LogicUsers extends Logic
 		return parent::_dbCall(
 			'getBenutzerByUID',
 			array($uid),
-			'An error occurred while retriving the benutzer'
+			'An error occurred while retrieving the benutzer'
 		);
 	}
 
@@ -638,7 +657,7 @@ class LogicUsers extends Logic
 		return parent::_dbCall(
 			'getCourseFachbereichsleitung',
 			array($moodleCourseId),
-			'An error occurred while retriving the fachbereichsleitung'
+			'An error occurred while retrieving the fachbereichsleitung'
 		);
 	}
 
@@ -650,7 +669,7 @@ class LogicUsers extends Logic
 		return parent::_dbCall(
 			'getCourseLehreinheiten',
 			array($moodleCourseId),
-			'An error occurred while retriving lehreinheiten'
+			'An error occurred while retrieving lehreinheiten'
 		);
 	}
 
@@ -662,7 +681,7 @@ class LogicUsers extends Logic
 		return parent::_dbCall(
 			'getLVBGruppe',
 			array($studiensemester_kurzbz, $studiengang_kz, $semester, $verband, $gruppe),
-			'An error occurred while retriving the LVB gruppe'
+			'An error occurred while retrieving the LVB gruppe'
 		);
 	}
 
@@ -674,7 +693,7 @@ class LogicUsers extends Logic
 		return parent::_dbCall(
 			'getSpezialGruppe',
 			array($gruppe_kurzbz, $studiensemester_kurzbz),
-			'An error occurred while retriving the spezial gruppe'
+			'An error occurred while retrieving the spezial gruppe'
 		);
 	}
 
@@ -686,7 +705,7 @@ class LogicUsers extends Logic
 		return parent::_dbCall(
 			'getCourseGroups',
 			array($moodleCourseId),
-			'An error occurred while retriving course groups'
+			'An error occurred while retrieving course groups'
 		);
 	}
 
@@ -698,7 +717,7 @@ class LogicUsers extends Logic
 		return parent::_dbCall(
 			'getGroupsMembers',
 			array($gruppe_kurzbz),
-			'An error occurred while retriving groups members'
+			'An error occurred while retrieving groups members'
 		);
 	}
 
@@ -712,7 +731,7 @@ class LogicUsers extends Logic
 		$courseAngerechnetDataset = parent::_dbCall(
 			'getCourseAngerechnet',
 			array($moodleCourseId),
-			'An error occurred while retriving angerechnet students'
+			'An error occurred while retrieving angerechnet students'
 		);
 
 		if (Database::rowsNumber($courseAngerechnetDataset) > 0)
@@ -734,12 +753,24 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
+	private static function _core_course_get_courses($moodleCoursesIDsArray)
+	{
+		return parent::_moodleAPICall(
+			'core_course_get_courses',
+			array($moodleCoursesIDsArray),
+			'An error occurred while retrieving courses from moodle'
+		);
+	}
+
+	/**
+	 *
+	 */
 	private static function _fhcomplete_user_get_users($uid)
 	{
 		$users = parent::_moodleAPICall(
 			'fhcomplete_user_get_users',
 			array($uid),
-			'An error occurred while retriving users info from moodle'
+			'An error occurred while retrieving users info from moodle'
 		);
 
 		return $users->users;
@@ -789,7 +820,7 @@ class LogicUsers extends Logic
 		$groups = parent::_moodleAPICall(
 			'core_group_get_course_groups',
 			array($moodleCourseId),
-			'An error occurred while retriving groups from moodle'
+			'An error occurred while retrieving groups from moodle'
 		);
 
 		foreach ($groups as $group)
@@ -823,7 +854,7 @@ class LogicUsers extends Logic
 		$groups = parent::_moodleAPICall(
 			'core_group_get_group_members',
 			array($groupId),
-			'An error occurred while retriving group members from moodle'
+			'An error occurred while retrieving group members from moodle'
 		);
 
 		if (count($groups) > 0 && count($groups[0]['userids']) > 0)

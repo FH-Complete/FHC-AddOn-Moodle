@@ -11,14 +11,14 @@ class LogicCourses extends Logic
     // Public Database wrappers methods
 
 	/**
-	 * Retrives all the courses from database to be synchronized with moodle
+	 * Retrieves all the courses from database to be synchronized with moodle
 	 */
 	public static function getCourses($studiensemester_kurzbz)
 	{
 		return parent::_dbCall(
 			'getCourses',
 			array($studiensemester_kurzbz),
-			'An error occurred while retriving courses'
+			'An error occurred while retrieving courses'
 		);
 	}
 
@@ -516,7 +516,7 @@ class LogicCourses extends Logic
 		$groups = parent::_dbCall(
 			'getMoodleCoursesByGroup',
 			array($studiensemester_kurzbz, $mdl_course_id, $gruppe_kurzbz),
-			'An error occurred while retriving groups from table addon.tbl_moodle'
+			'An error occurred while retrieving groups from table addon.tbl_moodle'
 		);
 
 		return Database::rowsNumber($groups) == 0 ? false : true;
@@ -533,7 +533,7 @@ class LogicCourses extends Logic
 		return parent::_moodleAPICall(
 			'core_course_get_categories',
 			array($name, $parent),
-			'An error occurred while retriving categories from moodle'
+			'An error occurred while retrieving categories from moodle'
 		);
 	}
 
@@ -573,7 +573,7 @@ class LogicCourses extends Logic
 		$courses = parent::_moodleAPICall(
 			'core_course_get_courses_by_field',
 			array('shortname', $shortname),
-			'An error occurred while retriving a course from moodle by shortname'
+			'An error occurred while retrieving a course from moodle by shortname'
 		);
 
 		if (count($courses->courses) == 0) return null;
@@ -589,7 +589,7 @@ class LogicCourses extends Logic
 		$info = parent::_moodleAPICall(
 			'core_webservice_get_site_info',
 			array(),
-			'An error occurred while retriving moodle infos'
+			'An error occurred while retrieving moodle infos'
 		);
 
 		$release = $info->release;
