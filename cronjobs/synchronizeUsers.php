@@ -35,6 +35,14 @@ if (count($dbMoodleCoursesIDsArray) != count($moodleCourses))
 	Output::printWarning('The number of courses in the database and those present in moodle does not match!');
 }
 
+$numCreatedUsers = 0;
+$numEnrolledLectors = 0;
+$numEnrolledManagementStaff = 0;
+$numEnrolledStudents = 0;
+$numCreatedGroups = 0;
+$numEnrolledGroupsMembers = 0;
+$numUnenrolledGroupsMembers = 0;
+
 if (count($moodleCourses) > 0) Output::printDebug('------------------------------------------------------------');
 
 // Loops through the courses retrieved from moodle
@@ -49,25 +57,57 @@ foreach ($moodleCourses as $moodleCourse)
 	$uidsToUnenrol = LogicUsers::getUsersToUnenrol($moodleEnrolledUsers);
 
 	// Synchronizes lectors
-	LogicUsers::synchronizeLektoren($moodleCourse->id, $moodleEnrolledUsers, $uidsToUnenrol);
+	LogicUsers::synchronizeLektoren(
+		$moodleCourse->id, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledLectors
+	);
 
 	// Synchronizes management staff
 	if (ADDON_MOODLE_SYNC_FACHBEREICHSLEITUNG === true)
 	{
-		LogicUsers::synchronizeFachbereichsleitung($moodleCourse->id, $moodleEnrolledUsers, $uidsToUnenrol);
+		LogicUsers::synchronizeFachbereichsleitung(
+			$moodleCourse->id, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledManagementStaff
+		);
 	}
 
 	// Synchronizes students
-	LogicUsers::synchronizeStudenten($moodleCourse->id, $moodleEnrolledUsers, $uidsToUnenrol);
+	LogicUsers::synchronizeStudenten(
+		$moodleCourse->id, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledStudents, $numCreatedGroups
+	);
 
 	// Synchronizes groups members
-	LogicUsers::synchronizeGroupsMembers($moodleCourse->id, $moodleEnrolledUsers, $uidsToUnenrol);
+	LogicUsers::synchronizeGroupsMembers(
+		$moodleCourse->id, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledGroupsMembers
+	);
 
 	// Unenrol users
-	LogicUsers::unenrolUsers($moodleCourse->id, $uidsToUnenrol);
+	LogicUsers::unenrolUsers($moodleCourse->id, $uidsToUnenrol, $numUnenrolledGroupsMembers);
 
 	Output::printDebug('------------------------------------------------------------');
 }
+
+// Summary
+Output::printInfo('----------------------------------------------------------------------');
+if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
+{
+	Output::printInfo('Total amount of users created in moodle: '. $numCreatedUsers);
+	Output::printInfo('Total amount of lectors enrolled in moodle: '. $numEnrolledLectors);
+	Output::printInfo('Total amount of management staff enrolled in moodle: '. $numEnrolledManagementStaff);
+	Output::printInfo('Total amount of students enrolled in moodle: '. $numEnrolledStudents);
+	Output::printInfo('Total amount of groups created in moodle: '. $numCreatedGroups);
+	Output::printInfo('Total amount of groups members enrolled in moodle: '. $numEnrolledGroupsMembers);
+	Output::printInfo('Total amount of UNrolled groups members in moodle: '. $numUnenrolledGroupsMembers);
+}
+else
+{
+	Output::printInfo('Total amount of users that would be created in moodle: '. $numCreatedUsers);
+	Output::printInfo('Total amount of lectors that would be enrolled in moodle: '. $numEnrolledLectors);
+	Output::printInfo('Total amount of management staff that would be enrolled in moodle: '. $numEnrolledManagementStaff);
+	Output::printInfo('Total amount of students that would be enrolled in moodle: '. $numEnrolledStudents);
+	Output::printInfo('Total amount of groups that would be created in moodle: '. $numCreatedGroups);
+	Output::printInfo('Total amount of groups members that would be enrolled in moodle: '. $numEnrolledGroupsMembers);
+	Output::printInfo('Total amount of groups members that would be UNenrolled in moodle: '. $numUnenrolledGroupsMembers);
+}
+Output::printInfo('----------------------------------------------------------------------');
 
 Output::printInfo('Ended synchronize users script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 Output::printLineSeparator();

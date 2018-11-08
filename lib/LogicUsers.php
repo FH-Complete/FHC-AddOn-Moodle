@@ -126,7 +126,9 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	public static function synchronizeLektoren($moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol)
+	public static function synchronizeLektoren(
+		$moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol, &$numCreatedUsers, &$numEnrolledLectors
+	)
 	{
 		$usersToEnroll = array(); //
 		$employees = self::_getCourseMitarbeiter($moodleCourseId); //
@@ -156,11 +158,10 @@ class LogicUsers extends Logic
 			//
 			if (!$userFound)
 			{
+				$users = self::_getOrCreateMoodleUser($employee->mitarbeiter_uid, $numCreatedUsers);
+
 				if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 				{
-					//
-					$users = self::_getOrCreateMoodleUser($employee->mitarbeiter_uid);
-
 					$usersToEnroll[] = array(
 						'roleid' => ADDON_MOODLE_LEKTOREN_ROLEID,
 						'userid' => $users[0]->id,
@@ -173,6 +174,8 @@ class LogicUsers extends Logic
 				{
 					$debugMessage .= ' >> dry run >> should be enrolled in moodle in a later step';
 				}
+
+				$numEnrolledLectors++;
 			}
 
 			Output::printDebug($debugMessage);
@@ -192,7 +195,9 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	public static function synchronizeFachbereichsleitung($moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol)
+	public static function synchronizeFachbereichsleitung(
+		$moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol, &$numCreatedUsers, &$numEnrolledManagementStaff
+	)
 	{
 		$usersToEnroll = array(); //
 		$employees = self::_getCourseFachbereichsleitung($moodleCourseId); //
@@ -220,11 +225,10 @@ class LogicUsers extends Logic
 
 			if (!$userFound)
 			{
+				$users = self::_getOrCreateMoodleUser($employee->mitarbeiter_uid, $numCreatedUsers);
+
 				if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 				{
-					//
-					$users = self::_getOrCreateMoodleUser($employee->mitarbeiter_uid);
-
 					$usersToEnroll[] = array(
 						'roleid' => ADDON_MOODLE_FACHBEREICHSLEITUNG_ROLEID,
 						'userid' => $users[0]->id,
@@ -237,6 +241,8 @@ class LogicUsers extends Logic
 				{
 					$debugMessage .= ' >> dry run >> should be enrolled in moodle in a later step';
 				}
+
+				$numEnrolledManagementStaff++;
 			}
 
 			Output::printDebug($debugMessage);
@@ -256,7 +262,9 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	public static function synchronizeStudenten($moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol)
+	public static function synchronizeStudenten(
+		$moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol, &$numCreatedUsers, &$numEnrolledStudents, &$numCreatedGroups
+	)
 	{
 		//
 		$lehreinheiten = self::_getCourseLehreinheiten($moodleCourseId);
@@ -319,11 +327,10 @@ class LogicUsers extends Logic
 				//
 				if (!$userFound)
 				{
+					$users = self::_getOrCreateMoodleUser($student->student_uid, $numCreatedUsers);
+
 					if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 					{
-						//
-						$users = self::_getOrCreateMoodleUser($student->student_uid);
-
 						//
 						$roleId = ADDON_MOODLE_STUDENT_ROLEID;
 						if (array_search($student->student_uid, $courseAngerechnet) !== false)
@@ -344,6 +351,8 @@ class LogicUsers extends Logic
 					{
 						$debugMessage .= ' >> dry run >> should be enrolled in moodle in a later step';
 					}
+
+					$numEnrolledStudents++;
 				}
 
 				//
@@ -352,7 +361,7 @@ class LogicUsers extends Logic
 					if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 					{
 						//
-						$group = self::_getOrCreateMoodleGroup($moodleCourseId, $groupName);
+						$group = self::_getOrCreateMoodleGroup($moodleCourseId, $groupName, $numCreatedGroups);
 
 						//
 						if (!self::_isMoodleUserMemberMoodleGroup($users[0]->id, $group->id))
@@ -395,7 +404,9 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	public static function synchronizeGroupsMembers($moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol)
+	public static function synchronizeGroupsMembers(
+		$moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol, &$numCreatedUsers, &$numEnrolledGroupsMembers
+	)
 	{
 		$courseGroups = self::_getCourseGroups($moodleCourseId); //
 
@@ -435,11 +446,10 @@ class LogicUsers extends Logic
 				//
 				if (!$userFound)
 				{
+					$users = self::_getOrCreateMoodleUser($groupMember->uid, $numCreatedUsers);
+
 					if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 					{
-						//
-						$users = self::_getOrCreateMoodleUser($groupMember->uid);
-
 						//
 						$usersToEnroll[] = array(
 							'roleid' => ADDON_MOODLE_STUDENT_ROLEID,
@@ -453,6 +463,8 @@ class LogicUsers extends Logic
 					{
 						$debugMessage .= ' >> dry run >> should be enrolled in moodle in a later step';
 					}
+
+					$numEnrolledGroupsMembers++;
 				}
 
 				Output::printDebug($debugMessage);
@@ -473,7 +485,7 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	public static function unenrolUsers($moodleCourseId, $uidsToUnenrol)
+	public static function unenrolUsers($moodleCourseId, $uidsToUnenrol, &$numUnenrolledGroupsMembers)
 	{
 		$usersToUnenrol = array(); //
 
@@ -504,6 +516,8 @@ class LogicUsers extends Logic
 				}
 
 				Output::printDebug($debugMessage);
+
+				$numUnenrolledGroupsMembers++;
 			}
 		}
 
@@ -523,7 +537,7 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	private static function _getOrCreateMoodleGroup($moodleCourseId, $groupName)
+	private static function _getOrCreateMoodleGroup($moodleCourseId, $groupName, &$numCreatedGroups)
 	{
 		//
 		$group = self::_core_group_get_course_groups($moodleCourseId, $groupName);
@@ -534,6 +548,7 @@ class LogicUsers extends Logic
 			//
 			$groups = self::_core_group_create_groups($moodleCourseId, $groupName);
 			$group = $groups[0]; //
+			$numCreatedGroups++;
 		}
 
 		return $group;
@@ -542,16 +557,25 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	private static function _getOrCreateMoodleUser($uid)
+	private static function _getOrCreateMoodleUser($uid, &$numCreatedUsers)
 	{
 		$users = self::_fhcomplete_user_get_users($uid);
 
 		// If not found
 		if (is_array($users) && count($users) == 0)
 		{
-			$users = self::_createMoodleUser($uid);
+			if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
+			{
+				$users = self::_createMoodleUser($uid);
 
-			Output::printDebug('User '.$uid.' does not exist, it has been created');
+				Output::printDebug('User '.$uid.' does not exist, it has been created');
+			}
+			else
+			{
+				Output::printDebug('User '.$uid.' does not exist, it would be created');
+			}
+
+			$numCreatedUsers++;
 		}
 
 		return $users;
