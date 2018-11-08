@@ -111,6 +111,8 @@ class LogicCourses extends Logic
 		&$numCoursesAddedToMoodle, &$numCategoriesAddedToMoodle
 	)
 	{
+		$moodleCourseId = -1;
+
 		//
 		$checkCourse = self::_getCourseByShortname($shortname);
 		if ($checkCourse == null)
@@ -140,6 +142,8 @@ class LogicCourses extends Logic
 			}
 			Output::printDebug('Sections number: '.$checkCourse->courseformatoptions[0]->value);
 		}
+
+		return $moodleCourseId;
 	}
 
 	/**
