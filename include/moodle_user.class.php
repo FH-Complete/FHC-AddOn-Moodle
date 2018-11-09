@@ -26,8 +26,6 @@
 require_once(dirname(__FILE__).'/../../../include/basis_db.class.php');
 require_once(dirname(__FILE__).'/../../../include/student.class.php');
 
-require_once('../lib/MoodleClient.php');
-
 class moodle_user extends basis_db
 {
 	public $log=''; 			//log message fuer Syncro
@@ -46,7 +44,9 @@ class moodle_user extends basis_db
 	 */
 	public function __construct()
 	{
-		$this->serverurl = '';
+		$this->serverurl = ADDON_MOODLE_PATH.'/webservice/soap/server.php?wsdl=1&wstoken='.ADDON_MOODLE_TOKEN;
+		if (ADDON_MOODLE_DEBUGLEVEL > 0)
+			$this->serverurl .= '&'.microtime(true);
 	}
 
 	/**
@@ -57,46 +57,36 @@ class moodle_user extends basis_db
 	 */
 	public function loaduser($uid)
 	{
-		$moodleClient = new MoodleClient();
-
-		$response = $moodleClient->call(
-			'fhcomplete_user_get_users',
-			MoodleClient::HTTP_POST_METHOD,
-			array(
-				'criteria' => array(
-					array(
-						'key' => 'username',
-						'value' => $uid
-					)
-				)
-			)
-		);
-
-		if ($moodleClient->isSuccess() && $moodleClient->hasData())
+		try
 		{
-			if (isset($response->users) && is_array($response->users) && count($response->users) > 0)
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
+			$response = $client->fhcomplete_user_get_users(array(array('key'=>'username', 'value'=>$uid)));
+
+			if (is_object($response))
 			{
-				$this->mdl_user_id = $response->users[0]->id;
-				$this->mdl_user_username = $response->users[0]->username;
-				$this->mdl_user_firstname = $response->users[0]->firstname;
-				$this->mdl_user_lastname = $response->users[0]->lastname;
+				$response_obj = $response;
+				unset($response);
+				$response['users'] = $response_obj->users;
+			}
+
+			if (isset($response['users'][0]))
+			{
+				$this->mdl_user_id = $response['users'][0]['id'];
+				$this->mdl_user_username = $response['users'][0]['username'];
+				$this->mdl_user_firstname = $response['users'][0]['firstname'];
+				$this->mdl_user_lastname = $response['users'][0]['lastname'];
 				return true;
 			}
 			else
 			{
-				$this->errormsg = 'No users have been found with: '.$uid;
+				$this->errormsg = 'Fehler beim Laden des Users';
 				return false;
 			}
 		}
-		elseif (!$moodleClient->hasData())
+		catch (SoapFault $E)
 		{
-			$this->errormsg = 'No users have been found with: '.$uid;
-			return false;
-		}
-		else
-		{
-			$this->errormsg = $moodleClient->getError();
-			return false;
+			$this->errormsg .= "SOAP Fehler beim Laden des Users: ".$E->faultstring;
+			return -1;
 		}
 	}
 
@@ -185,29 +175,14 @@ class moodle_user extends basis_db
 		}
 		$mitarbeiter = '';
 
-		$moodleClient = new MoodleClient();
-
-		$response = $moodleClient->call(
-			'core_enrol_get_enrolled_users',
-			MoodleClient::HTTP_POST_METHOD,
-			array(
-				'courseid' => $mdl_course_id,
-				'options' => array(
-					array(
-						'name' => 'userfields',
-						'value' => 'id,username'
-					)
-				)
-			)
-		);
-
-		if ($moodleClient->isSuccess())
+		try
 		{
-			$enrolled_users = $response;
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
+			$enrolled_users = $client->core_enrol_get_enrolled_users($mdl_course_id,array(array('name'=>'userfields','value'=>'id,username')));
 		}
-		else
+		catch (SoapFault $E)
 		{
-			$this->errormsg = $moodleClient->getError();
+			$this->errormsg .= "SOAP Fehler beim Laden der Teilnehmer des Kurses: ".$E->faultstring;
 			return false;
 		}
 
@@ -218,7 +193,7 @@ class moodle_user extends basis_db
 				$user_zugeteilt = false;
 				foreach($enrolled_users as $user)
 				{
-					if ($user->username == $row_ma->mitarbeiter_uid)
+					if ($user['username'] == $row_ma->mitarbeiter_uid)
 					{
 						$user_zugeteilt = true;
 						break;
@@ -248,32 +223,23 @@ class moodle_user extends basis_db
 						$mitarbeiter .= $this->mdl_user_id;
 
 						//Mitarbeiter ist noch nicht zugeteilt.
-						$data = array();
-						$data['roleid'] = 3; // 3=Lektor
-						$data['userid'] = $this->mdl_user_id;
-						$data['courseid'] = $mdl_course_id;
+						$data = new stdClass();
+						$data->roleid = 3; // 3=Lektor
+						$data->userid = $this->mdl_user_id;
+						$data->courseid = $mdl_course_id;
 
-						$moodleClient = new MoodleClient();
-
-						$response = $moodleClient->call(
-							'enrol_manual_enrol_users',
-							MoodleClient::HTTP_POST_METHOD,
-							array(
-								'enrolments' => array(
-									$data
-								)
-							)
-						);
-
-						if ($moodleClient->isSuccess())
+						try
 						{
+							$client = new SoapClient($this->serverurl, array('keep_alive' => false));
+							$client->enrol_manual_enrol_users(array($data));
+
 							$this->log .= "\nLektorIn $this->mdl_user_firstname $this->mdl_user_lastname wurde zum Kurs hinzugefügt";
 							$this->log_public .= "\nLektorIn $this->mdl_user_firstname $this->mdl_user_lastname wurde zum Kurs hinzugefügt";
 							$this->sync_create++;
 						}
-						else
+						catch (SoapFault $E)
 						{
-							$this->errormsg = $moodleClient->getError();
+							$this->errormsg .= "SOAP Fehler beim zuteilen der Teilnehmer des Kurses: ".$E->faultstring;
 							return false;
 						}
 					}
@@ -320,29 +286,14 @@ class moodle_user extends basis_db
 					AND mdl_course_id=".$this->db_add_param($mdl_course_id);
 		$studenten = '';
 
-		$moodleClient = new MoodleClient();
-
-		$response = $moodleClient->call(
-			'core_enrol_get_enrolled_users',
-			MoodleClient::HTTP_POST_METHOD,
-			array(
-				'courseid' => $mdl_course_id,
-				'options' => array(
-					array(
-						'name' => 'userfields',
-						'value' => 'id,username'
-					)
-				)
-			)
-		);
-
-		if ($moodleClient->isSuccess())
+		try
 		{
-			$enrolled_users = $response;
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
+			$enrolled_users = $client->core_enrol_get_enrolled_users($mdl_course_id, array(array('name'=>'userfields','value'=>'id,username')));
 		}
-		else
+		catch (SoapFault $E)
 		{
-			$this->errormsg = $moodleClient->getError();
+			$this->errormsg .= "SOAP Fehler beim Laden der Teilnehmer des Kurses: ".$E->faultstring;
 			return false;
 		}
 
@@ -406,10 +357,10 @@ class moodle_user extends basis_db
 						$user_zugeteilt = false;
 						foreach($enrolled_users as $user)
 						{
-							if ($user->username == $row_user->student_uid)
+							if ($user['username'] == $row_user->student_uid)
 							{
 								$user_zugeteilt = true;
-								$this->mdl_user_id = $user->id;
+								$this->mdl_user_id = $user['id'];
 								break;
 							}
 						}
@@ -438,10 +389,10 @@ class moodle_user extends basis_db
 
 								//Student ist noch nicht zugeteilt.
 
-								$data = array();
-								$data['roleid'] = 5; // 5=Teilnehmer/Student
-								$data['userid'] = $this->mdl_user_id;
-								$data['courseid'] = $mdl_course_id;
+								$data = new stdClass();
+								$data->roleid = 5; // 5=Teilnehmer/Student
+								$data->userid = $this->mdl_user_id;
+								$data->courseid = $mdl_course_id;
 
 								$userstoenroll[] = $data;
 
@@ -498,77 +449,36 @@ class moodle_user extends basis_db
 
 			if (count($userstoenroll)>0)
 			{
-				$moodleClient = new MoodleClient();
-
-				$response = $moodleClient->call(
-					'enrol_manual_enrol_users',
-					MoodleClient::HTTP_POST_METHOD,
-					array(
-						'enrolments' => $userstoenroll
-					)
-				);
-
-				if ($moodleClient->isSuccess())
+				try
 				{
+					$client = new SoapClient($this->serverurl, array('keep_alive' => false));
+					$client->enrol_manual_enrol_users($userstoenroll);
+					// Wenn User zum Kurs hinzugefuegt werden, muss eine kleine Pause eingelegt werden
+					// Die User werden nicht gleich zugeordnet, diese werden nach
+					// abschluss des SOAP Requests von Moodle noch weiterverarbeitet und
+					// erst zeitversetzt zugeordnet.
+					// Die Pause ist abgaengig von der Anzahl der User die hinzugefuegt werden
 					usleep(count($userstoenroll)*150000);
 				}
-				else
+				catch (SoapFault $E)
 				{
-					$this->errormsg = $moodleClient->getError();
+					$this->errormsg .= "SOAP Fehler beim Zuteilen der Teilnehmer des Kurses: ".$E->faultstring;
 					return false;
 				}
-
-				// try
-				// {
-				// 	$client = new SoapClient($this->serverurl);
-				// 	$client->enrol_manual_enrol_users($userstoenroll);
-				// 	// Wenn User zum Kurs hinzugefuegt werden, muss eine kleine Pause eingelegt werden
-				// 	// Die User werden nicht gleich zugeordnet, diese werden nach
-				// 	// abschluss des SOAP Requests von Moodle noch weiterverarbeitet und
-				// 	// erst zeitversetzt zugeordnet.
-				// 	// Die Pause ist abgaengig von der Anzahl der User die hinzugefuegt werden
-				// 	usleep(count($userstoenroll)*150000);
-				// }
-				// catch (SoapFault $E)
-				// {
-				// 	$this->errormsg .= "SOAP Fehler beim Zuteilen der Teilnehmer des Kurses: ".$E->faultstring;
-				// 	return false;
-				// }
 			}
 
 			if (count($groupmembertoadd) > 0)
 			{
-				$moodleClient = new MoodleClient();
-
-				$response = $moodleClient->call(
-					'core_group_add_group_members',
-					MoodleClient::HTTP_POST_METHOD,
-					array(
-						'members' => $groupmembertoadd
-					)
-				);
-
-				if ($moodleClient->isSuccess())
+				try
 				{
-					$groupresult = $response;
+					$client = new SoapClient($this->serverurl, array('keep_alive' => false));
+					$groupresult = $client->core_group_add_group_members($groupmembertoadd);
 				}
-				else
+				catch (SoapFault $E)
 				{
-					$this->errormsg = $moodleClient->getError();
+					$this->errormsg .= "SOAP Fehler beim Zuteilen der Teilnehmer zu Gruppen";
 					return false;
 				}
-
-
-				// try
-				// {
-				// 	$client = new SoapClient($this->serverurl);
-				// 	$groupresult = $client->core_group_add_group_members($groupmembertoadd);
-				// }
-				// catch (SoapFault $E)
-				// {
-				// 	$this->errormsg .= "SOAP Fehler beim Zuteilen der Teilnehmer zu Gruppen";
-				// 	return false;
-				// }
 			}
 
 			return true;
@@ -591,45 +501,21 @@ class moodle_user extends basis_db
 	{
 		if (!isset($this->gruppenzuordnungen[$groupid]))
 		{
-			$moodleClient = new MoodleClient();
-
-			$response = $moodleClient->call(
-				'core_group_get_group_members',
-				MoodleClient::HTTP_POST_METHOD,
-				array(
-					'groupids' => array(
-						$groupid
-					)
-				)
-			);
-
-			if ($moodleClient->isSuccess() && $moodleClient->hasData())
+			try
 			{
-				$this->gruppenzuordnungen[$groupid] = $response[0]->userids;
-				return true;
+				$client = new SoapClient($this->serverurl, array('keep_alive' => false));
+				$response = $client->core_group_get_group_members(array($groupid));
+
+				if (isset($response[0]['userids']))
+				{
+					$this->gruppenzuordnungen[$groupid]=$response[0]['userids'];
+				}
 			}
-			else
+			catch (SoapFault $E)
 			{
-				$this->errormsg = $moodleClient->getError();
+				$this->errormsg .= "SOAP Fehler beim Laden der Gruppenzuordnung: ".$E->faultstring;
 				return false;
 			}
-
-
-			// try
-			// {
-			// 	$client = new SoapClient($this->serverurl);
-			// 	$response = $client->core_group_get_group_members(array($groupid));
-			//
-			// 	if (isset($response[0]['userids']))
-			// 	{
-			// 		$this->gruppenzuordnungen[$groupid]=$response[0]['userids'];
-			// 	}
-			// }
-			// catch (SoapFault $E)
-			// {
-			// 	$this->errormsg .= "SOAP Fehler beim Laden der Gruppenzuordnung: ".$E->faultstring;
-			// 	return false;
-			// }
 		}
 
 		foreach($this->gruppenzuordnungen[$groupid] as $id)
@@ -652,47 +538,20 @@ class moodle_user extends basis_db
 	 */
 	public function createGroupMember($groupid, $userid)
 	{
-		$moodleClient = new MoodleClient();
-
-		$response = $moodleClient->call(
-			'core_group_add_group_members',
-			MoodleClient::HTTP_POST_METHOD,
-			array(
-				'members' => array(
-					array(
-						'groupid' => $groupid,
-						'userid' => $userid
-					)
-				)
-			)
-		);
-
-		if ($moodleClient->isSuccess())
+		try
 		{
-			return true;
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
+			$response = $client->core_group_add_group_members(array(array('groupid'=>$groupid, 'userid'=>$userid)));
+			if (isset($response[0]))
+				return true;
+			else
+				return false;
 		}
-		else
+		catch (SoapFault $E)
 		{
-			$this->errormsg = $moodleClient->getError();
+			$this->errormsg .= "SOAP Fehler bei zuteilen zu Gruppe: ".$E->faultstring;
 			return false;
 		}
-
-
-
-		// try
-		// {
-		// 	$client = new SoapClient($this->serverurl);
-		// 	$response = $client->core_group_add_group_members(array(array('groupid'=>$groupid, 'userid'=>$userid)));
-		// 	if (isset($response[0]))
-		// 		return true;
-		// 	else
-		// 		return false;
-		// }
-		// catch (SoapFault $E)
-		// {
-		// 	$this->errormsg .= "SOAP Fehler bei zuteilen zu Gruppe: ".$E->faultstring;
-		// 	return false;
-		// }
 	}
 
 	/**
@@ -703,58 +562,24 @@ class moodle_user extends basis_db
 	 */
 	public function getGroup($mdl_course_id, $gruppenbezeichnung)
 	{
-		$moodleClient = new MoodleClient();
-
-		$response = $moodleClient->call(
-			'core_group_get_course_groups',
-			MoodleClient::HTTP_POST_METHOD,
-			array(
-				'courseid' => $mdl_course_id
-			)
-		);
-
-		if ($moodleClient->isSuccess() && $moodleClient->hasData())
+		try
 		{
-			foreach ($response as $row)
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
+			$response = $client->core_group_get_course_groups($mdl_course_id);
+			foreach($response as $row)
 			{
-				if ($row->name == $gruppenbezeichnung)
-					return $row->id;
+				if ($row['name'] == $gruppenbezeichnung)
+					return $row['id'];
 			}
 
-			$this->errormsg = 'Gruppe wurde nicht gefunden '.$gruppenbezeichnung;
+			$this->errormsg = "Gruppe wurde nicht gefunden $gruppenbezeichnung";
 			return -1;
 		}
-		elseif (!$moodleClient->hasData())
+		catch (SoapFault $E)
 		{
-			$this->errormsg = 'No courses have been found with course_id: '.$mdl_course_id;
-			return -1;
-		}
-		else
-		{
-			$this->errormsg = $moodleClient->getError();
+			$this->log .= "Fehler beim Laden der Gruppe $mdl_course_id, $gruppenbezeichnung: ".$E->faultstring;
 			return false;
 		}
-
-
-
-		// try
-		// {
-		// 	$client = new SoapClient($this->serverurl);
-		// 	$response = $client->core_group_get_course_groups($mdl_course_id);
-		// 	foreach($response as $row)
-		// 	{
-		// 		if ($row['name'] == $gruppenbezeichnung)
-		// 			return $row['id'];
-		// 	}
-		//
-		// 	$this->errormsg = "Gruppe wurde nicht gefunden $gruppenbezeichnung";
-		// 	return -1;
-		// }
-		// catch (SoapFault $E)
-		// {
-		// 	$this->log .= "Fehler beim Laden der Gruppe $mdl_course_id, $gruppenbezeichnung: ".$E->faultstring;
-		// 	return false;
-		// }
 	}
 
 	/**
@@ -765,60 +590,31 @@ class moodle_user extends basis_db
 	 */
 	public function createGroup($mdl_course_id,  $gruppenbezeichnung)
 	{
-		$data = array();
-		$data['courseid'] = $mdl_course_id;
-		$data['name'] = $gruppenbezeichnung;
-		$data['description'] = $gruppenbezeichnung;
-
-		$moodleClient = new MoodleClient();
-
-		$response = $moodleClient->call(
-			'core_group_create_groups',
-			MoodleClient::HTTP_POST_METHOD,
-			array(
-				'groups' => array(
-					$data
-				)
-			)
-		);
-
-		if ($moodleClient->isSuccess() && $moodleClient->hasData())
+		try
 		{
-			return $response[0]->id;
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
+			$data = new stdClass();
+			$data->courseid = $mdl_course_id;
+			$data->name = $gruppenbezeichnung;
+			$data->description = $gruppenbezeichnung;
+
+			$response = $client->core_group_create_groups(array($data));
+
+			if (isset($response[0]))
+			{
+				return $response[0]['id'];
+			}
+			else
+			{
+				$this->errormsg = 'Fehler beim Anlegen der Gruppe';
+				return false;
+			}
 		}
-		else
+		catch (SoapFault $E)
 		{
-			$this->errormsg = $moodleClient->getError();
+			$this->errormsg .= "SOAP Fehler beim Anlegen der Gruppe: ".$E->faultstring;
 			return false;
 		}
-
-
-
-		// try
-		// {
-		// 	$client = new SoapClient($this->serverurl);
-		// 	$data = new stdClass();
-		// 	$data->courseid = $mdl_course_id;
-		// 	$data->name = $gruppenbezeichnung;
-		// 	$data->description = $gruppenbezeichnung;
-		//
-		// 	$response = $client->core_group_create_groups(array($data));
-		//
-		// 	if (isset($response[0]))
-		// 	{
-		// 		return $response[0]['id'];
-		// 	}
-		// 	else
-		// 	{
-		// 		$this->errormsg = 'Fehler beim Anlegen der Gruppe';
-		// 		return false;
-		// 	}
-		// }
-		// catch (SoapFault $E)
-		// {
-		// 	$this->errormsg .= "SOAP Fehler beim Anlegen der Gruppe: ".$E->faultstring;
-		// 	return false;
-		// }
 	}
 
 	/**
@@ -883,82 +679,35 @@ class moodle_user extends basis_db
 					}
 				}
 
-
-				$moodleClient = new MoodleClient();
-
-				$response = $moodleClient->call(
-					'core_user_create_users',
-					MoodleClient::HTTP_POST_METHOD,
-					array(
-						'users' => array(
-							$user
-						)
-					)
-				);
-
-				if ($moodleClient->isSuccess() && $moodleClient->hasData())
+				try
 				{
-					$this->mdl_user_id = $response[0]->id;
 
-					$user = array();
-					$user['id'] = $this->mdl_user_id;
-					$user['auth'] = 'ldap';
+					$client = new SoapClient($this->serverurl, array('keep_alive' => false));
+					$response = $client->core_user_create_users(array($user));
 
-					$response = $moodleClient->call(
-						'core_user_update_users',
-						MoodleClient::HTTP_POST_METHOD,
-						array(
-							'users' => array(
-								$user
-							)
-						)
-					);
-
-					if ($moodleClient->isSuccess())
+					if (isset($response[0]))
 					{
+						$this->mdl_user_id = $response[0]['id'];
+
+						// User nach dem anlegen auf LDAP Auth umstellen
+						$user = new stdClass();
+						$user->id = $this->mdl_user_id;
+						$user->auth = 'ldap';
+						$client = new SoapClient($this->serverurl, array('keep_alive' => false));
+						$response = $client->core_user_update_users(array($user));
+
 						return true;
 					}
 					else
 					{
-						$this->errormsg = $moodleClient->getError();
+						$this->errormsg = 'Fehler beim Laden des Users';
 						return false;
 					}
 				}
-				else
+				catch (SoapFault $E)
 				{
-					$this->errormsg = $moodleClient->getError();
-					return false;
+					$this->errormsg .= "SOAP Fehler beim Anlegen der User: ".$E->faultstring.' '.(isset($E->detail)?$E->detail:'').' data:'.$username;
 				}
-
-				// try
-				// {
-				//
-				// 	$client = new SoapClient($this->serverurl);
-				// 	$response = $client->core_user_create_users(array($user));
-				//
-				// 	if (isset($response[0]))
-				// 	{
-				// 		$this->mdl_user_id = $response[0]['id'];
-				//
-				// 		// User nach dem anlegen auf LDAP Auth umstellen
-				// 		$user = new stdClass();
-				// 		$user->id = $this->mdl_user_id;
-				// 		$user->auth = 'ldap';
-				// 		$client = new SoapClient($this->serverurl);
-				// 		$response = $client->core_user_update_users(array($user));
-				//
-				// 		return true;
-				// 	}
-				// 	else
-				// 	{
-				// 		$this->errormsg = 'Fehler beim Laden des Users';
-				// 		return false;
-				// 	}
-				// }
-				// catch (SoapFault $E)
-				// {
-				// 	$this->errormsg .= "SOAP Fehler beim Anlegen der User: ".$E->faultstring.' '.(isset($E->detail)?$E->detail:'').' data:'.$username;
-				// }
 			}
 			else
 			{
@@ -994,46 +743,24 @@ class moodle_user extends basis_db
 				return false;
 			}
 
-			$data = array();
-			$data['roleid'] = 5;
-			$data['userid'] = $this->mdl_user_id;
-			$data['courseid'] = $mdl_course_id;
+			$data = new stdClass();
+			$data->roleid = 5;
+			$data->userid = $this->mdl_user_id;
+			$data->courseid = $mdl_course_id;
 
-			$moodleClient = new MoodleClient();
-
-			$response = $moodleClient->call(
-				'enrol_manual_enrol_users',
-				MoodleClient::HTTP_POST_METHOD,
-				array(
-					'enrolments' => array(
-						$data
-					)
-				)
-			);
-
-			if ($moodleClient->isSuccess())
+			try
 			{
-				return true;
+				$client = new SoapClient($this->serverurl, array('keep_alive' => false));
+				$client->enrol_manual_enrol_users(array($data));
+				// WS-Funktion enrol_manual_enrol_users liefert immer null zurück
+				// Fehler bei der Zuordnung koennen daher nicht abgefangen werden.
+				// Eventuell sollten hier nochmals die Teilnehmer des Kurses geladen werden
+				// um zu pruefen ob die Zuordnung erfolgreich war.
 			}
-			else
+			catch (SoapFault $E)
 			{
-				$this->errormsg = $moodleClient->getError();
-				return false;
+				$this->errormsg .= "SOAP Fehler beim Zuordnen der User: ".$E->faultstring.' '.(isset($E->detail)?$E->detail:'');
 			}
-
-			// try
-			// {
-			// 	$client = new SoapClient($this->serverurl);
-			// 	$client->enrol_manual_enrol_users(array($data));
-			// 	// WS-Funktion enrol_manual_enrol_users liefert immer null zurück
-			// 	// Fehler bei der Zuordnung koennen daher nicht abgefangen werden.
-			// 	// Eventuell sollten hier nochmals die Teilnehmer des Kurses geladen werden
-			// 	// um zu pruefen ob die Zuordnung erfolgreich war.
-			// }
-			// catch (SoapFault $E)
-			// {
-			// 	$this->errormsg .= "SOAP Fehler beim Zuordnen der User: ".$E->faultstring.' '.(isset($E->detail)?$E->detail:'');
-			// }
 		}
 
 		return true;
@@ -1058,44 +785,24 @@ class moodle_user extends basis_db
 
 		foreach($mdl_course_id_array as $mdl_course_id)
 		{
-			$data = array();
-			$data['roleid'] = $role_id;
-			$data['userid'] = $this->mdl_user_id;
-			$data['courseid'] = $mdl_course_id;
+			$data = new stdClass();
+			$data->roleid = $role_id;
+			$data->userid = $this->mdl_user_id;
+			$data->courseid = $mdl_course_id;
 
 			$param[] = $data;
 		}
 
-		$moodleClient = new MoodleClient();
-
-		$response = $moodleClient->call(
-			'enrol_manual_enrol_users',
-			MoodleClient::HTTP_POST_METHOD,
-			array(
-				'enrolments' => $param
-			)
-		);
-
-		if ($moodleClient->isSuccess())
+		try
 		{
-			return true;
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
+			$client->enrol_manual_enrol_users($param);
 		}
-		else
+		catch (SoapFault $E)
 		{
-			$this->errormsg = $moodleClient->getError();
+			$this->errormsg .= "SOAP Fehler beim Zuordnen der User: ".$E->faultstring.' '.(isset($E->detail)?$E->detail:'');
 			return false;
 		}
-
-		// try
-		// {
-		// 	$client = new SoapClient($this->serverurl);
-		// 	$client->enrol_manual_enrol_users($param);
-		// }
-		// catch (SoapFault $E)
-		// {
-		// 	$this->errormsg .= "SOAP Fehler beim Zuordnen der User: ".$E->faultstring.' '.(isset($E->detail)?$E->detail:'');
-		// 	return false;
-		// }
 
 		return true;
 	}
@@ -1141,44 +848,16 @@ class moodle_user extends basis_db
 					)";
 		$mitarbeiter = '';
 
-
-		$moodleClient = new MoodleClient();
-
-		$response = $moodleClient->call(
-			'core_enrol_get_enrolled_users',
-			MoodleClient::HTTP_POST_METHOD,
-			array(
-				'courseid' => $mdl_course_id,
-				'options' => array(
-					array(
-						'name' => 'userfields',
-						'value' => 'id,username'
-					)
-				)
-			)
-		);
-
-		if ($moodleClient->isSuccess())
+		try
 		{
-			$enrolled_users = $response;
+			$client = new SoapClient($this->serverurl, array('keep_alive' => false));
+			$enrolled_users = $client->core_enrol_get_enrolled_users($mdl_course_id,array(array('name'=>'userfields','value'=>'id,username')));
 		}
-		else
+		catch (SoapFault $E)
 		{
-			$this->errormsg = $moodleClient->getError();
+			$this->errormsg .= "SOAP Fehler beim Ermitteln der Teilnehmer: ".$E->faultstring;
 			return false;
 		}
-
-
-		// try
-		// {
-		// 	$client = new SoapClient($this->serverurl);
-		// 	$enrolled_users = $client->core_enrol_get_enrolled_users($mdl_course_id,array(array('name'=>'userfields','value'=>'id,username')));
-		// }
-		// catch (SoapFault $E)
-		// {
-		// 	$this->errormsg .= "SOAP Fehler beim Ermitteln der Teilnehmer: ".$E->faultstring;
-		// 	return false;
-		// }
 
 		if ($result_ma = $this->db_query($qry))
 		{
@@ -1187,7 +866,7 @@ class moodle_user extends basis_db
 				$user_zugeteilt = false;
 				foreach($enrolled_users as $user)
 				{
-					if ($user->username == $row_ma->mitarbeiter_uid)
+					if ($user['username'] == $row_ma->mitarbeiter_uid)
 					{
 						$user_zugeteilt = true;
 						break;
@@ -1217,49 +896,25 @@ class moodle_user extends basis_db
 						$mitarbeiter .= $this->mdl_user_id;
 
 						//Mitarbeiter ist noch nicht zugeteilt.
-						$data = array();
-						$data['roleid'] = ADDON_MOODLE_FACHBEREICHSLEITUNG_ROLEID;
-						$data['userid'] = $this->mdl_user_id;
-						$data['courseid'] = $mdl_course_id;
+						$data = new stdClass();
+						$data->roleid = ADDON_MOODLE_FACHBEREICHSLEITUNG_ROLEID;
+						$data->userid = $this->mdl_user_id;
+						$data->courseid = $mdl_course_id;
 
-						$moodleClient = new MoodleClient();
-
-						$response = $moodleClient->call(
-							'enrol_manual_enrol_users',
-							MoodleClient::HTTP_POST_METHOD,
-							array(
-								'enrolments' => array(
-									$data
-								)
-							)
-						);
-
-						if ($moodleClient->isSuccess())
+						try
 						{
+
+							$client = new SoapClient($this->serverurl, array('keep_alive' => false));
+							$client->enrol_manual_enrol_users(array($data));
+
 							$this->log .= "\nFachbereitsleiterIn $this->mdl_user_firstname $this->mdl_user_lastname wurde zum Kurs hinzugefügt";
 							$this->log_public .= "\nFachbereichsleiterIn $this->mdl_user_firstname $this->mdl_user_lastname wurde zum Kurs hinzugefügt";
 							$this->sync_create++;
 						}
-						else
+						catch (SoapFault $E)
 						{
-							$this->errormsg = $moodleClient->getError();
-							return false;
+							$this->log .= "Fehler beim hinzufügen von FBL: ".$E->faultstring;
 						}
-
-						// try
-						// {
-						//
-						// 	$client = new SoapClient($this->serverurl);
-						// 	$client->enrol_manual_enrol_users(array($data));
-						//
-						// 	$this->log .= "\nFachbereitsleiterIn $this->mdl_user_firstname $this->mdl_user_lastname wurde zum Kurs hinzugefügt";
-						// 	$this->log_public .= "\nFachbereichsleiterIn $this->mdl_user_firstname $this->mdl_user_lastname wurde zum Kurs hinzugefügt";
-						// 	$this->sync_create++;
-						// }
-						// catch (SoapFault $E)
-						// {
-						// 	$this->log .= "Fehler beim hinzufügen von FBL: ".$E->faultstring;
-						// }
 					}
 				}
 			}
