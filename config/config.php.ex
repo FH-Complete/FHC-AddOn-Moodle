@@ -33,6 +33,9 @@ define('ADDON_MOODLE_GROUPS_TO_SYNCH', 'TW_ITSERVICE;TW_FIX_LKT');
 define('ADDON_MOODLE_GROUPS_COURSE_SHORTNAME', 'TW_FIX');
 define('ADDON_MOODLE_GROUPS_COURSE_FULLNAME', 'TW - FIX');
 
+// By default does not adds records to addon.tbl_moodle
+define('ADDON_MOODLE_POPULATE_TBL_MOODLE', false);
+
 // ------------------------------------------------------------------------------------------------------------
 // Users synching options
 

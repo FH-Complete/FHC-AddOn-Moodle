@@ -59,8 +59,12 @@ while ($course = Database::fetchRow($courses))
 		$numCoursesAddedToMoodle, $numCategoriesAddedToMoodle
 	);
 
-	// Adds a new record in addon.tbl_moodle with the course infos
-	LogicCourses::addCourseToDatabase($moodleCourseId, $course, $currentOrNextStudiensemester, $numCoursesAddedToDB); //
+	// If addon.tbl_moodle should be populated
+	if (ADDON_MOODLE_POPULATE_TBL_MOODLE === true)
+	{
+		// Adds a new record in addon.tbl_moodle with the course infos
+		LogicCourses::addCourseToDatabase($moodleCourseId, $course, $currentOrNextStudiensemester, $numCoursesAddedToDB); //
+	}
 
 	Output::printDebug('----------------------------------------------------------------------');
 }

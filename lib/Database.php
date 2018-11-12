@@ -310,9 +310,6 @@ class Database extends basis_db
 					AND lv.semester != 0
 					AND l.lehrform_kurzbz = lv.lehrform_kurzbz
 					AND b.uid NOT LIKE \'_Dummy%\'
-					AND l.lehreinheit_id NOT IN (
-							SELECT DISTINCT lehreinheit_id FROM addon.tbl_moodle
-						)
 				GROUP BY
 					lv.lehrveranstaltung_id,
 					lv.bezeichnung,
