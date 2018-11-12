@@ -449,27 +449,27 @@ class LogicUsers extends Logic
 					}
 
 					$numEnrolledStudents++;
-				}
 
-				//
-				if ($synchronizeGroup)
-				{
-					if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
+					//
+					if ($synchronizeGroup)
 					{
-						//
-						$group = self::_getOrCreateMoodleGroup($moodleCourseId, $groupName, $numCreatedGroups);
-
-						//
-						if (!self::_isMoodleUserMemberMoodleGroup($users[0]->id, $group->id))
+						if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 						{
-							$groupsMembersToAdd[] = array('groupid' => $group->id, 'userid' => $users[0]->id);
+							//
+							$group = self::_getOrCreateMoodleGroup($moodleCourseId, $groupName, $numCreatedGroups);
 
-							$debugMessage .= ' >> will be added to moodle group '.$groupName.' in a later step';
+							//
+							if (!self::_isMoodleUserMemberMoodleGroup($users[0]->id, $group->id))
+							{
+								$groupsMembersToAdd[] = array('groupid' => $group->id, 'userid' => $users[0]->id);
+
+								$debugMessage .= ' >> will be added to moodle group '.$groupName.' in a later step';
+							}
 						}
-					}
-					else
-					{
-						$debugMessage .= ' >> dry run >> should be added to moodle group '.$groupName.' in a later step';
+						else
+						{
+							$debugMessage .= ' >> dry run >> should be added to moodle group '.$groupName.' in a later step';
+						}
 					}
 				}
 
