@@ -43,7 +43,7 @@ class LogicUsers extends Logic
 		$moodleEnrolledUsers = parent::_moodleAPICall(
 			'core_enrol_get_enrolled_users',
 			array($moodleCourseId),
-			'An error occurred while retrieving enrolled users from moodle'
+			'An error occurred while retrieving enrolled users from moodle >> course id '.$moodleCourseId
 		);
 
 		self::_printDebugEmptyline();
@@ -55,6 +55,102 @@ class LogicUsers extends Logic
 
 	// --------------------------------------------------------------------------------------------
     // Public business logic methods
+
+	/**
+	 *
+	 */
+	public static function vilesciIsAllowed()
+	{
+		$isMoodleUser = false;
+		$benutzerberechtigung = new benutzerberechtigung();
+		$benutzerberechtigung->getBerechtigungen(get_uid());
+
+		if ($benutzerberechtigung->isBerechtigt('addon/moodle'))
+		{
+			$isMoodleUser = true;
+		}
+
+		return $isMoodleUser;
+	}
+
+	/**
+	 *
+	 */
+	public static function vilesciSynchronize()
+	{
+		$moodleCoursesIDs = self::_getVilesciMoodleCoursesIDs();
+
+		if ($moodleCoursesIDs == null) return;
+
+		//
+		if (count($moodleCoursesIDs) >= 1 && count($moodleCoursesIDs) <= ADDON_MOODLE_VILESCI_MAX_NUMBER_COURSES)
+		{
+			//
+			$numCreatedUsers = 0;
+			$numEnrolledLectors = 0;
+			$numEnrolledManagementStaff = 0;
+			$numEnrolledStudents = 0;
+			$numCreatedGroups = 0;
+			$numEnrolledGroupsMembers = 0;
+			$numUnenrolledGroupsMembers = 0;
+
+			//
+			foreach ($moodleCoursesIDs as $moodleCourseId)
+			{
+				if (trim($moodleCourseId) != '' && is_numeric($moodleCourseId))
+				{
+					// Get all the enrolled users in this course from moodle
+					$moodleEnrolledUsers = LogicUsers::core_enrol_get_enrolled_users($moodleCourseId);
+
+					// Retrieves a list of UIDs of users to be unenrolled
+					$uidsToUnenrol = LogicUsers::getUsersToUnenrol($moodleEnrolledUsers);
+
+					// Synchronizes lectors
+					LogicUsers::synchronizeLektoren(
+						$moodleCourseId, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledLectors
+					);
+
+					// Synchronizes management staff
+					if (ADDON_MOODLE_SYNC_FACHBEREICHSLEITUNG === true)
+					{
+						LogicUsers::synchronizeFachbereichsleitung(
+							$moodleCourseId, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledManagementStaff
+						);
+					}
+
+					// Synchronizes students
+					LogicUsers::synchronizeStudenten(
+						$moodleCourseId, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledStudents, $numCreatedGroups
+					);
+
+					// Synchronizes groups members
+					LogicUsers::synchronizeGroupsMembers(
+						$moodleCourseId, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledGroupsMembers
+					);
+
+					// Unenrol users
+					LogicUsers::unenrolUsers($moodleCourseId, $uidsToUnenrol, $numUnenrolledGroupsMembers);
+				}
+				elseif (trim($moodleCourseId) != '' && !is_numeric($moodleCourseId))
+				{
+					Output::printWarning('Not a valid course ID -> discarted: '.$moodleCourseId);
+				}
+			}
+
+			echo '<br>';
+			Output::printInfo('Total amount of users created in moodle: '. $numCreatedUsers);
+			Output::printInfo('Total amount of lectors enrolled in moodle: '. $numEnrolledLectors);
+			Output::printInfo('Total amount of management staff enrolled in moodle: '. $numEnrolledManagementStaff);
+			Output::printInfo('Total amount of students enrolled in moodle: '. $numEnrolledStudents);
+			Output::printInfo('Total amount of groups created in moodle: '. $numCreatedGroups);
+			Output::printInfo('Total amount of groups members enrolled in moodle: '. $numEnrolledGroupsMembers);
+			Output::printInfo('Total amount of UNrolled groups members in moodle: '. $numUnenrolledGroupsMembers);
+		}
+		else //
+		{
+			Output::printError('Maximum number of courses is '.ADDON_MOODLE_VILESCI_MAX_NUMBER_COURSES);
+		}
+	}
 
 	/**
 	 * Returns all the courses from moodle identified by a list of IDs given
@@ -537,6 +633,45 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
+	private static function _getVilesciMoodleCoursesIDs()
+	{
+		$moodleCoursesIDs = null;
+
+		//
+		if ($_SERVER['REQUEST_METHOD'] == 'POST')
+		{
+			$postMoodleCoursesIDs = null; //
+
+			//
+			if (isset($_POST['moodleCoursesIDs'])) $postMoodleCoursesIDs = $_POST['moodleCoursesIDs'];
+
+			//
+			if (is_string($postMoodleCoursesIDs)
+				&& trim($postMoodleCoursesIDs) != ''
+				&& mb_substr (trim($postMoodleCoursesIDs), 0, 1) != ADDON_MOODLE_VILESCI_COURSES_IDS_SEPARATOR)
+			{
+				//
+				if (strstr($postMoodleCoursesIDs, ADDON_MOODLE_VILESCI_COURSES_IDS_SEPARATOR) === false)
+				{
+					$moodleCoursesIDs = array($postMoodleCoursesIDs);
+				}
+				else //
+				{
+					$moodleCoursesIDs = explode(ADDON_MOODLE_VILESCI_COURSES_IDS_SEPARATOR, $postMoodleCoursesIDs);
+				}
+			}
+			else //
+			{
+				Output::printError('Nothing interesting was posted on this page');
+			}
+		}
+
+		return $moodleCoursesIDs;
+	}
+
+	/**
+	 *
+	 */
 	private static function _getOrCreateMoodleGroup($moodleCourseId, $groupName, &$numCreatedGroups)
 	{
 		//
@@ -873,7 +1008,7 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	private function _isMoodleUserMemberMoodleGroup($moodleUserId, $groupId)
+	private static function _isMoodleUserMemberMoodleGroup($moodleUserId, $groupId)
 	{
 		$groups = parent::_moodleAPICall(
 			'core_group_get_group_members',

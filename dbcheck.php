@@ -60,7 +60,7 @@ if($result = $db->db_query("SELECT 1 FROM system.tbl_berechtigung WHERE berechti
 
 		if(!$db->db_query($qry))
 			echo '<strong>'.$db->db_last_error().'</strong><br>';
-		else 
+		else
 			echo ' neue Berechtigung addon/moodle hinzugefuegt!<br>';
 	}
 }
@@ -74,7 +74,7 @@ if(!$result = @$db->db_query("SELECT 1 FROM addon.tbl_moodle"))
 				lehrveranstaltung_id bigint,
 				studiensemester_kurzbz varchar(16),
 				gruppen boolean,
-				insertamum timestamp, 
+				insertamum timestamp,
 				insertvon varchar(32),
 				updateamum timestamp,
 				updatevon varchar(32),
@@ -99,17 +99,17 @@ if(!$result = @$db->db_query("SELECT 1 FROM addon.tbl_moodle"))
 	GRANT SELECT, UPDATE ON addon.seq_moodle_moodle_id TO web;
 	GRANT SELECT, UPDATE ON addon.seq_moodle_moodle_id TO vilesci;
 
-	INSERT INTO addon.tbl_moodle(mdl_course_id, lehreinheit_id, lehrveranstaltung_id, 
-		studiensemester_kurzbz, gruppen, insertamum, insertvon, updateamum, updatevon, ext_id) 
-		SELECT 
-			mdl_course_id, lehreinheit_id, lehrveranstaltung_id, studiensemester_kurzbz, gruppen, insertamum, 
+	INSERT INTO addon.tbl_moodle(mdl_course_id, lehreinheit_id, lehrveranstaltung_id,
+		studiensemester_kurzbz, gruppen, insertamum, insertvon, updateamum, updatevon, ext_id)
+		SELECT
+			mdl_course_id, lehreinheit_id, lehrveranstaltung_id, studiensemester_kurzbz, gruppen, insertamum,
 			insertvon, null, null, moodle_id
 		FROM lehre.tbl_moodle WHERE moodle_version=\'2.4\';
 	';
 
 	if(!$db->db_query($qry))
 		echo '<strong>addon.tbl_moodle: '.$db->db_last_error().'</strong><br>';
-	else 
+	else
 		echo ' addon.tbl_moodle: Tabelle addon.tbl_moodle hinzugefuegt!<br>';
 }
 
@@ -119,25 +119,60 @@ if($result = $db->db_query("SELECT 1 FROM system.tbl_cronjob WHERE titel='AddOn 
 	if($db->db_num_rows($result)==0)
 	{
 		$file = dirname(__FILE__).'/cronjobs/sync_moodle_user.php';
-		$qry="INSERT INTO system.tbl_cronjob(titel, beschreibung,file,last_execute, aktiv, stunde, minute) 
+		$qry="INSERT INTO system.tbl_cronjob(titel, beschreibung,file,last_execute, aktiv, stunde, minute)
 		VALUES('AddOn Moodle User Sync','Addon Moodle User Synchronisation', ".$db->db_add_param($file).",now(), false, '2','0');";
 
 		if(!$db->db_query($qry))
 			echo '<strong>'.$db->db_last_error().'</strong><br>';
-		else 
+		else
 			echo ' neuer Cronjob "AddOn Moodle User Sync" hinzugefuegt!<br>';
+	}
+}
+
+// Add column gruppe_kurzbz to addon.tbl_moodle
+if (!$result = @$db->db_query('SELECT gruppe_kurzbz FROM addon.tbl_moodle LIMIT 1'))
+{
+	$qry = 'ALTER TABLE addon.tbl_moodle ADD COLUMN gruppe_kurzbz CHARACTER VARYING(32);';
+	if (!$db->db_query($qry))
+		echo '<strong>addon.tbl_moodle: '.$db->db_last_error().'</strong><br>';
+	else
+		echo '<br>Added column gruppe_kurzbz to table addon.tbl_moodle<br>';
+}
+
+// FOREIGN KEY fk_moodle_gruppe_kurzbz: addon.tbl_moodle.gruppe_kurzbz references public.tbl_gruppe.gruppe_kurzbz
+if ($result = @$db->db_query("SELECT conname FROM pg_constraint WHERE conname = 'fk_moodle_gruppe_kurzbz'"))
+{
+	if ($db->db_num_rows($result) == 0)
+	{
+		$qry = "ALTER TABLE addon.tbl_moodle ADD CONSTRAINT fk_moodle_gruppe_kurzbz FOREIGN KEY (gruppe_kurzbz) REFERENCES public.tbl_gruppe(gruppe_kurzbz) ON UPDATE CASCADE ON DELETE RESTRICT;";
+
+		if (!$db->db_query($qry))
+			echo '<strong>addon.tbl_moodle: '.$db->db_last_error().'</strong><br>';
+		else
+			echo '<br>addon.tbl_moodle: added foreign key on column gruppe_kurzbz referenced to public.tbl_gruppe(gruppe_kurzbz)<br>';
 	}
 }
 
 echo '<br>Aktualisierung abgeschlossen<br><br>';
 echo '<h2>Gegenprüfung</h2>';
 
-
 // Liste der verwendeten Tabellen / Spalten des Addons
-$tabellen=array(
-	"addon.tbl_moodle"  => array("moodle_id","mdl_course_id","lehreinheit_id","lehrveranstaltung_id","studiensemester_kurzbz","gruppen","insertamum","insertvon","updateamum","updatevon","ext_id"),
+$tabellen = array(
+	'addon.tbl_moodle' => array(
+		'moodle_id',
+		'mdl_course_id',
+		'lehreinheit_id',
+		'lehrveranstaltung_id',
+		'studiensemester_kurzbz',
+		'gruppen',
+		'insertamum',
+		'insertvon',
+		'updateamum',
+		'updatevon',
+		'ext_id',
+		'gruppe_kurzbz'
+	)
 );
-
 
 $tabs=array_keys($tabellen);
 $i=0;
@@ -155,4 +190,3 @@ foreach ($tabellen AS $attribute)
 	flush();
 	$i++;
 }
-?>
