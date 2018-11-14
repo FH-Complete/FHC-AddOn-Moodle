@@ -26,7 +26,17 @@ $rootCategoryId = ADDON_MOODLE_ROOT_CATEGORY_ID; // used to create the groups co
 $studiensemester = new studiensemester();
 $studiensemester->load($currentOrNextStudiensemester);
 
-$courses = LogicCourses::getCourses($currentOrNextStudiensemester); // Loads courses to be synch with moodle
+// Loads courses to be synch with moodle
+$courses = null;
+//
+if (ADDON_MOODLE_JUST_MOODLE != true)
+{
+	$courses = LogicCourses::getCoursesFromLehreinheit($currentOrNextStudiensemester);
+}
+else
+{
+	$courses = LogicCourses::getCoursesFromTblMoodle($currentOrNextStudiensemester);
+}
 $courseFormatOptions = LogicCourses::getCourseFormatOptions(); // Generates the parameter courseformatoptions for all courses
 $startDate = LogicCourses::getStartDate($studiensemester); // Generates the parameter startdate for all courses
 $endDate = LogicCourses::getEndDate($studiensemester); // Generates the parameter enddate for all courses
@@ -39,6 +49,7 @@ Output::printDebug('------------------------------------------------------------
 // Counters variables used by the summary
 $numGroupsAddedToDB = 0;
 $numCoursesAddedToDB = 0;
+$numCoursesUpdatedDB = 0;
 $numCoursesAddedToMoodle = 0;
 $numCategoriesAddedToMoodle = 0;
 
@@ -59,11 +70,15 @@ while ($course = Database::fetchRow($courses))
 		$numCoursesAddedToMoodle, $numCategoriesAddedToMoodle
 	);
 
-	// If addon.tbl_moodle should be populated
-	if (ADDON_MOODLE_POPULATE_TBL_MOODLE === true)
+	//
+	if (ADDON_MOODLE_JUST_MOODLE != true)
 	{
 		// Adds a new record in addon.tbl_moodle with the course infos
 		LogicCourses::addCourseToDatabase($moodleCourseId, $course, $currentOrNextStudiensemester, $numCoursesAddedToDB); //
+	}
+	else
+	{
+		LogicCourses::updateCourseToDatabase($moodleCourseId, $course, $numCoursesUpdatedDB); //
 	}
 
 	Output::printDebug('----------------------------------------------------------------------');
@@ -71,15 +86,19 @@ while ($course = Database::fetchRow($courses))
 
 // >>> Addig groups <<<
 
-$numberOfCourses++; // +1 for groups course
+//
+if (ADDON_MOODLE_JUST_MOODLE != true)
+{
+	$numberOfCourses++; // +1 for groups course
 
-// Adds a course in moodle for all the groups users
-$moodleCourseId = LogicCourses::addGroupsCourseToMoodle(
-	$currentOrNextStudiensemester, $startDate, $courseFormatOptions, $endDate, $numCategoriesAddedToMoodle
-);
+	// Adds a course in moodle for all the groups users
+	$moodleCourseId = LogicCourses::addGroupsCourseToMoodle(
+		$currentOrNextStudiensemester, $startDate, $courseFormatOptions, $endDate, $numCategoriesAddedToMoodle
+	);
 
-// // Adds new records in addon.tbl_moodle with the groups and course infos
-LogicCourses::addGroupsToDatabase($moodleCourseId, $currentOrNextStudiensemester, $numGroupsAddedToDB); //
+	// Adds new records in addon.tbl_moodle with the groups and course infos
+	LogicCourses::addGroupsToDatabase($moodleCourseId, $currentOrNextStudiensemester, $numGroupsAddedToDB); //
+}
 
 // Summary
 Output::printInfo('----------------------------------------------------------------------');
@@ -89,6 +108,7 @@ if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 	Output::printInfo('Total amount of courses already present moodle: '. ($numberOfCourses - $numCoursesAddedToMoodle));
 	Output::printInfo('Total amount of categories added to moodle: '. $numCategoriesAddedToMoodle);
 	Output::printInfo('Total amount of courses added to database: '. $numCoursesAddedToDB);
+	Output::printInfo('Total amount of courses updated in database: '. $numCoursesUpdatedDB);
 	Output::printInfo('Total amount of groups added to database: '.$numGroupsAddedToDB);
 }
 else
@@ -97,6 +117,7 @@ else
 	Output::printInfo('Total amount of courses already present moodle: '. ($numberOfCourses - $numCoursesAddedToMoodle));
 	Output::printInfo('Total amount of categories that would be added to moodle: '. $numCategoriesAddedToMoodle);
 	Output::printInfo('Total amount of courses that would be added to database: '. $numCoursesAddedToDB);
+	Output::printInfo('Total amount of courses that would be updated in database: '. $numCoursesUpdatedDB);
 	Output::printInfo('Total amount of groups that would be added to database: '.$numGroupsAddedToDB);
 }
 Output::printInfo('----------------------------------------------------------------------');

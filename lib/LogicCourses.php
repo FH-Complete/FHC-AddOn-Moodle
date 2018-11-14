@@ -11,14 +11,26 @@ class LogicCourses extends Logic
     // Public Database wrappers methods
 
 	/**
-	 * Retrieves all the courses from database to be synchronized with moodle
+	 * Retrieves all the courses from database to be synchronized with moodle using lehreinheit
 	 */
-	public static function getCourses($studiensemester_kurzbz)
+	public static function getCoursesFromLehreinheit($studiensemester_kurzbz)
 	{
 		return parent::_dbCall(
-			'getCourses',
+			'getCoursesFromLehreinheit',
 			array($studiensemester_kurzbz),
-			'An error occurred while retrieving courses'
+			'An error occurred while retrieving courses from lehreinheit'
+		);
+	}
+
+	/**
+	 * Retrieves all the courses from database to be synchronized with moodle using table addon.tbl_moodle
+	 */
+	public static function getCoursesFromTblMoodle($studiensemester_kurzbz)
+	{
+		return parent::_dbCall(
+			'getCoursesFromTblMoodle',
+			array($studiensemester_kurzbz),
+			'An error occurred while retrieving courses from addon.tbl_moodle'
 		);
 	}
 
@@ -82,11 +94,21 @@ class LogicCourses extends Logic
 	 */
 	public static function getCourseShortname($course, $studiensemester_kurzbz)
 	{
-		return mb_substr(self::_getStudiengangKuerzel($course->studiengang_kz).
-				($course->orgform_kurzbz != '' ? '-'.$course->orgform_kurzbz : '').
-   				($course->semester != '' ? '-'.$course->semester : '').'-'.
-				$studiensemester_kurzbz.'-'.$course->kurzbz.'-'.$course->lehreinheit_id.'-'.
-				$course->lektoren, 0, 254);
+		$orgform = $course->lv_orgform_kurzbz != '' ? $course->lv_orgform_kurzbz : $course->sg_orgform_kurzbz;
+
+		$shortname = self::_getStudiengangKuerzel($course->studiengang_kz).'-'.
+			$orgform.'-'.
+			$course->semester.'-'.
+			$studiensemester_kurzbz.'-'.
+			$course->kurzbz;
+
+		//
+		if (ADDON_MOODLE_JUST_MOODLE != true)
+		{
+			$shortname .= '-'.$course->lehreinheit_id;
+		}
+
+		return $shortname;
 	}
 
 	/**
@@ -94,11 +116,21 @@ class LogicCourses extends Logic
 	 */
 	public static function getCourseFullname($course, $studiensemester_kurzbz)
 	{
-		return mb_substr(self::_getStudiengangKuerzel($course->studiengang_kz).
-				($course->orgform_kurzbz != '' ? '-'.$course->orgform_kurzbz : '').
-   				($course->semester != '' ? '-'.$course->semester : '').'-'.
-				$studiensemester_kurzbz.'-'.$course->bezeichnung.'-'.$course->lehreinheit_id.'-'.
-				$course->lektoren, 0, 254);
+		$orgform = ($course->lv_orgform_kurzbz != '' ? $course->lv_orgform_kurzbz : $course->sg_orgform_kurzbz);
+
+		$fullname = self::_getStudiengangKuerzel($course->studiengang_kz).' - '.
+			$orgform.' - '.
+			$course->semester.' - '.
+			$studiensemester_kurzbz.' - '.
+			$course->kurzbz;
+
+		//
+		if (ADDON_MOODLE_JUST_MOODLE != true)
+		{
+			$fullname .= ' - '.$course->lehreinheit_id;
+		}
+
+		return $fullname;
 	}
 
 	/**
@@ -183,6 +215,25 @@ class LogicCourses extends Logic
 		}
 
 		$numCoursesAddedToDB++;
+	}
+
+	/**
+	 *
+	 */
+	public static function updateCourseToDatabase($moodleCourseId, $course, &$numCoursesUpdatedDB)
+	{
+		if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
+		{
+			self::_updateMoodleTable($moodleCourseId, $course->moodle_id);
+
+			Output::printDebug('Updated in database >> new mdl_course_id: '.$moodleCourseId);
+		}
+		else
+		{
+			Output::printDebug('Dry run >> should be updated into database >> new mdl_course_id: '.$moodleCourseId);
+		}
+
+		$numCoursesUpdatedDB++;
 	}
 
 	/**
@@ -505,6 +556,18 @@ class LogicCourses extends Logic
 				$insertamum, $insertvon, $gruppen, $gruppe_kurzbz
 			),
 			'An error occurred while inserting into table addon.tbl_moodle'
+		);
+	}
+
+	/**
+	 *
+	 */
+	private static function _updateMoodleTable($moodleCourseId, $tblMoodleId)
+	{
+		return parent::_dbCall(
+			'updateMoodleTable',
+			array($moodleCourseId, $tblMoodleId),
+			'An error occurred while updating table addon.tbl_moodle'
 		);
 	}
 

@@ -167,10 +167,13 @@ class LogicUsers extends Logic
 		// Needed at least once
 		do
 		{
+			$moodleCoursesIDsArraySlice = array_slice($moodleCoursesIDsArray, $offset, ADDON_MOODLE_POST_PARAMS_NUMBER);
+
+			// If there are no more chunks
+			if (count($moodleCoursesIDsArraySlice) == 0) break;
+
 			// Retrieves a chunk of courses from moodle
-			$tmpMoodleCourses = self::_core_course_get_courses(
-				array_slice($moodleCoursesIDsArray, $offset, ADDON_MOODLE_POST_PARAMS_NUMBER)
-			);
+			$tmpMoodleCourses = self::_core_course_get_courses($moodleCoursesIDsArraySlice);
 
 			// Adds this chunk to array $moodleCourses
 			$moodleCourses = array_merge($moodleCourses, $tmpMoodleCourses);
@@ -1016,9 +1019,9 @@ class LogicUsers extends Logic
 			'An error occurred while retrieving group members from moodle'
 		);
 
-		if (count($groups) > 0 && count($groups[0]['userids']) > 0)
+		if (count($groups) > 0 && count($groups[0]->userids) > 0)
 		{
-			foreach ($groups[0]['userids'] as $userId)
+			foreach ($groups[0]->userids as $userId)
 			{
 				if ($userId == $moodleUserId)
 				{
