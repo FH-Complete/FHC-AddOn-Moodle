@@ -163,15 +163,11 @@ class LogicUsers extends Logic
 	{
 		$offset = 0; //
 		$moodleCourses = array(); //
+		$moodleCoursesIDsArraySlice = null;
 
-		// Needed at least once
-		do
+		//
+		while (count($moodleCoursesIDsArraySlice = array_slice($moodleCoursesIDsArray, $offset, ADDON_MOODLE_POST_PARAMS_NUMBER)) > 0)
 		{
-			$moodleCoursesIDsArraySlice = array_slice($moodleCoursesIDsArray, $offset, ADDON_MOODLE_POST_PARAMS_NUMBER);
-
-			// If there are no more chunks
-			if (count($moodleCoursesIDsArraySlice) == 0) break;
-
 			// Retrieves a chunk of courses from moodle
 			$tmpMoodleCourses = self::_core_course_get_courses($moodleCoursesIDsArraySlice);
 
@@ -181,7 +177,6 @@ class LogicUsers extends Logic
 			// Increments the offset
 			$offset += ADDON_MOODLE_POST_PARAMS_NUMBER;
 		}
-		while (count($moodleCourses) < count($moodleCoursesIDsArray)); // Until all the courses are retrieved
 
 		return $moodleCourses;
 	}
@@ -784,6 +779,25 @@ class LogicUsers extends Logic
 		return $users;
 	}
 
+	/**
+	 *
+	 */
+	private static function _moodleAPICallChunks($arrayParameter, $apiName, $errorMessage)
+	{
+		$offset = 0; //
+		$arraySlice = null;
+
+		//
+		while (count($arraySlice = array_slice($arrayParameter, $offset, ADDON_MOODLE_POST_PARAMS_NUMBER)) > 0)
+		{
+			// Enrols a chunk of users in a moodle course
+			parent::_moodleAPICall($apiName, array($arraySlice), $errorMessage);
+
+			// Increments the offset
+			$offset += ADDON_MOODLE_POST_PARAMS_NUMBER;
+		}
+	}
+
 	// --------------------------------------------------------------------------------------------
 	// Private Database wrappers methods
 
@@ -943,11 +957,7 @@ class LogicUsers extends Logic
 	 */
 	private static function _enrol_manual_enrol_users($users)
 	{
-		return parent::_moodleAPICall(
-			'enrol_manual_enrol_users',
-			array($users),
-			'An error occurred while enrolling users in moodle'
-		);
+		self::_moodleAPICallChunks($users, 'enrol_manual_enrol_users', 'An error occurred while enrolling users in moodle');
 	}
 
 	/**
@@ -1038,11 +1048,7 @@ class LogicUsers extends Logic
 	 */
 	private static function _core_group_add_group_members($members)
 	{
-		return parent::_moodleAPICall(
-			'core_group_add_group_members',
-			array($members),
-			'An error occurred while adding members to a moodle group'
-		);
+		self::_moodleAPICallChunks($members, 'core_group_add_group_members', 'An error occurred while adding members to a moodle group');
 	}
 
 	/**
@@ -1050,10 +1056,6 @@ class LogicUsers extends Logic
 	 */
 	private static function _enrol_manual_unenrol_users($users)
 	{
-		return parent::_moodleAPICall(
-			'enrol_manual_unenrol_users',
-			array($users),
-			'An error occurred while removing enrolled users in moodle'
-		);
+		self::_moodleAPICallChunks($users, 'enrol_manual_unenrol_users', 'An error occurred while removing enrolled users in moodle');
 	}
 }
