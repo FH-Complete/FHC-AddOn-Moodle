@@ -270,20 +270,35 @@ class moodle_user extends basis_db
 
 		//Studentengruppen laden die zu diesem Kurs zugeteilt sind
 		$qry = "SELECT
-					studiengang_kz, semester, verband, gruppe, gruppe_kurzbz, tbl_moodle.studiensemester_kurzbz, tbl_moodle.gruppen
+					lg.studiengang_kz,
+					lg.semester,
+					lg.verband,
+					lg.gruppe,
+					lg.gruppe_kurzbz,
+					m.studiensemester_kurzbz,
+					m.gruppen
 				FROM
-					lehre.tbl_lehreinheitgruppe JOIN addon.tbl_moodle USING(lehreinheit_id)
+					lehre.tbl_lehreinheitgruppe lg
+					JOIN addon.tbl_moodle m USING(lehreinheit_id)
 				WHERE
-					mdl_course_id=".$this->db_add_param($mdl_course_id)."
+					mdl_course_id = ".$this->db_add_param($mdl_course_id)."
 				UNION
 				SELECT
-					studiengang_kz, semester, verband, gruppe, gruppe_kurzbz, tbl_moodle.studiensemester_kurzbz, tbl_moodle.gruppen
+					lg.studiengang_kz,
+					lg.semester,
+					lg.verband,
+					lg.gruppe,
+					lg.gruppe_kurzbz,
+					m.studiensemester_kurzbz,
+					m.gruppen
 				FROM
-					lehre.tbl_lehreinheitgruppe JOIN lehre.tbl_lehreinheit USING(lehreinheit_id)
-					JOIN addon.tbl_moodle USING(lehrveranstaltung_id)
+					lehre.tbl_lehreinheitgruppe lg
+					JOIN lehre.tbl_lehreinheit l USING(lehreinheit_id)
+					JOIN addon.tbl_moodle m USING(lehrveranstaltung_id)
 				WHERE
-					tbl_lehreinheit.studiensemester_kurzbz=tbl_moodle.studiensemester_kurzbz
-					AND mdl_course_id=".$this->db_add_param($mdl_course_id);
+					l.studiensemester_kurzbz = m.studiensemester_kurzbz
+					AND m.mdl_course_id = ".$this->db_add_param($mdl_course_id);
+
 		$studenten = '';
 
 		try
