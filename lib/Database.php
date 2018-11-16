@@ -29,6 +29,7 @@ class Database extends basis_db
 					addon.tbl_moodle
 				WHERE
 					studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+					OR studiensemester_kurzbz IS NULL
 				ORDER BY
 					mdl_course_id';
 
