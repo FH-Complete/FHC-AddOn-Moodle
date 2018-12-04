@@ -274,12 +274,23 @@ class Database extends basis_db
 				FROM
 					addon.tbl_moodle m
 					JOIN lehre.tbl_lehreinheit l USING(lehreinheit_id, studiensemester_kurzbz)
-					JOIN lehre.tbl_zeugnisnote z ON(z.lehrveranstaltung_id = l.lehrveranstaltung_id)
+					JOIN lehre.tbl_zeugnisnote z ON(z.lehrveranstaltung_id = l.lehrveranstaltung_id AND z.studiensemester_kurzbz=l.studiensemester_kurzbz)
 					JOIN lehre.tbl_note n USING(note)
 				WHERE
 					n.lkt_ueberschreibbar = FALSE
 					AND z.student_uid NOT ILIKE \'%dummy%\'
 					AND m.mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER).'
+				UNION
+				SELECT DISTINCT
+							z.student_uid AS student_uid
+						FROM
+							addon.tbl_moodle m
+							JOIN lehre.tbl_zeugnisnote z USING(lehrveranstaltung_id, studiensemester_kurzbz)
+							JOIN lehre.tbl_note n USING(note)
+						WHERE
+							n.lkt_ueberschreibbar = FALSE
+							AND z.student_uid NOT ILIKE \'%dummy%\'
+							AND m.mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER).'
 				ORDER BY
 					student_uid';
 
