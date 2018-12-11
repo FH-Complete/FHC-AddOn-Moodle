@@ -611,6 +611,14 @@ class moodle_course extends basis_db
 		$data->categoryid = $id_stsem;
 		$data->format = 'topics';
 
+		if(defined('ADDON_MOODLE_NUM_SECTIONS') && !is_null(ADDON_MOODLE_NUM_SECTIONS))
+		{
+			$numsections_option = new stdClass();
+			$numsections_option->name = 'numsections';
+			$numsections_option->value = ADDON_MOODLE_NUM_SECTIONS;
+			$data->courseformatoptions = array($numsections_option);
+		}
+
 		$response = $client->core_course_create_courses(array($data));
 		if (isset($response[0]))
 		{
