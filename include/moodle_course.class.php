@@ -43,6 +43,7 @@ class moodle_course extends basis_db
 	public $insertamum;
 	public $insertvon;
 	public $gruppen;
+	public $gruppe_kurzbz;
 
 	//Moodle Attribute
 	public $mdl_fullname;
@@ -134,7 +135,7 @@ class moodle_course extends basis_db
 		}
 
 		$qry = 'BEGIN; INSERT INTO addon.tbl_moodle(mdl_course_id, lehreinheit_id, lehrveranstaltung_id,
-											studiensemester_kurzbz, insertamum, insertvon, gruppen)
+											studiensemester_kurzbz, insertamum, insertvon, gruppen, gruppe_kurzbz)
 				VALUES('.
 				$this->db_add_param($this->mdl_course_id, FHC_INTEGER).','.
 				$this->db_add_param($this->lehreinheit_id, FHC_INTEGER).','.
@@ -142,8 +143,9 @@ class moodle_course extends basis_db
 				$this->db_add_param($this->studiensemester_kurzbz).','.
 				$this->db_add_param($this->insertamum).','.
 				$this->db_add_param($this->insertvon).','.
-				$this->db_add_param($this->gruppen, FHC_BOOLEAN).");";
-
+				$this->db_add_param($this->gruppen, FHC_BOOLEAN).','.
+				$this->db_add_param($this->gruppe_kurzbz).");";
+		
 		if ($this->db_query($qry))
 		{
 			$qry = "SELECT currval('addon.seq_moodle_moodle_id') as id;";
@@ -891,6 +893,7 @@ class moodle_course extends basis_db
 				$obj->insertamum = $row->insertamum;
 				$obj->insertvon = $row->insertvon;
 				$obj->gruppen = $this->db_parse_bool($row->gruppen);
+				$obj->gruppe_kurzbz = $row->gruppe_kurzbz;
 
 				$this->result[] = $obj;
 			}
@@ -968,7 +971,7 @@ class moodle_course extends basis_db
 		$qry = '
 			SELECT
 				mdl_course_id, moodle_id, lehreinheit_id, lehrveranstaltung_id,
-				studiensemester_kurzbz, insertamum, insertvon, gruppen
+				studiensemester_kurzbz, insertamum, insertvon, gruppen, gruppe_kurzbz
 			FROM
 				addon.tbl_moodle
 			WHERE
@@ -988,6 +991,7 @@ class moodle_course extends basis_db
 				$obj->insertamum = $row->insertamum;
 				$obj->insertvon = $row->insertvon;
 				$obj->gruppen = $this->db_parse_bool($row->gruppen);
+				$obj->gruppe_kurzbz = $row->gruppe_kurzbz;
 
 				$this->result[] = $obj;
 			}

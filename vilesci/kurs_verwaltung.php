@@ -34,7 +34,7 @@ require_once('../../../include/lehreinheit.class.php');
 require_once('../../../include/lehreinheitmitarbeiter.class.php');
 require_once('../../../include/lehreinheitgruppe.class.php');
 require_once('../../../include/benutzerberechtigung.class.php');
-require_once('../config.inc.php');
+require_once('../config.inc.php');  
 require_once('../include/moodle_course.class.php');
 
 $user = get_uid();
@@ -44,6 +44,9 @@ $rechte->getBerechtigungen($user);
 
 if(!$rechte->isBerechtigt('addon/moodle'))
 	die('Sie haben keine Berechtigung für diese Seite');
+
+// Messages to be displayed like saving success/error
+$msgBox = '';
 
 $stg = new studiengang();
 $stg->getAll('typ, kurzbz',true);
@@ -58,10 +61,10 @@ if(isset($_POST['work']) && $_POST['work'] == 'getMoodleCourse')
 
 	$moodle_course = new moodle_course();
 	if($moodle_course->loadMoodleCourse($mdl_course_id))
-		$data['mdl_fullname'] = $moodle_course->mdl_fullname;
+		$data['mdl_fullname'] = $moodle_course->mdl_fullname;	
 	else
 		$data['mdl_fullname'] = 'Kurs existiert nicht';
-
+	
 	echo json_encode($data);
 	exit;
 }
@@ -101,26 +104,95 @@ if(isset($_POST['work']) && $_POST['work'] == 'getLEs')
 
 if(isset($_POST['saveZuteilung']))
 {
-	$lehreinheit_id = $_POST['lehreinheit_id'];
-	$lehrveranstaltung_id = $_POST['lehrveranstaltung_id'];
-	$studiensemester = $_POST['moodle_studiensemester'];
-	$mdl_course_id = $_POST['mdl_course_id'];
-	$gruppen = isset($_POST['gruppen']);
+	if (isset($_POST['mdl_course_id']) && is_numeric($_POST['mdl_course_id']))
+	{
+		$mdl_course_id = $_POST['mdl_course_id'];
+		$gruppe_kurzbz = (isset($_POST['gruppe_kurzbz']) && !empty($_POST['gruppe_kurzbz'])) ? $_POST['gruppe_kurzbz'] : null;
+		$lehreinheit_id = (isset($_POST['lehreinheit_id']) && is_numeric($_POST['lehreinheit_id'])) ? $_POST['lehreinheit_id'] : null;
+		$lehrveranstaltung_id = (isset($_POST['lehrveranstaltung_id']) && is_numeric($_POST['lehrveranstaltung_id'])) ? $_POST['lehrveranstaltung_id'] : null;
+		$studiensemester = (isset($_POST['studiensemester_kurzbz']) && !empty($_POST['studiensemester_kurzbz'])) ? $_POST['studiensemester_kurzbz'] : null; 
+		$gruppen = isset($_POST['gruppen']);
 
-	$moodle_course = new moodle_course();
+		$moodle_course = new moodle_course();
 
-	$moodle_course->mdl_course_id = $mdl_course_id;
-	$moodle_course->lehreinheit_id = $lehreinheit_id;
-	if($lehreinheit_id == '')
-		$moodle_course->lehrveranstaltung_id = $lehrveranstaltung_id;
-
-	$moodle_course->studiensemester_kurzbz = $studiensemester;
-	$moodle_course->insertamum = date('Y-m-d H:i:s');
-	$moodle_course->insertvon = $user;
-	$moodle_course->gruppen = $gruppen;
-
-	if(!$moodle_course->create_vilesci())
-		echo $moodle_course->errormsg;
+		$moodle_course->mdl_course_id = $mdl_course_id;
+		$moodle_course->gruppe_kurzbz = $gruppe_kurzbz;
+		$moodle_course->lehreinheit_id = $lehreinheit_id;
+		if (is_null($lehreinheit_id))
+			$moodle_course->lehrveranstaltung_id = $lehrveranstaltung_id;
+		$moodle_course->studiensemester_kurzbz = $studiensemester;
+		$moodle_course->insertamum = date('Y-m-d H:i:s');
+		$moodle_course->insertvon = $user;
+		$moodle_course->gruppen = $gruppen;
+		
+		// Check if there are existing moodles for gruppen or lehrveranstaltung 
+		// or lehreinheit to this moodle course id, which does not allow new assignment
+		$moodle_course->getAllMoodleForMoodleCourse($mdl_course_id);
+		$moodle_arr = $moodle_course->result;
+		$moodle_course_has_groups = false;	// true if moodle course has moodles with groups assigned yet
+		$moodle_course_has_lv_or_le = false;	// true if moodel course hase moodles with lv or le assigned yet
+		
+		foreach ($moodle_arr as $moodle)
+		{
+			if (!is_null($moodle->gruppe_kurzbz))
+			{
+				$moodle_course_has_groups = true;
+			}
+			
+			if (!is_null($moodle->lehrveranstaltung_id) || !is_null($moodle->lehreinheit_id))
+			{
+				$moodle_course_has_lv_or_le = true;
+			}
+		}
+		
+		if (is_null($gruppe_kurzbz) && is_null($lehrveranstaltung_id))
+		{
+			$msgBox = 'Bitte treffen Sie erst eine Auswahl für die Zuteilung.';
+			$moodle_mdl_course_id = $mdl_course_id;
+		}	
+		// Moodle course assignment requires
+		// - gruppe (and no lv/le assigned yet for this course) OR
+		// - studiensemester AND (lehrveranstaltung OR lehreinheit) (and no groups assigned yet for this course)
+		elseif ((!is_null($moodle_course->gruppe_kurzbz) && !$moodle_course_has_lv_or_le) ||
+			((!is_null($moodle_course->studiensemester_kurzbz) && (!is_null($moodle_course->lehrveranstaltung_id) || !is_null($moodle_course->lehreinheit_id)))) && !$moodle_course_has_groups)
+		{	
+			// Save assignment
+			if(!$moodle_course->create_vilesci())
+			{
+				echo $moodle_course->errormsg;
+			}
+			else
+			{
+				$msgBox = 'Gespeichert!';
+				$moodle_mdl_course_id = $mdl_course_id;
+				
+			}
+		}
+		else
+		{
+			$msgBox = "<b>Nicht gespeichert!</b><br>";
+			if ($moodle_course_has_lv_or_le)
+			{
+				$msgBox.= ""
+					. "Es wurden früher bereits Lehrveranstaltungen oder Lehreinheiten zum Moodle Kurs zugeteilt.<br>"
+					. "Nur noch Zuteilung von weiteren Lehrveranstaltungen oder Lehreinheiten möglich.";
+			}
+			elseif ($moodle_course_has_groups)
+			{
+				$msgBox.= ""
+					. "Es wurden früher bereits Gruppen zum Moodle Kurs zugeteilt.<br>"
+					. "Nur noch Zuteilung von weiteren Gruppen möglich.<br>";
+			}
+			else
+			{
+				$msgBox.= 'Bitte treffen Sie erst eine Auswahl für die Zuteilung.';
+			}
+		}
+	}
+	else
+	{
+		$msgBox = 'Bitte geben Sie eine Moodle Kurs ID ein.';
+	}
 }
 
 $message = '';
@@ -130,7 +202,20 @@ if (!$stsem_aktuell = $stsem->getakt())
 
 $studiensemester_kurzbz = (isset($_REQUEST['moodle_studiensemester'])?trim($_REQUEST['moodle_studiensemester']):$stsem_aktuell);
 $studiengang_kz = (isset($_REQUEST['moodle_studiengang_kz'])?trim($_REQUEST['moodle_studiengang_kz']):'');
-$moodle_mdl_course_id = (isset($_REQUEST['moodle_mdl_course_id'])?trim($_REQUEST['moodle_mdl_course_id']):'');
+
+if (isset($_REQUEST['moodle_mdl_course_id']))
+{
+	$moodle_mdl_course_id = trim($_REQUEST['moodle_mdl_course_id']); // first try to set moodle course id by request
+}
+elseif (isset($mdl_course_id) && !empty($mdl_course_id))
+{
+	$moodle_mdl_course_id = $mdl_course_id; // second try to set moodle course by reusing former post request
+}
+else
+{
+	$moodle_mdl_course_id = '';	
+}
+	
 $method = (isset($_REQUEST['method'])?trim($_REQUEST['method']):'');
 
 if ($method == 'delete')
@@ -180,19 +265,20 @@ if ($method == 'delete')
 		$message = 'Ungültige Moodle ID übergeben';
 }
 
-echo '<!DOCTYPE html>
+?>
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 	<head>
-		<meta charset="UTF-8">
-		<link rel="stylesheet" href="../../../skin/fhcomplete.css" type="text/css">
-		<link rel="stylesheet" href="../../../skin/vilesci.css" type="text/css">';
-require_once('../../../include/meta/jquery.php');
-require_once('../../../include/meta/jquery-tablesorter.php');
-
-echo'
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		<title>Moodle - Kursverwaltung</title>
-		<script type="text/javascript">
-
+		<link rel="stylesheet" href="../../../skin/fhcomplete.css" type="text/css">
+		<link rel="stylesheet" href="../../../skin/vilesci.css" type="text/css">
+		<link href="../../../skin/jquery-ui-1.9.2.custom.min.css" rel="stylesheet" type="text/css">
+		<script type="text/javascript" src="../../../vendor/components/jquery/jquery.min.js"></script>
+		<script type="text/javascript" src="../../../vendor/components/jqueryui/jquery-ui.min.js"></script>
+		<?php require_once '../../../include/meta/jquery-tablesorter.php';?>
+		<script type="text/javascript">		
 		$(document).ready(function()
 		{
 			$("#myTable").tablesorter(
@@ -200,13 +286,80 @@ echo'
 				sortList: [[0,0]],
 				widgets: ["zebra"]
 			});
+			
+			// Autocomplete field "Gruppe"
+			$("#gruppe").autocomplete(
+			{
+				source: "kursverwaltung_autocomplete.php?autocomplete=gruppe",
+				minLength: 2,
+				response: function(event, ui)
+				{
+					// Set group-label and -value
+					for(i in ui.content)
+					{
+						ui.content[i].value = ui.content[i].gruppe_kurzbz;
+						ui.content[i].label = ui.content[i].gruppe_kurzbz + " - " + ui.content[i].bezeichnung;
+					}
+				},
+				select: function()
+				{
+					// If a group is selected, disable all following dropdowns/checkboxes
+					$('#studiensemester_kurzbz').prop('disabled', true);
+					$('#studiengang').prop('disabled', true);
+					$('#semester').prop('disabled', true);
+					$('#lehrveranstaltung').prop('disabled', true);
+					$('#lehreinheit').prop('disabled', true);
+					$('#gruppen').prop('disabled', true);
+					
+					// If the selection is taken back, enable dropdowns again/checkboxes
+					$("#gruppe").keyup(function() 
+					{
+						if (!this.value) 
+						{
+							$('#studiensemester_kurzbz').prop('disabled', false);
+							$('#studiengang').prop('disabled', false);
+							$('#semester').prop('disabled', false);
+							$('#lehrveranstaltung').prop('disabled', false);
+							$('#lehreinheit').prop('disabled', false);
+							$('#gruppen').prop('disabled', false);
+						}
+					});
+				}
+			});
+			
+			// Enable dropdowns/checkboxes when a moodle course id is entered
+			$('#mdl_course_id').keyup(function()
+			{
+				// Enable when entering field
+				if(this.value) 
+				{
+					$('#gruppe').prop('disabled', false);
+					$('#studiensemester_kurzbz').prop('disabled', false);
+					$('#studiengang').prop('disabled', false);
+					$('#semester').prop('disabled', false);
+					$('#lehrveranstaltung').prop('disabled', false);
+					$('#lehreinheit').prop('disabled', false);
+					$('#gruppen').prop('disabled', false); 
+				}
+				// Disable when field is empty
+				else
+				{
+					$('#gruppe').prop('disabled', true);
+					$('#studiensemester_kurzbz').prop('disabled', true);
+					$('#studiengang').prop('disabled', true);
+					$('#semester').prop('disabled', true);
+					$('#lehrveranstaltung').prop('disabled', true);
+					$('#lehreinheit').prop('disabled', true);
+					$('#gruppen').prop('disabled', true);
+				}
+			});
 		});
 
 		function changeStudiengang()
 		{
 			getLehrveranstaltungen();
 		}
-
+	
 		function changeSemester()
 		{
 			getLehrveranstaltungen();
@@ -224,7 +377,7 @@ echo'
 				stg: stg_kz,
 				sem: semester,
 				lvid: lvid,
-				stsem: "'.$studiensemester_kurzbz.'",
+				stsem: "<?php echo $studiensemester_kurzbz ?>",
 				work: "getLEs"
 			};
 
@@ -236,9 +389,10 @@ echo'
 				success: function(data)
 				{
 					$("#lehreinheit").empty();
-					$("#lehreinheit").append(\'<option value="">-- gesamter Kurs --</option>\');
-					$.each(data, function(i, entry){
-						$("#lehreinheit").append(\'<option value="\'+i+\'">\'+entry+\'</option>\');
+					$("#lehreinheit").append('<option value="">-- gesamter Kurs --</option>');
+					$.each(data, function(i, entry)
+					{
+						$("#lehreinheit").append('<option value="' + i + '">' + entry + '</option>');
 					});
 				},
 				error: function(data)
@@ -247,7 +401,7 @@ echo'
 				}
 			});
 		}
-
+		
 		function getLehrveranstaltungen()
 		{
 			var stg_kz = $("#studiengang").val();
@@ -257,7 +411,7 @@ echo'
 			data = {
 				stg: stg_kz,
 				sem: semester,
-				stsem: "'.$studiensemester_kurzbz.'",
+				stsem: "<?php echo $studiensemester_kurzbz ?>",
 				work: "getLVs"
 			};
 
@@ -269,9 +423,9 @@ echo'
 				success: function(data)
 				{
 					$("#lehrveranstaltung").empty();
-					$("#lehrveranstaltung").append(\'<option value="">-- Auswahl --</option>\');
+					$("#lehrveranstaltung").append('<option value="">-- Auswahl --</option>');
 					$.each(data, function(i, entry){
-						$("#lehrveranstaltung").append(\'<option value="\'+i+\'">\'+entry+\'</option>\');
+						$("#lehrveranstaltung").append('<option value="' + i + '">' + entry + '</option>');
 					});
 				},
 				error: function(data)
@@ -284,6 +438,9 @@ echo'
 		function changeMoodle()
 		{
 			var mdl_course_id = $("#mdl_course_id").val();
+			
+			// Empty messagebox
+			$('#msgBox').empty();
 
 			// LV holen
 			data = {
@@ -305,9 +462,12 @@ echo'
 					alert("Fehler beim Laden der Daten");
 				}
 			});
-		}
+		}	
 		</script>
 	</head>
+
+<?php
+echo '
 <body>
 	<h1>Moodle - Kursverwaltung</h1>
 	<form name="moodle_verwaltung" action="kurs_verwaltung.php" method="POST">
@@ -358,7 +518,7 @@ echo '
 	'.$message.'<br>';
 
 // Liste anzeigen nachdem der Anzeigenbutton gedrückt wurde oder nach löschen die Liste wieder neu anzeigen
-if ($studiengang_kz != '' && $studiensemester_kurzbz != '')
+if (($studiengang_kz != '' && $studiensemester_kurzbz != '') || !empty($moodle_mdl_course_id))
 {
 	$moodle = new moodle_course();
 	if($moodle_mdl_course_id == '')
@@ -373,30 +533,35 @@ if ($studiengang_kz != '' && $studiensemester_kurzbz != '')
 				<th>Lehrveranstaltung</th>
 				<th>Lehreinheit</th>
 				<th>Kurzbz</th>
-				<th>Gruppen</th>
-				<th>Moodle ID</th>
 				<th>Semester</th>
+				<th>Moodle-Gruppen</th>
+				<th>OE-Gruppe</th>
+				<th>Moodle ID</th>			
 				<th>1)</th>
 				<th>2)</th>
 			</tr>
 		</thead>
 		<tbody>';
-
 	$mdl_course_bezeichnung = array();
 	foreach($moodle->result as $row)
 	{
-		$lv = new lehrveranstaltung($row->lehrveranstaltung_id);
-		$lehreinheit = '';
-		// wenn LE übergeben lade dazugehörige LV
-		if($row->lehreinheit_id != '')
+		// If LV was assigned, load LV
+		if (!is_null($row->lehrveranstaltung_id))
+		{		
+			$lv = new lehrveranstaltung($row->lehrveranstaltung_id);
+			$lehreinheit = ' ';
+		}
+		// If LE was assigned -> load LV by using LE
+		elseif (!is_null($row->lehreinheit_id))
 		{
 			$le = new lehreinheit();
+			$lv = new Lehrveranstaltung();
 			$le->loadLE($row->lehreinheit_id);
 			$lv->load($le->lehrveranstaltung_id);
 
-			$lehreinheit = getLehreinheitBezeichnung($row->lehreinheit_id);
+			$lehreinheit = getLehreinheitBezeichnung($row->lehreinheit_id);	
 		}
-
+	
 		if(!isset($mdl_course_bezeichnung[$row->mdl_course_id]))
 		{
 			$course = new moodle_course();
@@ -412,18 +577,35 @@ if ($studiengang_kz != '' && $studiensemester_kurzbz != '')
 
 		$delpathall = $delpath .'&all';
 
+		if (!is_null($row->lehrveranstaltung_id) || !is_null($row->lehreinheit_id))
+		{	
 		echo '
 			<tr>
 				<td>'.$stg_arr[$lv->studiengang_kz].' '.$lv->semester.' '.$lv->bezeichnung.' ('.$lv->lehrveranstaltung_id.')</td>
 				<td>'.$lehreinheit.'</td>
 				<td>'.$lv->kurzbz.'</td>
+				<td>'.$lv->semester.'</td>
 				<td>'.($row->gruppen?'Ja':'Nein').'</td>
+				<td align="center"> - </td>';
+		}
+		elseif (!is_null($row->gruppe_kurzbz))
+		{
+		echo '
+			<tr>
+				<td align="center"> - </td>
+				<td align="center"> - </td>
+				<td align="center"> - </td>
+				<td align="center"> - </td>
+				<td align="center"> - </td>
+				<td>'. $row->gruppe_kurzbz. '</td>';
+		}
+		echo '
 				<td>
 					<a href="'.ADDON_MOODLE_PATH.'/course/view.php?id='.$row->mdl_course_id.'" target="_blank">
 					'.$mdl_course_bezeichnung[$row->mdl_course_id].' ('.$row->mdl_course_id.')
 					</a>
 				</td>
-				<td>'.$lv->semester.'</td>
+		
 				<td>
 					<a href="'.$delpath.'">
 					<img src="../skin/images/tree-diagramm-delete.png" height="20px" title="Zuordnung zu Kurs löschen">
@@ -445,49 +627,80 @@ echo "<span style='font-size:12px;'>1: Löscht nur die Zuordnung zum Moodle Kurs
 echo '
 <h2>Neue Zuteilung erstellen</h2>
 	<form method="POST" action="kurs_verwaltung.php">
-	<input type="hidden" name="moodle_studiensemester" value="'.$studiensemester_kurzbz.'" />
-	<input type="hidden" name="moodle_studiengang_kz" value="'.$studiengang_kz.'" />
-	<input type="hidden" name="moodle_mdl_course_id" value="'.$moodle_mdl_course_id.'" />
 	<table>
 		<tr>
-			<td>Moodle Kurs ID</td>
+			<td><b>Moodle Kurs ID</b></td>
 			<td>
-				<input type="text" value="" size="4" id="mdl_course_id" name="mdl_course_id" onchange="changeMoodle()">
+				<input type="text" value="" size="20" id="mdl_course_id" name="mdl_course_id" onchange="changeMoodle()">
 				<span id="mdl_course_bezeichnung"></span>
 			</td>
 		</tr>
 		<tr>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>Gruppe</td>
+			<td>
+				<input class="search" disabled placeholder="Gruppe eingeben" type="text" id="gruppe" name="gruppe_kurzbz" size="40">
+			</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td style="padding: 10px;">ODER</td>
+		</tr>
+		<tr>
+			<td>Studiensemester: </td>
+			<td>
+				<select id="studiensemester_kurzbz" name="studiensemester_kurzbz" disabled>';
+
+				$stsem->getAll();
+				foreach ($stsem->studiensemester as $row)
+				{
+					if($studiensemester_kurzbz == $row->studiensemester_kurzbz)
+						$selected = 'selected="selected"';
+					else
+						$selected = '';
+					echo '<option value="'.$row->studiensemester_kurzbz.'" '.$selected.'>'.$row->studiensemester_kurzbz.'</option>';
+				}
+				
+				echo '
+				</select>
+			</td>
+		<tr>
 			<td>Studiengang</td>
 			<td>
-				<select id="studiengang" name="studiengang_kz" onchange="changeStudiengang()">';
+				<select id="studiengang" name="studiengang_kz" disabled onchange="changeStudiengang()">
+				<option value="">-- bitte wählen --</option>';
 
 foreach ($stg->result as $row)
 {
 	if (!$row->moodle)
 		continue;
-	echo '<option value="'.$row->studiengang_kz.'">'.$row->kuerzel.' ('.$row->kurzbzlang.')</option>';
+		echo '
+				<option value="'.$row->studiengang_kz.'">'.$row->kuerzel.' ('.$row->kurzbzlang.')</option>';
 }
-echo '
+		echo '
 				</select>
 			</td>
 		</tr>
 		<tr>
 			<td>Semester</td>
 			<td>
-				<select id="semester" name="semester" onchange="changeSemester()">
-					<option value="">-- keine Auswahl --</option>';
-for($i = 1; $i <= 10; $i++)
-{
-	echo '<option value="'.$i.'">'.$i.'. Semester</option>';
-}
-echo '
+				<select id="semester" name="semester" disabled onchange="changeSemester()">
+					<option value="">-- bitte wählen --</option>';
+		for($i = 1; $i <= 10; $i++)
+		{
+			echo '
+					<option value="'.$i.'">'.$i.'. Semester</option>';
+		}
+		echo '
 				</select>
 			</td>
 		</tr>
 		<tr>
 			<td>Lehrveranstaltung</td>
 			<td>
-				<select id="lehrveranstaltung" name="lehrveranstaltung_id" onchange="changeLV()">
+				<select id="lehrveranstaltung" name="lehrveranstaltung_id" disabled onchange="changeLV()">
 					<option>-- zuerst Semester auswählen --</option>
 				</select>
 			</td>
@@ -495,21 +708,23 @@ echo '
 		<tr>
 			<td>Lehreinheit</td>
 			<td>
-				<select id="lehreinheit" name="lehreinheit_id">
+				<select id="lehreinheit" name="lehreinheit_id" disabled>
 					<option>-- zuerst LV auswählen --</option>
 				</select>
 			</td>
 		</tr>
 		<tr>
 			<td>Gruppen</td>
-			<td><input type="checkbox" name="gruppen"></td>
+			<td><input type="checkbox" id="gruppen" name="gruppen" disabled></td>
 		</tr>
 		<tr>
 			<td></td>
-			<td><input type="submit" name="saveZuteilung" value="Zuteilung speichern" /></td>
+			<td><input type="submit" name="saveZuteilung" value="Zuteilung speichern"></td>
 		</tr>
 	</table>
 </form>
+<br><br>
+<span id="msgBox">'. $msgBox. '</span>
 </body>
 </html>';
 
