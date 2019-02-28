@@ -129,7 +129,7 @@ class LogicUsers extends Logic
 					);
 
 					// Unenrol users
-					LogicUsers::unenrolUsers($moodleCourseId, $uidsToUnenrol, $numUnenrolledGroupsMembers);
+					//LogicUsers::unenrolUsers($moodleCourseId, $uidsToUnenrol, $numUnenrolledGroupsMembers);
 				}
 				elseif (trim($moodleCourseId) != '' && !is_numeric($moodleCourseId))
 				{
