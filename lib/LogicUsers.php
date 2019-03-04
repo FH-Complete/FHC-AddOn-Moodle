@@ -589,7 +589,7 @@ class LogicUsers extends Logic
 		foreach ($uidsToUnenrol as $uidToUnenrol)
 		{
 			//
-			$users = self::_fhcomplete_user_get_users($uidToUnenrol);
+			$users = self::_core_user_get_users_by_field($uidToUnenrol);
 			if (count($users) > 0) //
 			{
 				$debugMessage = 'Group member '.$uidToUnenrol.':"'.$users[0]->firstname.' '.$users[0]->lastname.'"';
@@ -692,7 +692,7 @@ class LogicUsers extends Logic
 	 */
 	private static function _getOrCreateMoodleUser($uid, &$numCreatedUsers)
 	{
-		$users = self::_fhcomplete_user_get_users($uid);
+		$users = self::_core_user_get_users_by_field($uid);
 
 		// If not found
 		if (is_array($users) && count($users) == 0)
@@ -941,15 +941,15 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	private static function _fhcomplete_user_get_users($uid)
+	private static function _core_user_get_users_by_field($uid)
 	{
 		$users = parent::_moodleAPICall(
-			'fhcomplete_user_get_users',
+			'core_user_get_users_by_field',
 			array($uid),
 			'An error occurred while retrieving users info from moodle'
 		);
 
-		return $users->users;
+		return $users;
 	}
 
 	/**

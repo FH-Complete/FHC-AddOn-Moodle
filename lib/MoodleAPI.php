@@ -61,18 +61,14 @@ class MoodleAPI extends MoodleClient
 	/**
 	 *
 	 */
-	public function fhcomplete_user_get_users($uid)
+	public function core_user_get_users_by_field($uid)
 	{
 		return $this->call(
-			'fhcomplete_user_get_users',
+			'core_user_get_users_by_field',
 			MoodleClient::HTTP_POST_METHOD,
 			array(
-				'criteria' => array(
-					array(
-						'key' => 'username',
-						'value' => $uid
-					)
-				)
+				'field' => 'username',
+				'values' => array($uid)
 			)
 		);
 	}
