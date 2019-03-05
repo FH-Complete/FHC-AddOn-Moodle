@@ -80,7 +80,7 @@ foreach ($moodleCourses as $moodleCourse)
 	);
 
 	// Unenrol users
-	//LogicUsers::unenrolUsers($moodleCourse->id, $uidsToUnenrol, $numUnenrolledGroupsMembers);
+	LogicUsers::unenrolUsers($moodleCourse->id, $uidsToUnenrol, $numUnenrolledGroupsMembers);
 
 	Output::printDebug('------------------------------------------------------------');
 }

@@ -129,7 +129,7 @@ class LogicUsers extends Logic
 					);
 
 					// Unenrol users
-					//LogicUsers::unenrolUsers($moodleCourseId, $uidsToUnenrol, $numUnenrolledGroupsMembers);
+					LogicUsers::unenrolUsers($moodleCourseId, $uidsToUnenrol, $numUnenrolledGroupsMembers);
 				}
 				elseif (trim($moodleCourseId) != '' && !is_numeric($moodleCourseId))
 				{
@@ -506,6 +506,9 @@ class LogicUsers extends Logic
 
 		Output::printDebug('Number of groups in database: '.Database::rowsNumber($courseGroups));
 		self::_printDebugEmptyline();
+
+		// If there are NO groups to be synchronized for this moodle course, then there is NO need to unenrol users
+		if (Database::rowsNumber($courseGroups) == 0) $uidsToUnenrol = array();
 
 		//
 		while ($courseGroup = Database::fetchRow($courseGroups))

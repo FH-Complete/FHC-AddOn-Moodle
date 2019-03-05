@@ -80,7 +80,7 @@ abstract class Logic
 			if ($result == null)
 	 		{
 	 			Output::printError('Database: '.$message);
-				var_dump($parameters);
+				Output::varDumpParameters($parameters);
 	 			die();
 	 		}
 		}
@@ -105,7 +105,7 @@ abstract class Logic
 			if ($moodleAPI->isError())
 	 		{
 	 			Output::printError('MoodleAPI: '.$message.': '.$moodleAPI->getError());
-				var_dump($parameters);
+				Output::varDumpParameters($parameters);
 	 			die();
 	 		}
 		}

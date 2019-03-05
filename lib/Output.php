@@ -52,6 +52,16 @@ class Output
 		}
 	}
 
+	/**
+	 *
+	 */
+	public static function varDumpParameters($parameters)
+	{
+		echo self::_getNewLine();
+		var_dump($parameters);
+		echo self::_getNewLine();
+	}
+
 	// --------------------------------------------------------------------------------------------
     // Private methods
 
