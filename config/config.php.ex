@@ -61,9 +61,9 @@ define('ADDON_MOODLE_USER_PWD_PREFIX', 'FHCv!A2');
 define('ADDON_MOODLE_USER_LDAP_AUTH', 'ldap');
 define('ADDON_MOODLE_USER_PKZ_TYPE', 'pkz');
 
-// To avoid incurring the limitation of parameters that can be posted imposed by apache + php
-// NOTE: better to keep it < 1000, anyway < max_input_vars set in php.ini file (usually 1000)
-define('ADDON_MOODLE_POST_PARAMS_NUMBER', 500);
+// To avoid incurring the limitation of parameters that can be posted imposed by apache + php + moodle
+// NOTE: better to keep it < 500, anyway < max_input_vars set in php.ini file (usually 1000)
+define('ADDON_MOODLE_POST_PARAMS_NUMBER', 300);
 
 // Defines the separator for the courses id posted in vilesci usersSynchronization page
 define('ADDON_MOODLE_VILESCI_COURSES_IDS_SEPARATOR', ';');
