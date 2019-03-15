@@ -76,6 +76,115 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
+	public static function synchronizeUsers($moodleCourses)
+	{
+		//
+		$numCreatedUsers = 0;
+		$numEnrolledLectors = 0;
+		$numEnrolledManagementStaff = 0;
+		$numEnrolledStudents = 0;
+		$numCreatedGroups = 0;
+		$numEnrolledGroupsMembers = 0;
+		$numUnenrolledGroupsMembers = 0;
+		$numEnrolledLeaders = 0;
+
+		if (count($moodleCourses) > 0) Output::printDebug('------------------------------------------------------------');
+
+		// Loops through the courses retrieved from moodle
+		foreach ($moodleCourses as $moodleCourse)
+		{
+			// $moodleCourses could be an array of object or integer
+			$moodleCourseId = is_object($moodleCourse) ? $moodleCourse->id : $moodleCourse;
+			$moodleCourseDesc = is_object($moodleCourse) ? ':'.$moodleCourse->shortname : '';
+
+			if (trim($moodleCourseId) != '' && is_numeric($moodleCourseId))
+			{
+				Output::printDebug('>>> Syncing moodle course '.$moodleCourseId.$moodleCourseDesc.'" <<<');
+
+				// Get all the enrolled users in this course from moodle
+				$moodleEnrolledUsers = LogicUsers::core_enrol_get_enrolled_users($moodleCourseId);
+
+				// Tries to retrieve groups from DB for this moodle course
+				$courseGroups = LogicUsers::getCourseGroups($moodleCourseId); //
+
+				// Retrieves a list of UIDs of users to be unenrolled selecting them by role
+				$uidsToUnenrol = LogicUsers::getUsersToUnenrol($moodleEnrolledUsers);
+
+				// Checks if there are groups
+				if (Database::rowsNumber($courseGroups) > 0)
+				{
+					// Synchronizes groups members
+					LogicUsers::synchronizeGroupsMembers(
+						$moodleCourseId, $courseGroups, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledGroupsMembers
+					);
+				}
+				else // otherwise
+				{
+					// Synchronizes lectors
+					LogicUsers::synchronizeLektoren(
+						$moodleCourseId, $moodleEnrolledUsers, $numCreatedUsers, $numEnrolledLectors
+					);
+
+					// Synchronizes management staff
+					if (ADDON_MOODLE_SYNC_FACHBEREICHSLEITUNG === true)
+					{
+						LogicUsers::synchronizeFachbereichsleitung(
+							$moodleCourseId, $moodleEnrolledUsers, $numCreatedUsers, $numEnrolledManagementStaff
+						);
+					}
+
+					// Synchronizes students
+					LogicUsers::synchronizeStudenten(
+						$moodleCourseId, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledStudents, $numCreatedGroups
+					);
+
+					// Synchronizes groups members
+					LogicUsers::synchronizeCompetenceFieldAndDepartmentLeaders(
+						$moodleCourseId, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledLeaders
+					);
+				}
+
+				// Unenrol users for this group
+				LogicUsers::unenrolUsers($moodleCourseId, $uidsToUnenrol, $numUnenrolledGroupsMembers);
+			}
+			else
+			{
+				Output::printWarning('Not a valid course ID -> discarted: '.$moodleCourseId);
+			}
+
+			Output::printDebug('------------------------------------------------------------');
+		}
+
+		// Summary
+		Output::printInfo('----------------------------------------------------------------------');
+		if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
+		{
+			Output::printInfo('Total amount of users created in moodle: '. $numCreatedUsers);
+			Output::printInfo('Total amount of lectors enrolled in moodle: '. $numEnrolledLectors);
+			Output::printInfo('Total amount of management staff enrolled in moodle: '. $numEnrolledManagementStaff);
+			Output::printInfo('Total amount of students enrolled in moodle: '. $numEnrolledStudents);
+			Output::printInfo('Total amount of groups created in moodle: '. $numCreatedGroups);
+			Output::printInfo('Total amount of groups members enrolled in moodle: '. $numEnrolledGroupsMembers);
+			Output::printInfo('Total amount of leaders enrolled in moodle: '. $numEnrolledLeaders);
+			Output::printInfo('Total amount of UNrolled groups members in moodle: '. $numUnenrolledGroupsMembers);
+		}
+		else
+		{
+			Output::printInfo('Total amount of users that would be created in moodle: '. $numCreatedUsers);
+			Output::printInfo('Total amount of lectors that would be enrolled in moodle: '. $numEnrolledLectors);
+			Output::printInfo('Total amount of management staff that would be enrolled in moodle: '. $numEnrolledManagementStaff);
+			Output::printInfo('Total amount of students that would be enrolled in moodle: '. $numEnrolledStudents);
+			Output::printInfo('Total amount of groups that would be created in moodle: '. $numCreatedGroups);
+			Output::printInfo('Total amount of groups members that would be enrolled in moodle: '. $numEnrolledGroupsMembers);
+			Output::printInfo('Total amount of leaders that would be enrolled in moodle: '. $numEnrolledLeaders);
+			Output::printInfo('Total amount of groups members that would be UNenrolled in moodle: '. $numUnenrolledGroupsMembers);
+		}
+		Output::printInfo('----------------------------------------------------------------------');
+	}
+
+	/**
+	 *
+	 */
 	public static function vilesciSynchronize()
 	{
 		$moodleCoursesIDs = self::_getVilesciMoodleCoursesIDs();
@@ -85,75 +194,7 @@ class LogicUsers extends Logic
 		//
 		if (count($moodleCoursesIDs) >= 1 && count($moodleCoursesIDs) <= ADDON_MOODLE_VILESCI_MAX_NUMBER_COURSES)
 		{
-			//
-			$numCreatedUsers = 0;
-			$numEnrolledLectors = 0;
-			$numEnrolledManagementStaff = 0;
-			$numEnrolledStudents = 0;
-			$numCreatedGroups = 0;
-			$numEnrolledGroupsMembers = 0;
-			$numUnenrolledGroupsMembers = 0;
-
-			//
-			foreach ($moodleCoursesIDs as $moodleCourseId)
-			{
-				if (trim($moodleCourseId) != '' && is_numeric($moodleCourseId))
-				{
-					// Get all the enrolled users in this course from moodle
-					$moodleEnrolledUsers = LogicUsers::core_enrol_get_enrolled_users($moodleCourseId);
-
-					// Tries to retrieve groups from DB for this moodle course
-					$courseGroups = LogicUsers::getCourseGroups($moodleCourseId); //
-
-					// Checks if there are groups
-					if (Database::rowsNumber($courseGroups) > 0)
-					{
-						// Retrieves a list of UIDs of users to be unenrolled
-						$uidsToUnenrol = LogicUsers::getUsersToUnenrol($moodleEnrolledUsers);
-
-						// Synchronizes groups members
-						LogicUsers::synchronizeGroupsMembers(
-							$moodleCourseId, $courseGroups, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledGroupsMembers
-						);
-
-						// Unenrol users
-						LogicUsers::unenrolUsers($moodleCourseId, $uidsToUnenrol, $numUnenrolledGroupsMembers);
-					}
-					else // otherwise
-					{
-						// Synchronizes lectors
-						LogicUsers::synchronizeLektoren(
-							$moodleCourseId, $moodleEnrolledUsers, $numCreatedUsers, $numEnrolledLectors
-						);
-
-						// Synchronizes management staff
-						if (ADDON_MOODLE_SYNC_FACHBEREICHSLEITUNG === true)
-						{
-							LogicUsers::synchronizeFachbereichsleitung(
-								$moodleCourseId, $moodleEnrolledUsers, $numCreatedUsers, $numEnrolledManagementStaff
-							);
-						}
-
-						// Synchronizes students
-						LogicUsers::synchronizeStudenten(
-							$moodleCourseId, $moodleEnrolledUsers, $numCreatedUsers, $numEnrolledStudents, $numCreatedGroups
-						);
-					}
-				}
-				elseif (trim($moodleCourseId) != '' && !is_numeric($moodleCourseId))
-				{
-					Output::printWarning('Not a valid course ID -> discarted: '.$moodleCourseId);
-				}
-			}
-
-			echo '<br>';
-			Output::printInfo('Total amount of users created in moodle: '. $numCreatedUsers);
-			Output::printInfo('Total amount of lectors enrolled in moodle: '. $numEnrolledLectors);
-			Output::printInfo('Total amount of management staff enrolled in moodle: '. $numEnrolledManagementStaff);
-			Output::printInfo('Total amount of students enrolled in moodle: '. $numEnrolledStudents);
-			Output::printInfo('Total amount of groups created in moodle: '. $numCreatedGroups);
-			Output::printInfo('Total amount of groups members enrolled in moodle: '. $numEnrolledGroupsMembers);
-			Output::printInfo('Total amount of UNrolled groups members in moodle: '. $numUnenrolledGroupsMembers);
+			self::synchronizeUsers($moodleCoursesIDs);
 		}
 		else //
 		{
@@ -191,9 +232,9 @@ class LogicUsers extends Logic
 	}
 
 	/**
-	 * Copies all the students enrolled for a moodle course to a new array
-	 * which keys are the UIDs of these students
-	 * These students will be eventually unenrolled later
+	 * Copies all the enrolled users for a moodle course to a new array
+	 * which keys are the UIDs of these users
+	 * These users will be eventually unenrolled later
 	 */
 	public static function getUsersToUnenrol($moodleEnrolledUsers)
 	{
@@ -202,21 +243,23 @@ class LogicUsers extends Logic
 		// Loops through all the enrolled users
 		foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
 		{
-			$studentRoleFound = false; // a student is still not found
+			$usersRoleFound = false; // user is still not found
 
-			// // Loops through all the user's roles
+			// Loops through all the user's roles
 			foreach ($moodleEnrolledUser->roles as $role)
 			{
-				// If one of the user's roles is "student"
-				if ($role->roleid == ADDON_MOODLE_STUDENT_ROLEID)
+				// If one of the user's roles is "student", "kompetenzfeldleitung" or "departmentleitung"
+				if ($role->roleid == ADDON_MOODLE_STUDENT_ROLEID
+					|| $role->roleid == ADDON_MOODLE_KOMPETENZFELDLEITUNG_ROLEID
+					|| $role->roleid == ADDON_MOODLE_DEPARTMENTLEITUNG_ROLEID)
 				{
-					$studentRoleFound = true; // found!
-					break; // quit from the previous loop
+					$usersRoleFound = true; // found!
+					break; // quit from the loop
 				}
 			}
 
-			// A student was found
-			if ($studentRoleFound)
+			// User was found
+			if ($usersRoleFound)
 			{
 				// Save the user's uid into array uidsToUnenrol
 				$uidsToUnenrol[$moodleEnrolledUser->username] = $moodleEnrolledUser->username;
@@ -363,7 +406,7 @@ class LogicUsers extends Logic
 	 *
 	 */
 	public static function synchronizeStudenten(
-		$moodleCourseId, $moodleEnrolledUsers, &$numCreatedUsers, &$numEnrolledStudents, &$numCreatedGroups
+		$moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol, &$numCreatedUsers, &$numEnrolledStudents, &$numCreatedGroups
 	)
 	{
 		//
@@ -408,6 +451,7 @@ class LogicUsers extends Logic
 			//
 			while ($student = Database::fetchRow($studenten))
 			{
+				unset($uidsToUnenrol[$student->student_uid]); // Removes this user from the list of users to be unenrolled
 				$debugMessage = 'Syncing student '.$student->student_uid.':"'.$student->vorname.' '.$student->nachname.'"';
 				$userFound = false; //
 
@@ -577,6 +621,104 @@ class LogicUsers extends Logic
 
 			self::_printDebugEmptyline();
 		}
+	}
+
+	/**
+	 *
+	 */
+	public static function synchronizeCompetenceFieldAndDepartmentLeaders(
+		$moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol, &$numCreatedUsers, &$numEnrolledLeaders
+	)
+	{
+		$usersToEnroll = array(); //
+
+		$organisationUnits = self::_getOrganisationunits($moodleCourseId); //
+
+		Output::printDebug('Number of organisation units in database: '.Database::rowsNumber($organisationUnits));
+
+		//
+		while ($organisationUnit = Database::fetchRow($organisationUnits))
+		{
+			$leaders = self::_getCompetenceFieldAndDeparmentLeadersOE($organisationUnit->oe_kurzbz); //
+
+			Output::printDebug('Number of leaders in database for this organisation unit: '.Database::rowsNumber($leaders));
+
+			//
+			while ($leader = Database::fetchRow($leaders))
+			{
+				unset($uidsToUnenrol[$leader->uid]); // Removes this user from the list of users to be unenrolled
+				$userFound = false; //
+
+				$leaderDesc = '';
+				if ($leader->organisationseinheittyp_kurzbz == ADDON_MOODLE_DEPARTMENT)
+				{
+					$leaderDesc = 'department';
+				}
+				elseif ($leader->organisationseinheittyp_kurzbz == ADDON_MOODLE_KOMPETENZFELD)
+				{
+					$leaderDesc = 'competence field';
+				}
+
+				$debugMessage = 'Syncing '.$leaderDesc.' leader '.$leader->uid.':"'.$leader->vorname.' '.$leader->nachname.'"';
+
+				//
+				foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
+				{
+					//
+					if ($leader->uid == $moodleEnrolledUser->username)
+					{
+						$debugMessage .= ' >> already enrolled in moodle';
+						$userFound = true;
+						break;
+					}
+				}
+
+				//
+				if (!$userFound)
+				{
+					$users = self::_getOrCreateMoodleUser($leader->uid, $numCreatedUsers);
+
+					if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
+					{
+						$roleid = -42;
+						if ($leader->organisationseinheittyp_kurzbz == ADDON_MOODLE_DEPARTMENT)
+						{
+							$roleid = ADDON_MOODLE_DEPARTMENTLEITUNG_ROLEID;
+						}
+						elseif ($leader->organisationseinheittyp_kurzbz == ADDON_MOODLE_KOMPETENZFELD)
+						{
+							$roleid = ADDON_MOODLE_KOMPETENZFELDLEITUNG_ROLEID;
+						}
+
+						$usersToEnroll[] = array(
+							'roleid' => $roleid,
+							'userid' => $users[0]->id,
+							'courseid' => $moodleCourseId
+						);
+
+						$debugMessage .= ' >> will be enrolled in moodle in a later step';
+					}
+					else
+					{
+						$debugMessage .= ' >> dry run >> should be enrolled in moodle in a later step';
+					}
+
+					$numEnrolledLeaders++;
+				}
+
+				Output::printDebug($debugMessage);
+			}
+		}
+
+		//
+		if (count($usersToEnroll) > 0)
+		{
+			self::_enrol_manual_enrol_users($usersToEnroll);
+
+			Output::printDebug('Number of leaders enrolled in moodle: '.count($usersToEnroll));
+		}
+
+		self::_printDebugEmptyline();
 	}
 
 	/**
@@ -825,6 +967,30 @@ class LogicUsers extends Logic
 			'getCourseMitarbeiter',
 			array($moodleCourseId),
 			'An error occurred while retrieving the mitarbeiter'
+		);
+	}
+
+	/**
+	 *
+	 */
+	private static function _getOrganisationunits($moodleCourseId)
+	{
+		return parent::_dbCall(
+			'getOrganisationunits',
+			array($moodleCourseId),
+			'An error occurred while retrieving organisation units for a moodle course'
+		);
+	}
+
+	/**
+	 *
+	 */
+	private static function _getCompetenceFieldAndDeparmentLeadersOE($oe_kurzbz)
+	{
+		return parent::_dbCall(
+			'getCompetenceFieldAndDeparmentLeadersOE',
+			array($oe_kurzbz),
+			'An error occurred while retrieving competence field and department leaders for an organisation unit'
 		);
 	}
 

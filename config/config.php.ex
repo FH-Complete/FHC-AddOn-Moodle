@@ -54,6 +54,16 @@ define('ADDON_MOODLE_LEKTOREN_ROLEID', 3);
 define('ADDON_MOODLE_STUDENT_ROLEID', 5);
 define('ADDON_MOODLE_FACHBEREICHSLEITUNG_ROLEID', 10);
 define('ADDON_MOODLE_LV_ANGERECHNET_ROLEID', 11);
+define('ADDON_MOODLE_KOMPETENZFELDLEITUNG_ROLEID', 19);
+define('ADDON_MOODLE_DEPARTMENTLEITUNG_ROLEID', 20);
+
+// Organisation unit types
+define('ADDON_MOODLE_DEPARTMENT', 'Department');
+define('ADDON_MOODLE_KOMPETENZFELD', 'Kompetenzfeld');
+
+// User functions
+define('ADDON_MOODLE_LEITUNG', 'Leitung');
+define('ADDON_MOODLE_ASSISTENT', 'ass');
 
 // Parameters used to create a new user in moodle
 define('ADDON_MOODLE_USER_MANUAL_AUTH', 'manual');

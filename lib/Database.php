@@ -75,6 +75,74 @@ class Database extends basis_db
 	/**
 	 *
 	 */
+	public function getOrganisationunits($moodleCourseId)
+ 	{
+ 		$query = 'SELECT
+						lv.oe_kurzbz
+					FROM
+						addon.tbl_moodle m
+						JOIN lehre.tbl_lehreinheit lh USING(lehreinheit_id)
+						JOIN lehre.tbl_lehrveranstaltung lv ON(lv.lehrveranstaltung_id = lh.lehrveranstaltung_id)
+					WHERE
+						m.mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER).'
+						AND lv.oe_kurzbz NOT ILIKE \'%dummy%\'
+					UNION
+					SELECT
+						lv.oe_kurzbz
+					FROM
+						addon.tbl_moodle m
+						JOIN lehre.tbl_lehrveranstaltung lv USING(lehrveranstaltung_id)
+					WHERE
+						m.mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER).'
+						AND lv.oe_kurzbz NOT ILIKE \'%dummy%\'
+					';
+
+ 		return $this->_execQuery($query);
+ 	}
+
+	/**
+	 *
+	 */
+	public function getCompetenceFieldAndDeparmentLeadersOE($oe_kurzbz)
+ 	{
+		$query = 'WITH RECURSIVE oes(oe_kurzbz, oe_parent_kurzbz, organisationseinheittyp_kurzbz) AS (
+						SELECT
+							oe_kurzbz, oe_parent_kurzbz, organisationseinheittyp_kurzbz
+						FROM
+							public.tbl_organisationseinheit
+						WHERE
+							oe_kurzbz = '.$this->db_add_param($oe_kurzbz).'
+							AND aktiv = true
+						UNION ALL
+						SELECT
+							o.oe_kurzbz, o.oe_parent_kurzbz, o.organisationseinheittyp_kurzbz
+						FROM
+							public.tbl_organisationseinheit o, oes
+						WHERE
+							o.oe_kurzbz = oes.oe_parent_kurzbz
+							AND o.aktiv = true
+					)
+					SELECT
+						b.uid, p.vorname, p.nachname, oes.organisationseinheittyp_kurzbz
+					FROM
+						oes
+						JOIN public.tbl_benutzerfunktion bf USING(oe_kurzbz)
+						JOIN public.tbl_benutzer b USING(uid)
+						JOIN public.tbl_person p USING(person_id)
+					WHERE
+						bf.funktion_kurzbz = \''.ADDON_MOODLE_LEITUNG.'\'
+						AND (
+								oes.organisationseinheittyp_kurzbz = \''.ADDON_MOODLE_DEPARTMENT.'\'
+								OR oes.organisationseinheittyp_kurzbz = \''.ADDON_MOODLE_KOMPETENZFELD.'\'
+						)
+					';
+
+ 		return $this->_execQuery($query);
+ 	}
+
+	/**
+	 *
+	 */
 	public function getBenutzerByUID($uid)
 	{
 		$query = 'SELECT
