@@ -93,64 +93,56 @@ class LogicUsers extends Logic
 		// Loops through the courses retrieved from moodle
 		foreach ($moodleCourses as $moodleCourse)
 		{
-			// $moodleCourses could be an array of object or integer
-			$moodleCourseId = is_object($moodleCourse) ? $moodleCourse->id : $moodleCourse;
-			$moodleCourseDesc = is_object($moodleCourse) ? ':'.$moodleCourse->shortname : '';
+			$moodleCourseId = $moodleCourse->id;
+			$moodleCourseDesc = ':'.$moodleCourse->shortname;
 
-			if (trim($moodleCourseId) != '' && is_numeric($moodleCourseId))
+			Output::printDebug('>>> Syncing moodle course '.$moodleCourseId.$moodleCourseDesc.'" <<<');
+
+			// Get all the enrolled users in this course from moodle
+			$moodleEnrolledUsers = self::core_enrol_get_enrolled_users($moodleCourseId);
+
+			// Tries to retrieve groups from DB for this moodle course
+			$courseGroups = self::getCourseGroups($moodleCourseId); //
+
+			// Retrieves a list of UIDs of users to be unenrolled selecting them by role
+			$uidsToUnenrol = self::getUsersToUnenrol($moodleEnrolledUsers);
+
+			// Checks if there are groups
+			if (Database::rowsNumber($courseGroups) > 0)
 			{
-				Output::printDebug('>>> Syncing moodle course '.$moodleCourseId.$moodleCourseDesc.'" <<<');
+				// Synchronizes groups members
+				self::synchronizeGroupsMembers(
+					$moodleCourseId, $courseGroups, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledGroupsMembers
+				);
+			}
+			else // otherwise
+			{
+				// Synchronizes lectors
+				self::synchronizeLektoren(
+					$moodleCourseId, $moodleEnrolledUsers, $numCreatedUsers, $numEnrolledLectors
+				);
 
-				// Get all the enrolled users in this course from moodle
-				$moodleEnrolledUsers = LogicUsers::core_enrol_get_enrolled_users($moodleCourseId);
-
-				// Tries to retrieve groups from DB for this moodle course
-				$courseGroups = LogicUsers::getCourseGroups($moodleCourseId); //
-
-				// Retrieves a list of UIDs of users to be unenrolled selecting them by role
-				$uidsToUnenrol = LogicUsers::getUsersToUnenrol($moodleEnrolledUsers);
-
-				// Checks if there are groups
-				if (Database::rowsNumber($courseGroups) > 0)
+				// Synchronizes management staff
+				if (ADDON_MOODLE_SYNC_FACHBEREICHSLEITUNG === true)
 				{
-					// Synchronizes groups members
-					LogicUsers::synchronizeGroupsMembers(
-						$moodleCourseId, $courseGroups, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledGroupsMembers
-					);
-				}
-				else // otherwise
-				{
-					// Synchronizes lectors
-					LogicUsers::synchronizeLektoren(
-						$moodleCourseId, $moodleEnrolledUsers, $numCreatedUsers, $numEnrolledLectors
-					);
-
-					// Synchronizes management staff
-					if (ADDON_MOODLE_SYNC_FACHBEREICHSLEITUNG === true)
-					{
-						LogicUsers::synchronizeFachbereichsleitung(
-							$moodleCourseId, $moodleEnrolledUsers, $numCreatedUsers, $numEnrolledManagementStaff
-						);
-					}
-
-					// Synchronizes students
-					LogicUsers::synchronizeStudenten(
-						$moodleCourseId, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledStudents, $numCreatedGroups
-					);
-
-					// Synchronizes groups members
-					LogicUsers::synchronizeCompetenceFieldAndDepartmentLeaders(
-						$moodleCourseId, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledLeaders
+					self::synchronizeFachbereichsleitung(
+						$moodleCourseId, $moodleEnrolledUsers, $numCreatedUsers, $numEnrolledManagementStaff
 					);
 				}
 
-				// Unenrol users for this group
-				LogicUsers::unenrolUsers($moodleCourseId, $uidsToUnenrol, $numUnenrolledGroupsMembers);
+				// Synchronizes students
+				self::synchronizeStudenten(
+					$moodleCourseId, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledStudents, $numCreatedGroups
+				);
+
+				// Synchronizes groups members
+				self::synchronizeCompetenceFieldAndDepartmentLeaders(
+					$moodleCourseId, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledLeaders
+				);
 			}
-			else
-			{
-				Output::printWarning('Not a valid course ID -> discarted: '.$moodleCourseId);
-			}
+
+			// Unenrol users for this group
+			self::unenrolUsers($moodleCourseId, $uidsToUnenrol, $numUnenrolledGroupsMembers);
 
 			Output::printDebug('------------------------------------------------------------');
 		}
@@ -194,7 +186,10 @@ class LogicUsers extends Logic
 		//
 		if (count($moodleCoursesIDs) >= 1 && count($moodleCoursesIDs) <= ADDON_MOODLE_VILESCI_MAX_NUMBER_COURSES)
 		{
-			self::synchronizeUsers($moodleCoursesIDs);
+			// Retrieves the courses from moodle using the course ids given as POST parameters
+			$moodleCourses = LogicUsers::getMoodleCourses($moodleCoursesIDs);
+
+			self::synchronizeUsers($moodleCourses);
 		}
 		else //
 		{
@@ -803,16 +798,37 @@ class LogicUsers extends Logic
 			//
 			if (is_string($postMoodleCoursesIDs)
 				&& trim($postMoodleCoursesIDs) != ''
-				&& mb_substr (trim($postMoodleCoursesIDs), 0, 1) != ADDON_MOODLE_VILESCI_COURSES_IDS_SEPARATOR)
+				&& mb_substr(trim($postMoodleCoursesIDs), 0, 1) != ADDON_MOODLE_VILESCI_COURSES_IDS_SEPARATOR)
 			{
+				$tmpMoodleCoursesIDs;
+
 				//
 				if (strstr($postMoodleCoursesIDs, ADDON_MOODLE_VILESCI_COURSES_IDS_SEPARATOR) === false)
 				{
-					$moodleCoursesIDs = array($postMoodleCoursesIDs);
+					$tmpMoodleCoursesIDs = array($postMoodleCoursesIDs);
 				}
 				else //
 				{
-					$moodleCoursesIDs = explode(ADDON_MOODLE_VILESCI_COURSES_IDS_SEPARATOR, $postMoodleCoursesIDs);
+					$tmpMoodleCoursesIDs = explode(ADDON_MOODLE_VILESCI_COURSES_IDS_SEPARATOR, $postMoodleCoursesIDs);
+				}
+
+				//
+				if (is_array($tmpMoodleCoursesIDs) && count($tmpMoodleCoursesIDs) > 0)
+				{
+					$moodleCoursesIDs = array();
+
+					//
+					foreach ($tmpMoodleCoursesIDs as $tmpMoodleCoursesID)
+					{
+						if (trim($tmpMoodleCoursesID) == '' || !is_numeric($tmpMoodleCoursesID))
+						{
+							Output::printWarning('Not a valid course ID -> discarted: "'.$tmpMoodleCoursesID.'"');
+						}
+						else
+						{
+							$moodleCoursesIDs[] = $tmpMoodleCoursesID;
+						}
+					}
 				}
 			}
 			else //
@@ -1184,6 +1200,18 @@ class LogicUsers extends Logic
 			'core_group_create_groups',
 			array($moodleCourseId, $groupName, $groupName),
 			'An error occurred while creating a group in moodle'
+		);
+	}
+
+	/**
+	 *
+	 */
+	private static function _core_role_assign_roles($userid, $roleid, $contextlevel, $instanceid)
+	{
+		return parent::_moodleAPICall(
+			'core_role_assign_roles',
+			array($userid, $roleid, $contextlevel, $instanceid),
+			'An error occurred while assigning roles'
 		);
 	}
 

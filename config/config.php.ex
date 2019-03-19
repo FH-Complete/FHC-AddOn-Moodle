@@ -56,6 +56,7 @@ define('ADDON_MOODLE_FACHBEREICHSLEITUNG_ROLEID', 10);
 define('ADDON_MOODLE_LV_ANGERECHNET_ROLEID', 11);
 define('ADDON_MOODLE_KOMPETENZFELDLEITUNG_ROLEID', 19);
 define('ADDON_MOODLE_DEPARTMENTLEITUNG_ROLEID', 20);
+define('ADDON_MOODLE_STUDIENGANGSLEITUNG_ROLEID', 17);
 
 // Organisation unit types
 define('ADDON_MOODLE_DEPARTMENT', 'Department');
@@ -64,6 +65,7 @@ define('ADDON_MOODLE_KOMPETENZFELD', 'Kompetenzfeld');
 // User functions
 define('ADDON_MOODLE_LEITUNG', 'Leitung');
 define('ADDON_MOODLE_ASSISTENT', 'ass');
+define('ADDON_MOODLE_STELLVERTRETUNG', 'stvLtg');
 
 // Parameters used to create a new user in moodle
 define('ADDON_MOODLE_USER_MANUAL_AUTH', 'manual');
@@ -72,7 +74,6 @@ define('ADDON_MOODLE_USER_LDAP_AUTH', 'ldap');
 define('ADDON_MOODLE_USER_PKZ_TYPE', 'pkz');
 
 // To avoid incurring the limitation of parameters that can be posted imposed by apache + php + moodle
-// NOTE: better to keep it < 500, anyway < max_input_vars set in php.ini file (usually 1000)
 define('ADDON_MOODLE_POST_PARAMS_NUMBER', 300);
 
 // Defines the separator for the courses id posted in vilesci usersSynchronization page
