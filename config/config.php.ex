@@ -59,13 +59,11 @@ define('ADDON_MOODLE_DEPARTMENTLEITUNG_ROLEID', 20);
 define('ADDON_MOODLE_STUDIENGANGSLEITUNG_ROLEID', 17);
 
 // Organisation unit types
-define('ADDON_MOODLE_DEPARTMENT', 'Department');
-define('ADDON_MOODLE_KOMPETENZFELD', 'Kompetenzfeld');
+define('ADDON_MOODLE_OUTYPES', '\'Department\', \'Kompetenzfeld\'');
 
 // User functions
-define('ADDON_MOODLE_LEITUNG', 'Leitung');
-define('ADDON_MOODLE_ASSISTENT', 'ass');
-define('ADDON_MOODLE_STELLVERTRETUNG', 'stvLtg');
+define('ADDON_MOODLE_COURSE_FUNCTIONS', '\'Leitung\'');
+define('ADDON_MOODLE_CATEGORY_FUNCTIONS', '\'Leitung\', \'ass\', \'stvLtg\'');
 
 // Parameters used to create a new user in moodle
 define('ADDON_MOODLE_USER_MANUAL_AUTH', 'manual');

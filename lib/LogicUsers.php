@@ -136,7 +136,7 @@ class LogicUsers extends Logic
 				);
 
 				// Synchronizes groups members
-				self::synchronizeCompetenceFieldAndDepartmentLeaders(
+				self::synchronizeCompetenceFieldDepartmentLeaders(
 					$moodleCourseId, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledLeaders
 				);
 			}
@@ -195,6 +195,111 @@ class LogicUsers extends Logic
 		{
 			Output::printError('Maximum number of courses is '.ADDON_MOODLE_VILESCI_MAX_NUMBER_COURSES);
 		}
+	}
+
+	/**
+	 *
+	 */
+	public static function synchronizeCategories($moodleCourses)
+	{
+		//
+		$numCreatedUsers = 0;
+		$numAssignedLeaders = 0;
+		$moodleParentCategoryIds = array();
+
+		if (count($moodleCourses) > 0) Output::printDebug('------------------------------------------------------------');
+
+		// Loops through the courses retrieved from moodle
+		foreach ($moodleCourses as $moodleCourse)
+		{
+			$moodleCourseId = $moodleCourse->id; // moodle course id
+			$moodleCourseDesc = ':'.$moodleCourse->shortname; // moodle course short name
+			$moodleCourseCategoryId = -42; // moodle course category id
+
+			//
+			if (isset($moodleParentCategoryIds[$moodleCourse->categoryid]))
+			{
+				$moodleCourseCategoryId = $moodleParentCategoryIds[$moodleCourse->categoryid];
+			}
+			else
+			{
+				$category = self::_core_course_get_categories($moodleCourse->categoryid);
+
+				if ($category != null) $moodleCourseCategoryId = $moodleParentCategoryIds[$moodleCourse->categoryid] = $category[0]->parent;
+			}
+
+			Output::printDebug('>>> Syncing '.$moodleCourseId.':'.$moodleCourseDesc.':'.$moodleCourseCategoryId.'" <<<');
+
+			$usersToAssign = array(); // users to assign to the category
+
+			$organisationUnits = self::_getOrganisationunitsDegree($moodleCourseId); // retrieves organisation units from DB for this degree
+
+			Output::printDebug('Number of organisation units in database: '.Database::rowsNumber($organisationUnits));
+
+			// Loops through organisation units
+			while ($organisationUnit = Database::fetchRow($organisationUnits))
+			{
+				Output::printDebug('Current organisation unit: '.$organisationUnit->oe_kurzbz);
+
+				$cLeaders = self::_getCourseleadersDelegatesAssistentsOE($organisationUnit->oe_kurzbz); // get category leaders for this organisation
+
+				Output::printDebug('Number of category leaders in database for this organisation unit: '.Database::rowsNumber($cLeaders));
+
+				// Loops through category leaders
+				while ($cLeader = Database::fetchRow($cLeaders))
+				{
+					$debugMessage = 'Syncing category leader '.$cLeader->uid.':'.$cLeader->funktion_kurzbz.':"'.$cLeader->vorname.' '.$cLeader->nachname.'"';
+
+					$users = self::_getOrCreateMoodleUser($cLeader->uid, $numCreatedUsers); // self-explanatory ;)
+
+					if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
+					{
+						$usersToAssign[] = array(
+							'roleid' => ADDON_MOODLE_STUDIENGANGSLEITUNG_ROLEID,
+							'userid' => $users[0]->id,
+							'contextlevel' => 'coursecat',
+							'instanceid' => $moodleCourseCategoryId
+						);
+
+						$debugMessage .= ' >> will be assigned to a category in moodle in a later step';
+					}
+					else
+					{
+						$debugMessage .= ' >> dry run >> should be assigned to a category in moodle in a later step';
+					}
+
+					$numAssignedLeaders++;
+
+					Output::printDebug($debugMessage);
+				}
+			}
+
+			//
+			if (count($usersToAssign) > 0)
+			{
+				self::_core_role_assign_roles($usersToAssign);
+
+				Output::printDebug('Number of leaders assigned to a category in moodle: '.count($usersToAssign));
+			}
+
+			self::_printDebugEmptyline();
+
+			Output::printDebug('------------------------------------------------------------');
+		}
+
+		// Summary
+		Output::printInfo('----------------------------------------------------------------------');
+		if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
+		{
+			Output::printInfo('Total amount of users created in moodle: '. $numCreatedUsers);
+			Output::printInfo('Total amount of leaders assigned to a category in moodle: '. $numAssignedLeaders);
+		}
+		else
+		{
+			Output::printInfo('Total amount of users that would be created in moodle: '. $numCreatedUsers);
+			Output::printInfo('Total amount of leaders that would be assigned to a category in moodle: '. $numAssignedLeaders);
+		}
+		Output::printInfo('----------------------------------------------------------------------');
 	}
 
 	/**
@@ -621,13 +726,13 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	public static function synchronizeCompetenceFieldAndDepartmentLeaders(
+	public static function synchronizeCompetenceFieldDepartmentLeaders(
 		$moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol, &$numCreatedUsers, &$numEnrolledLeaders
 	)
 	{
 		$usersToEnroll = array(); //
 
-		$organisationUnits = self::_getOrganisationunits($moodleCourseId); //
+		$organisationUnits = self::_getOrganisationunitsCourseUnit($moodleCourseId); //
 
 		Output::printDebug('Number of organisation units in database: '.Database::rowsNumber($organisationUnits));
 
@@ -989,12 +1094,24 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	private static function _getOrganisationunits($moodleCourseId)
+	private static function _getOrganisationunitsCourseUnit($moodleCourseId)
 	{
 		return parent::_dbCall(
-			'getOrganisationunits',
+			'getOrganisationunitsCourseUnit',
 			array($moodleCourseId),
-			'An error occurred while retrieving organisation units for a moodle course'
+			'An error occurred while retrieving organisation units for a moodle course from its course unit'
+		);
+	}
+
+	/**
+	 *
+	 */
+	private static function _getOrganisationunitsDegree($moodleCourseId)
+	{
+		return parent::_dbCall(
+			'getOrganisationunitsDegree',
+			array($moodleCourseId),
+			'An error occurred while retrieving organisation units for a moodle course from its degree'
 		);
 	}
 
@@ -1007,6 +1124,18 @@ class LogicUsers extends Logic
 			'getCompetenceFieldAndDeparmentLeadersOE',
 			array($oe_kurzbz),
 			'An error occurred while retrieving competence field and department leaders for an organisation unit'
+		);
+	}
+
+	/**
+	 *
+	 */
+	private static function _getCourseleadersDelegatesAssistentsOE($oe_kurzbz)
+	{
+		return parent::_dbCall(
+			'getCourseleadersDelegatesAssistentsOE',
+			array($oe_kurzbz),
+			'An error occurred while retrieving course leaders, delegates and assistants for an organisation unit'
 		);
 	}
 
@@ -1206,18 +1335,6 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	private static function _core_role_assign_roles($userid, $roleid, $contextlevel, $instanceid)
-	{
-		return parent::_moodleAPICall(
-			'core_role_assign_roles',
-			array($userid, $roleid, $contextlevel, $instanceid),
-			'An error occurred while assigning roles'
-		);
-	}
-
-	/**
-	 *
-	 */
 	private static function _isMoodleUserMemberMoodleGroup($moodleUserId, $groupId)
 	{
 		$groups = parent::_moodleAPICall(
@@ -1243,6 +1360,14 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
+	private static function _core_role_assign_roles($usersToAssign)
+	{
+		self::_moodleAPICallChunks($usersToAssign, 'core_role_assign_roles', 'An error occurred while assigning roles');
+	}
+
+	/**
+	 *
+	 */
 	private static function _core_group_add_group_members($members)
 	{
 		self::_moodleAPICallChunks($members, 'core_group_add_group_members', 'An error occurred while adding members to a moodle group');
@@ -1254,5 +1379,17 @@ class LogicUsers extends Logic
 	private static function _enrol_manual_unenrol_users($users)
 	{
 		self::_moodleAPICallChunks($users, 'enrol_manual_unenrol_users', 'An error occurred while removing enrolled users in moodle');
+	}
+
+	/**
+	 *
+	 */
+	private static function _core_course_get_categories($id)
+	{
+		return parent::_moodleAPICall(
+			'core_course_get_categories_by_id',
+			array($id),
+			'An error occurred while retrieving categories from moodle'
+		);
 	}
 }

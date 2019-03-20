@@ -75,7 +75,7 @@ class Database extends basis_db
 	/**
 	 *
 	 */
-	public function getOrganisationunits($moodleCourseId)
+	public function getOrganisationunitsCourseUnit($moodleCourseId)
  	{
  		$query = 'SELECT
 						lv.oe_kurzbz
@@ -112,7 +112,7 @@ class Database extends basis_db
 							public.tbl_organisationseinheit
 						WHERE
 							oe_kurzbz = '.$this->db_add_param($oe_kurzbz).'
-							AND aktiv = true
+							AND aktiv = TRUE
 						UNION ALL
 						SELECT
 							o.oe_kurzbz, o.oe_parent_kurzbz, o.organisationseinheittyp_kurzbz
@@ -120,7 +120,7 @@ class Database extends basis_db
 							public.tbl_organisationseinheit o, oes
 						WHERE
 							o.oe_kurzbz = oes.oe_parent_kurzbz
-							AND o.aktiv = true
+							AND o.aktiv = TRUE
 					)
 					SELECT
 						b.uid, p.vorname, p.nachname, oes.organisationseinheittyp_kurzbz
@@ -130,11 +130,65 @@ class Database extends basis_db
 						JOIN public.tbl_benutzer b USING(uid)
 						JOIN public.tbl_person p USING(person_id)
 					WHERE
-						bf.funktion_kurzbz = \''.ADDON_MOODLE_LEITUNG.'\'
-						AND (
-								oes.organisationseinheittyp_kurzbz = \''.ADDON_MOODLE_DEPARTMENT.'\'
-								OR oes.organisationseinheittyp_kurzbz = \''.ADDON_MOODLE_KOMPETENZFELD.'\'
+						bf.funktion_kurzbz IN (\''.ADDON_MOODLE_COURSE_FUNCTIONS.'\')
+						AND (bf.datum_von <= NOW() OR bf.datum_von IS NULL)
+						AND (bf.datum_bis >= NOW() OR bf.datum_bis IS NULL)
+						AND b.aktiv = TRUE
+						AND oes.organisationseinheittyp_kurzbz IN ('.ADDON_MOODLE_OUTYPES.')
 						)
+					';
+
+ 		return $this->_execQuery($query);
+ 	}
+
+	/**
+	 *
+	 */
+	public function getOrganisationunitsDegree($moodleCourseId)
+ 	{
+ 		$query = 'SELECT
+						sg.oe_kurzbz
+					FROM
+						addon.tbl_moodle m
+						JOIN lehre.tbl_lehreinheit lh USING(lehreinheit_id)
+						JOIN lehre.tbl_lehrveranstaltung lv ON(lv.lehrveranstaltung_id = lh.lehrveranstaltung_id)
+						JOIN public.tbl_studiengang sg USING(studiengang_kz)
+					WHERE
+						m.mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER).'
+						AND lv.oe_kurzbz NOT ILIKE \'%dummy%\'
+					UNION
+					SELECT
+						sg.oe_kurzbz
+					FROM
+						addon.tbl_moodle m
+						JOIN lehre.tbl_lehrveranstaltung lv USING(lehrveranstaltung_id)
+						JOIN public.tbl_studiengang sg USING(studiengang_kz)
+					WHERE
+						m.mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER).'
+						AND lv.oe_kurzbz NOT ILIKE \'%dummy%\'
+					';
+
+ 		return $this->_execQuery($query);
+ 	}
+
+	/**
+	 *
+	 */
+	public function getCourseleadersDelegatesAssistentsOE($oe_kurzbz)
+ 	{
+		$query = '
+					SELECT
+						b.uid, p.vorname, p.nachname, bf.funktion_kurzbz
+					FROM
+						public.tbl_benutzerfunktion bf
+						JOIN public.tbl_benutzer b USING(uid)
+						JOIN public.tbl_person p USING(person_id)
+					WHERE
+						bf.oe_kurzbz = '.$this->db_add_param($oe_kurzbz).'
+						AND (bf.datum_von <= NOW() OR bf.datum_von IS NULL)
+						AND (bf.datum_bis >= NOW() OR bf.datum_bis IS NULL)
+						AND bf.funktion_kurzbz IN ('.ADDON_MOODLE_CATEGORY_FUNCTIONS.')
+						AND b.aktiv = TRUE
 					';
 
  		return $this->_execQuery($query);

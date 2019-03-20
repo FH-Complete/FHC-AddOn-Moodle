@@ -200,7 +200,7 @@ class MoodleAPI extends MoodleClient
 	/**
 	 *
 	 */
-	public function core_course_get_categories($name, $parent, $addsubcategories = '0')
+	public function core_course_get_categories_by_name_parent($name, $parent, $addsubcategories = '0')
 	{
 		return $this->call(
 			'core_course_get_categories',
@@ -215,6 +215,26 @@ class MoodleAPI extends MoodleClient
 					array(
 						'key' => 'parent',
 						'value' => $parent
+					)
+				)
+			)
+		);
+	}
+
+	/**
+	 *
+	 */
+	public function core_course_get_categories_by_id($id, $addsubcategories = '0')
+	{
+		return $this->call(
+			'core_course_get_categories',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'addsubcategories' => $addsubcategories,
+				'criteria' => array(
+					array(
+						'key' => 'id',
+						'value' => $id
 					)
 				)
 			)
@@ -294,20 +314,13 @@ class MoodleAPI extends MoodleClient
 	/**
 	 *
 	 */
-	public function core_role_assign_roles($userid, $roleid, $contextlevel, $instanceid)
+	public function core_role_assign_roles($assignments)
 	{
 		return $this->call(
 			'core_role_assign_roles',
 			MoodleClient::HTTP_POST_METHOD,
 			array(
-				'assignments' => array(
-					array(
-						'userid' => $userid,
-						'roleid' => $roleid,
-						'contextlevel' => $contextlevel,
-						'instanceid' => $instanceid
-					)
-				)
+				'assignments' => $assignments
 			)
 		);
 	}

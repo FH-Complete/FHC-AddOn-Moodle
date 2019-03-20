@@ -594,7 +594,7 @@ class LogicCourses extends Logic
 	private static function _core_course_get_categories($name, $parent)
 	{
 		return parent::_moodleAPICall(
-			'core_course_get_categories',
+			'core_course_get_categories_by_name_parent',
 			array($name, $parent),
 			'An error occurred while retrieving categories from moodle'
 		);
