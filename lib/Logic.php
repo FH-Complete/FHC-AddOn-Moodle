@@ -52,6 +52,28 @@ abstract class Logic
 		return $currentOrNextStudiensemester;
 	}
 
+	/**
+	 *
+	 */
+	public static function getBaseURL()
+	{
+		$moodleAPI = new MoodleAPI();
+
+		return $moodleAPI->getBaseURL();
+	}
+
+	/**
+	 *
+	 */
+	public static function core_course_get_courses($moodleCoursesIDsArray)
+	{
+		return self::_moodleAPICall(
+			'core_course_get_courses',
+			array($moodleCoursesIDsArray),
+			'An error occurred while retrieving courses from moodle'
+		);
+	}
+
 	// --------------------------------------------------------------------------------------------
     // Protected methods
 

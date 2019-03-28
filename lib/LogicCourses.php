@@ -8,6 +8,21 @@ require_once('Logic.php');
 class LogicCourses extends Logic
 {
 	// --------------------------------------------------------------------------------------------
+    // Public Moodle API wrappers methods
+
+	/**
+	 *
+	 */
+	public static function core_course_delete_courses($moodleCoursesIDsArray)
+	{
+		return self::_moodleAPICall(
+			'core_course_delete_courses',
+			array($moodleCoursesIDsArray),
+			'An error occurred while deleting courses from moodle'
+		);
+	}
+
+	// --------------------------------------------------------------------------------------------
     // Public Database wrappers methods
 
 	/**
@@ -31,6 +46,84 @@ class LogicCourses extends Logic
 			'getCoursesFromTblMoodle',
 			array($studiensemester_kurzbz),
 			'An error occurred while retrieving courses from addon.tbl_moodle'
+		);
+	}
+
+	/**
+	 *
+	 */
+	public static function getDBCoursesByIDs($moodleCourseId)
+	{
+		return parent::_dbCall(
+			'getCoursesByIDs',
+			array($moodleCourseId),
+			'An error occurred while retrieving courses from addon.tbl_moodle by ids'
+		);
+	}
+
+	/**
+	 *
+	 */
+	public static function getCourseByMoodleId($moodleId)
+	{
+		return parent::_dbCall(
+			'getCoursesByMoodleId',
+			array($moodleId),
+			'An error occurred while retrieving courses from addon.tbl_moodle by its primary key'
+		);
+	}
+
+	/**
+	 *
+	 */
+	public static function getDBCoursesByStudiengangStudiensemester($studiengang_kz, $studiensemester_kurzbz)
+	{
+		return parent::_dbCall(
+			'getCoursesByStudiengangStudiensemester',
+			array($studiengang_kz, $studiensemester_kurzbz),
+			'An error occurred while retrieving courses from addon.tbl_moodle by studiengang and studiensemester'
+		);
+	}
+
+	/**
+	 *
+	 */
+	public static function insertMoodleTable(
+		$moodleCourseId, $lehreinheit_id, $lehrveranstaltung_id, $studiensemester_kurzbz,
+		$insertamum = 'NOW()', $insertvon = ADDON_MOODLE_INSERTVON, $gruppen = false, $gruppe_kurzbz = null
+	)
+	{
+		return parent::_dbCall(
+			'insertMoodleTable',
+			array(
+				$moodleCourseId, $lehreinheit_id, $lehrveranstaltung_id, $studiensemester_kurzbz,
+				$insertamum, $insertvon, $gruppen, $gruppe_kurzbz
+			),
+			'An error occurred while inserting into table addon.tbl_moodle'
+		);
+	}
+
+	/**
+	 *
+	 */
+	public static function deleteDBCourseByMoodleId($moodleId)
+	{
+		return parent::_dbCall(
+			'deleteCourseByMoodleId',
+			array($moodleId),
+			'An error occurred while deleting a course from addon.tbl_moodle by its primary key'
+		);
+	}
+
+	/**
+	 *
+	 */
+	public static function deleteDBCoursesByMoodleCourseId($moodleCourseId)
+	{
+		return parent::_dbCall(
+			'deleteCoursesByMoodleCourseId',
+			array($moodleCourseId),
+			'An error occurred while deleting courses from addon.tbl_moodle using a moodle course id'
 		);
 	}
 
@@ -190,13 +283,13 @@ class LogicCourses extends Logic
 			//
 			if ($lehreinheitOrLehrveranstaltung == 0)
 			{
-				self::_insertMoodleTable($moodleCourseId, $course->lehreinheit_id, null, $studiensemester_kurzbz);
+				self::insertMoodleTable($moodleCourseId, $course->lehreinheit_id, null, $studiensemester_kurzbz);
 
 				Output::printDebug('Added into database >> lehreinheit_id: '.$course->lehreinheit_id);
 			}
 			else
 			{
-				self::_insertMoodleTable($moodleCourseId, null, $course->lehrveranstaltung_id, $studiensemester_kurzbz);
+				self::insertMoodleTable($moodleCourseId, null, $course->lehrveranstaltung_id, $studiensemester_kurzbz);
 
 				Output::printDebug('Added into database >> lehrveranstaltung_id: '.$course->lehrveranstaltung_id);
 			}
@@ -337,7 +430,7 @@ class LogicCourses extends Logic
 				{
 					if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 					{
-						self::_insertMoodleTable($moodleCourseId, null, null, $studiensemester_kurzbz, 'NOW()', ADDON_MOODLE_INSERTVON, false, $group);
+						self::insertMoodleTable($moodleCourseId, null, null, $studiensemester_kurzbz, 'NOW()', ADDON_MOODLE_INSERTVON, false, $group);
 
 						Output::printDebug('Added into database >> gruppe_kurzbz: '.$group);
 					}
@@ -540,24 +633,6 @@ class LogicCourses extends Logic
 
 	// --------------------------------------------------------------------------------------------
 	// Private Database wrappers methods
-
-	/**
-	 *
-	 */
-	private static function _insertMoodleTable(
-		$moodleCourseId, $lehreinheit_id, $lehrveranstaltung_id, $studiensemester_kurzbz,
-		$insertamum = 'NOW()', $insertvon = ADDON_MOODLE_INSERTVON, $gruppen = false, $gruppe_kurzbz = null
-	)
-	{
-		return parent::_dbCall(
-			'insertMoodleTable',
-			array(
-				$moodleCourseId, $lehreinheit_id, $lehrveranstaltung_id, $studiensemester_kurzbz,
-				$insertamum, $insertvon, $gruppen, $gruppe_kurzbz
-			),
-			'An error occurred while inserting into table addon.tbl_moodle'
-		);
-	}
 
 	/**
 	 *

@@ -597,6 +597,75 @@ class Database extends basis_db
 		return $this->_execQuery($query);
 	}
 
+	/**
+	 *
+	 */
+	public function getCoursesByIDs($moodleCourseId)
+	{
+		$query = 'SELECT * FROM addon.tbl_moodle WHERE mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER);
+
+		return $this->_execQuery($query);
+	}
+
+	/**
+	 *
+	 */
+	public function getCoursesByMoodleId($moodleId)
+	{
+		$query = 'SELECT * FROM addon.tbl_moodle WHERE moodle_id = '.$this->db_add_param($moodleId, FHC_INTEGER);
+
+		return $this->_execQuery($query);
+	}
+
+	/**
+	 *
+	 */
+	public function getCoursesByStudiengangStudiensemester($studiengang_kz, $studiensemester_kurzbz)
+	{
+		$query = 'SELECT
+						mdl_course_id, moodle.moodle_id, moodle.lehreinheit_id, moodle.lehrveranstaltung_id,
+						moodle.studiensemester_kurzbz, moodle.insertamum, moodle.insertvon, gruppen
+					FROM addon.tbl_moodle moodle
+						JOIN lehre.tbl_lehrveranstaltung lv USING(lehrveranstaltung_id)
+					WHERE
+						moodle.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+						AND lv.studiengang_kz = '.$this->db_add_param($studiengang_kz).'
+						AND moodle.lehreinheit_id IS NULL
+					UNION
+					SELECT
+						mdl_course_id, moodle.moodle_id, moodle.lehreinheit_id, moodle.lehrveranstaltung_id,
+						moodle.studiensemester_kurzbz, moodle.insertamum, moodle.insertvon, gruppen
+					FROM addon.tbl_moodle moodle
+						JOIN lehre.tbl_lehreinheit le ON(moodle.lehreinheit_id = le.lehreinheit_id)
+						JOIN lehre.tbl_lehrveranstaltung lv ON(le.lehrveranstaltung_id = lv.lehrveranstaltung_id)
+					WHERE
+						moodle.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+						AND lv.studiengang_kz = '.$this->db_add_param($studiengang_kz).'
+						AND moodle.lehrveranstaltung_id IS NULL';
+
+		return $this->_execQuery($query);
+	}
+
+	/**
+	 *
+	 */
+	public function deleteCourseByMoodleId($moodleId)
+	{
+		$query = 'DELETE FROM addon.tbl_moodle WHERE moodle_id = '.$this->db_add_param($moodleId, FHC_INTEGER);
+
+		return $this->_execQuery($query);
+	}
+
+	/**
+	 *
+	 */
+	public function deleteCoursesByMoodleCourseId($moodleCourseId)
+	{
+		$query = 'DELETE FROM addon.tbl_moodle WHERE mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER);
+
+		return $this->_execQuery($query);
+	}
+
 	// --------------------------------------------------------------------------------------------
     // Public static methods
 

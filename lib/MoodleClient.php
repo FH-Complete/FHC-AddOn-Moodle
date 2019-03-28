@@ -11,6 +11,7 @@ class MoodleClient
     const HTTP_GET_METHOD = 'GET'; // http get method name
     const HTTP_POST_METHOD = 'POST'; // http post method name
 	const URI_TEMPLATE = '%s://%s/%s?%s=%s&%s=%s&%s=%s'; // URI format
+	const BASE_URL_TEMPLATE = '%s://%s'; // Base URL format
 
 	private $_connectionArray;		// contains the connection parameters configuration array
 
@@ -117,6 +118,23 @@ class MoodleClient
 	{
 		return $this->_emptyResponse;
 	}
+
+	// --------------------------------------------------------------------------------------------
+    // Protected  methods
+
+	/**
+     *
+     */
+    protected function getBaseURL()
+    {
+        $baseURL = sprintf(
+            MoodleClient::BASE_URL_TEMPLATE,
+            $this->_connectionArray[PROTOCOL],
+            $this->_connectionArray[HOST]
+        );
+
+		return $baseURL;
+    }
 
     // --------------------------------------------------------------------------------------------
     // Private methods

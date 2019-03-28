@@ -21,6 +21,14 @@ class MoodleAPI extends MoodleClient
 	/**
 	 *
 	 */
+	public function getBaseURL()
+	{
+		return parent::getBaseURL();
+	}
+
+	/**
+	 *
+	 */
 	public function core_course_get_courses($moodleCoursesIDsArray)
 	{
 		return $this->call(
@@ -321,6 +329,20 @@ class MoodleAPI extends MoodleClient
 			MoodleClient::HTTP_POST_METHOD,
 			array(
 				'assignments' => $assignments
+			)
+		);
+	}
+
+	/**
+	 *
+	 */
+	public function core_course_delete_courses($moodleCoursesIDsArray)
+	{
+		return $this->call(
+			'core_course_delete_courses',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'courseids' => $moodleCoursesIDsArray
 			)
 		);
 	}

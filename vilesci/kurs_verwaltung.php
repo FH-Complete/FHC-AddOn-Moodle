@@ -1,4 +1,5 @@
 <?php
+
 /* Copyright (C) 2015 fhcomplete.org
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,26 +17,22 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  *
  * Authors: Karl Burkhart <burkhart@technikum-wien.at>,
-  * 		Andreas Österreicher <oesi@technikum-wien.at>
+ *			Andreas Österreicher <oesi@technikum-wien.at>
  */
 
 /*
-*	Dieses Programm listet nach Selektionskriterien alle Moodelkurse zu einem Studiengang auf.
-*   Fuer jede MoodleID werden die Anzahl Benotungen, und erfassten sowie angelegte Zusaetze angezeigt.
-*	Jeder der angezeigten Moodle IDs kann geloescht werden.
-*/
-require_once('../../../config/vilesci.config.inc.php');
-require_once('../../../config/global.config.inc.php');
+ * Dieses Programm listet nach Selektionskriterien alle Moodelkurse zu einem Studiengang auf.
+ * Fuer jede MoodleID werden die Anzahl Benotungen, und erfassten sowie angelegte Zusaetze angezeigt.
+ * Jeder der angezeigten Moodle IDs kann geloescht werden.
+ */
+
+require_once('../lib/LogicCourses.php'); // A lot happens here!
+
 require_once('../../../include/functions.inc.php');
-require_once('../../../include/studiensemester.class.php');
-require_once('../../../include/studiengang.class.php');
-require_once('../../../include/lehrveranstaltung.class.php');
 require_once('../../../include/lehreinheit.class.php');
-require_once('../../../include/lehreinheitmitarbeiter.class.php');
 require_once('../../../include/lehreinheitgruppe.class.php');
-require_once('../../../include/benutzerberechtigung.class.php');
-require_once('../config.inc.php');  
-require_once('../include/moodle_course.class.php');
+require_once('../../../include/lehrveranstaltung.class.php');
+require_once('../../../include/lehreinheitmitarbeiter.class.php');
 
 $user = get_uid();
 
@@ -55,19 +52,21 @@ foreach ($stg->result as $row)
 {
 	$stg_arr[$row->studiengang_kz]=$row->kuerzel;
 }
-if(isset($_POST['work']) && $_POST['work'] == 'getMoodleCourse')
-{
-	$mdl_course_id = $_POST['mdl_course_id'];
 
-	$moodle_course = new moodle_course();
-	if($moodle_course->loadMoodleCourse($mdl_course_id))
-		$data['mdl_fullname'] = $moodle_course->mdl_fullname;	
+if (isset($_POST['work']) && $_POST['work'] == 'getMoodleCourse' && isset($_POST['mdl_course_id']))
+{
+	$data = array();
+
+	$moodleCourses = LogicCourses::core_course_get_courses(array($_POST['mdl_course_id']));
+	if (count($moodleCourses) > 0)
+		$data['mdl_fullname'] = $moodleCourses[0]->fullname;
 	else
 		$data['mdl_fullname'] = 'Kurs existiert nicht';
-	
+
 	echo json_encode($data);
 	exit;
 }
+
 if(isset($_POST['work']) && $_POST['work'] == 'getLVs')
 {
 	$stg = $_POST['stg'];
@@ -85,6 +84,7 @@ if(isset($_POST['work']) && $_POST['work'] == 'getLVs')
 	echo json_encode($data);
 	exit;
 }
+
 if(isset($_POST['work']) && $_POST['work'] == 'getLEs')
 {
 	$studiensemester_kurzbz = $_POST['stsem'];
@@ -110,63 +110,44 @@ if(isset($_POST['saveZuteilung']))
 		$gruppe_kurzbz = (isset($_POST['gruppe_kurzbz']) && !empty($_POST['gruppe_kurzbz'])) ? $_POST['gruppe_kurzbz'] : null;
 		$lehreinheit_id = (isset($_POST['lehreinheit_id']) && is_numeric($_POST['lehreinheit_id'])) ? $_POST['lehreinheit_id'] : null;
 		$lehrveranstaltung_id = (isset($_POST['lehrveranstaltung_id']) && is_numeric($_POST['lehrveranstaltung_id'])) ? $_POST['lehrveranstaltung_id'] : null;
-		$studiensemester = (isset($_POST['studiensemester_kurzbz']) && !empty($_POST['studiensemester_kurzbz'])) ? $_POST['studiensemester_kurzbz'] : null; 
-		$gruppen = isset($_POST['gruppen']);
+		$studiensemester_kurzbz = (isset($_POST['studiensemester_kurzbz']) && !empty($_POST['studiensemester_kurzbz'])) ? $_POST['studiensemester_kurzbz'] : null;
+		$gruppen = (isset($_POST['gruppen']) && !empty($_POST['gruppen'])) ? $_POST['gruppen'] : null;
 
-		$moodle_course = new moodle_course();
-
-		$moodle_course->mdl_course_id = $mdl_course_id;
-		$moodle_course->gruppe_kurzbz = $gruppe_kurzbz;
-		$moodle_course->lehreinheit_id = $lehreinheit_id;
-		if (is_null($lehreinheit_id))
-			$moodle_course->lehrveranstaltung_id = $lehrveranstaltung_id;
-		$moodle_course->studiensemester_kurzbz = $studiensemester;
-		$moodle_course->insertamum = date('Y-m-d H:i:s');
-		$moodle_course->insertvon = $user;
-		$moodle_course->gruppen = $gruppen;
-		
-		// Check if there are existing moodles for gruppen or lehrveranstaltung 
-		// or lehreinheit to this moodle course id, which does not allow new assignment
-		$moodle_course->getAllMoodleForMoodleCourse($mdl_course_id);
-		$moodle_arr = $moodle_course->result;
 		$moodle_course_has_groups = false;	// true if moodle course has moodles with groups assigned yet
 		$moodle_course_has_lv_or_le = false;	// true if moodel course hase moodles with lv or le assigned yet
-		
-		foreach ($moodle_arr as $moodle)
+
+		$dbMoodleCourses = LogicCourses::getDBCoursesByIDs($mdl_course_id);
+		while ($dbMoodleCourse = Database::fetchRow($dbMoodleCourses))
 		{
-			if (!is_null($moodle->gruppe_kurzbz))
+			if (!is_null($dbMoodleCourse->gruppe_kurzbz))
 			{
 				$moodle_course_has_groups = true;
 			}
-			
-			if (!is_null($moodle->lehrveranstaltung_id) || !is_null($moodle->lehreinheit_id))
+
+			if (!is_null($dbMoodleCourse->lehrveranstaltung_id) || !is_null($dbMoodleCourse->lehreinheit_id))
 			{
 				$moodle_course_has_lv_or_le = true;
 			}
 		}
-		
+
 		if (is_null($gruppe_kurzbz) && is_null($lehrveranstaltung_id))
 		{
 			$msgBox = 'Bitte treffen Sie erst eine Auswahl für die Zuteilung.';
 			$moodle_mdl_course_id = $mdl_course_id;
-		}	
+		}
 		// Moodle course assignment requires
 		// - gruppe (and no lv/le assigned yet for this course) OR
 		// - studiensemester AND (lehrveranstaltung OR lehreinheit) (and no groups assigned yet for this course)
-		elseif ((!is_null($moodle_course->gruppe_kurzbz) && !$moodle_course_has_lv_or_le) ||
-			((!is_null($moodle_course->studiensemester_kurzbz) && (!is_null($moodle_course->lehrveranstaltung_id) || !is_null($moodle_course->lehreinheit_id)))) && !$moodle_course_has_groups)
-		{	
+		elseif ((!is_null($gruppe_kurzbz) && !$moodle_course_has_lv_or_le)
+			|| (!is_null($studiensemester_kurzbz) && (!is_null($lehrveranstaltung_id) || !is_null($lehreinheit_id)))
+			&& !$moodle_course_has_groups)
+		{
 			// Save assignment
-			if(!$moodle_course->create_vilesci())
-			{
-				echo $moodle_course->errormsg;
-			}
-			else
-			{
-				$msgBox = 'Gespeichert!';
-				$moodle_mdl_course_id = $mdl_course_id;
-				
-			}
+			LogicCourses::insertMoodleTable(
+				$mdl_course_id, $lehreinheit_id, $lehrveranstaltung_id, $studiensemester_kurzbz, 'NOW()', $insertvon = $user, $gruppen, $gruppe_kurzbz
+			);
+			$msgBox = 'Gespeichert!';
+			$moodle_mdl_course_id = $mdl_course_id;
 		}
 		else
 		{
@@ -213,53 +194,41 @@ elseif (isset($mdl_course_id) && !empty($mdl_course_id))
 }
 else
 {
-	$moodle_mdl_course_id = '';	
+	$moodle_mdl_course_id = '';
 }
-	
-$method = (isset($_REQUEST['method'])?trim($_REQUEST['method']):'');
 
+$method = (isset($_REQUEST['method'])?trim($_REQUEST['method']):'');
 if ($method == 'delete')
 {
-	if (!$rechte->isBerechtigt('basis/moodle', null, 'suid'))
-		die('Sie haben keine Berechtigung fuer diesen Vorgang');
+	if (!$rechte->isBerechtigt('basis/moodle', null, 'suid')) die('Sie haben keine Berechtigung fuer diesen Vorgang');
 
-	$moodle_id = isset($_REQUEST['moodle_id'])?$_REQUEST['moodle_id']:'';
-
-	if($moodle_id != '')
+	$moodle_id = isset($_REQUEST['moodle_id']) ? $_REQUEST['moodle_id'] : '';
+	if ($moodle_id != '')
 	{
-		// delete
-		$moodle = new moodle_course();
-		$moodle->load($moodle_id);
+		// Delete
 		$error = false;
-
-		if(isset($_GET['all']))
+		$dbMoodleCourses = LogicCourses::getCourseByMoodleId($moodle_id);
+		$dbMoodleCourse = Database::fetchRow($dbMoodleCourses);
+		if ($dbMoodleCourse)
 		{
-			// mittels webservice moodlekurs
-			$moodlecourse = new moodle_course();
-			if($moodlecourse->deleteKurs($moodle->mdl_course_id))
+			if (isset($_GET['all']))
 			{
-				$message = "Erfolgreich gelöscht";
-				// Zuordnung löschen
-				if($moodle->deleteZuordnung($moodle->mdl_course_id))
-					$message= "Erfolgreich gelöscht";
+				// Mittels webservice moodlekurs
+				$response = LogicCourses::core_course_delete_courses(array($dbMoodleCourse->mdl_course_id));
+				if ($response != null && count($response->warnings) == 0)
+				{
+					LogicCourses::deleteDBCoursesByMoodleCourseId($dbMoodleCourse->mdl_course_id);
+				}
 				else
-					$message ="Fehler beim Löschen aufgetreten";
+				{
+					$message = $response->warnings[0]->message;
+				}
 			}
 			else
 			{
-				$message = $moodlecourse->errormsg;
-				$error = true;
+				LogicCourses::deleteDBCourseByMoodleId($moodle_id);
 			}
 		}
-		else
-		{
-			// einzelne Zuordnung löschen
-			if($moodle->delete($moodle->moodle_id))
-				$message= "Erfolgreich gelöscht";
-			else
-				$message ="Fehler beim Löschen aufgetreten";
-		}
-
 	}
 	else
 		$message = 'Ungültige Moodle ID übergeben';
@@ -278,7 +247,7 @@ if ($method == 'delete')
 		<script type="text/javascript" src="../../../vendor/components/jquery/jquery.min.js"></script>
 		<script type="text/javascript" src="../../../vendor/components/jqueryui/jquery-ui.min.js"></script>
 		<?php require_once '../../../include/meta/jquery-tablesorter.php';?>
-		<script type="text/javascript">		
+		<script type="text/javascript">
 		$(document).ready(function()
 		{
 			$("#myTable").tablesorter(
@@ -286,7 +255,7 @@ if ($method == 'delete')
 				sortList: [[0,0]],
 				widgets: ["zebra"]
 			});
-			
+
 			// Autocomplete field "Gruppe"
 			$("#gruppe").autocomplete(
 			{
@@ -310,11 +279,11 @@ if ($method == 'delete')
 					$('#lehrveranstaltung').prop('disabled', true);
 					$('#lehreinheit').prop('disabled', true);
 					$('#gruppen').prop('disabled', true);
-					
+
 					// If the selection is taken back, enable dropdowns again/checkboxes
-					$("#gruppe").keyup(function() 
+					$("#gruppe").keyup(function()
 					{
-						if (!this.value) 
+						if (!this.value)
 						{
 							$('#studiensemester_kurzbz').prop('disabled', false);
 							$('#studiengang').prop('disabled', false);
@@ -326,12 +295,12 @@ if ($method == 'delete')
 					});
 				}
 			});
-			
+
 			// Enable dropdowns/checkboxes when a moodle course id is entered
 			$('#mdl_course_id').keyup(function()
 			{
 				// Enable when entering field
-				if(this.value) 
+				if(this.value)
 				{
 					$('#gruppe').prop('disabled', false);
 					$('#studiensemester_kurzbz').prop('disabled', false);
@@ -339,7 +308,7 @@ if ($method == 'delete')
 					$('#semester').prop('disabled', false);
 					$('#lehrveranstaltung').prop('disabled', false);
 					$('#lehreinheit').prop('disabled', false);
-					$('#gruppen').prop('disabled', false); 
+					$('#gruppen').prop('disabled', false);
 				}
 				// Disable when field is empty
 				else
@@ -359,7 +328,7 @@ if ($method == 'delete')
 		{
 			getLehrveranstaltungen();
 		}
-	
+
 		function changeSemester()
 		{
 			getLehrveranstaltungen();
@@ -401,7 +370,7 @@ if ($method == 'delete')
 				}
 			});
 		}
-		
+
 		function getLehrveranstaltungen()
 		{
 			var stg_kz = $("#studiengang").val();
@@ -438,7 +407,7 @@ if ($method == 'delete')
 		function changeMoodle()
 		{
 			var mdl_course_id = $("#mdl_course_id").val();
-			
+
 			// Empty messagebox
 			$('#msgBox').empty();
 
@@ -462,7 +431,7 @@ if ($method == 'delete')
 					alert("Fehler beim Laden der Daten");
 				}
 			});
-		}	
+		}
 		</script>
 	</head>
 
@@ -520,11 +489,14 @@ echo '
 // Liste anzeigen nachdem der Anzeigenbutton gedrückt wurde oder nach löschen die Liste wieder neu anzeigen
 if (($studiengang_kz != '' && $studiensemester_kurzbz != '') || !empty($moodle_mdl_course_id))
 {
-	$moodle = new moodle_course();
-	if($moodle_mdl_course_id == '')
-		$moodle->getAllMoodleForStudiengang($studiengang_kz, $studiensemester_kurzbz);
+	if ($moodle_mdl_course_id == '')
+	{
+		$dbMoodleCourses = LogicCourses::getDBCoursesByStudiengangStudiensemester($studiengang_kz, $studiensemester_kurzbz);
+	}
 	else
-		$moodle->getAllMoodleForMoodleCourse($moodle_mdl_course_id);
+	{
+		$dbMoodleCourses = LogicCourses::getDBCoursesByIDs($moodle_mdl_course_id);
+	}
 
 	echo '
 	<table id="myTable" class="tablesorter">
@@ -536,59 +508,56 @@ if (($studiengang_kz != '' && $studiensemester_kurzbz != '') || !empty($moodle_m
 				<th>Semester</th>
 				<th>Moodle-Gruppen</th>
 				<th>OE-Gruppe</th>
-				<th>Moodle ID</th>			
+				<th>Moodle ID</th>
 				<th>1)</th>
 				<th>2)</th>
 			</tr>
 		</thead>
 		<tbody>';
-	$mdl_course_bezeichnung = array();
-	foreach($moodle->result as $row)
+	$mdl_course_bezeichnung = '';
+
+	while ($dbMoodleCourse = Database::fetchRow($dbMoodleCourses))
 	{
 		// If LV was assigned, load LV
-		if (!is_null($row->lehrveranstaltung_id))
-		{		
-			$lv = new lehrveranstaltung($row->lehrveranstaltung_id);
+		if (!is_null($dbMoodleCourse->lehrveranstaltung_id))
+		{
+			$lv = new lehrveranstaltung($dbMoodleCourse->lehrveranstaltung_id);
 			$lehreinheit = ' ';
 		}
 		// If LE was assigned -> load LV by using LE
-		elseif (!is_null($row->lehreinheit_id))
+		elseif (!is_null($dbMoodleCourse->lehreinheit_id))
 		{
 			$le = new lehreinheit();
 			$lv = new Lehrveranstaltung();
-			$le->loadLE($row->lehreinheit_id);
+			$le->loadLE($dbMoodleCourse->lehreinheit_id);
 			$lv->load($le->lehrveranstaltung_id);
 
-			$lehreinheit = getLehreinheitBezeichnung($row->lehreinheit_id);	
-		}
-	
-		if(!isset($mdl_course_bezeichnung[$row->mdl_course_id]))
-		{
-			$course = new moodle_course();
-			$course->loadMoodleCourse($row->mdl_course_id);
-			$mdl_course_bezeichnung[$row->mdl_course_id] = $course->mdl_fullname;
+			$lehreinheit = getLehreinheitBezeichnung($dbMoodleCourse->lehreinheit_id);
 		}
 
+		$moodleCourses = LogicCourses::core_course_get_courses(array($dbMoodleCourse->mdl_course_id));
+		if (count($moodleCourses) > 0) $mdl_course_bezeichnung = $moodleCourses[0]->fullname;
+
 		$delpath = 'kurs_verwaltung.php?method=delete';
-		$delpath .= '&moodle_id='.$row->moodle_id;
+		$delpath .= '&moodle_id='.$dbMoodleCourse->moodle_id;
 		$delpath .= '&moodle_studiensemester='.$studiensemester_kurzbz;
 		$delpath .= '&moodle_studiengang_kz='.$studiengang_kz;
 		$delpath .= '&moodle_mdl_course_id='.$moodle_mdl_course_id;
 
 		$delpathall = $delpath .'&all';
 
-		if (!is_null($row->lehrveranstaltung_id) || !is_null($row->lehreinheit_id))
-		{	
+		if (!is_null($dbMoodleCourse->lehrveranstaltung_id) || !is_null($dbMoodleCourse->lehreinheit_id))
+		{
 		echo '
 			<tr>
 				<td>'.$stg_arr[$lv->studiengang_kz].' '.$lv->semester.' '.$lv->bezeichnung.' ('.$lv->lehrveranstaltung_id.')</td>
 				<td>'.$lehreinheit.'</td>
 				<td>'.$lv->kurzbz.'</td>
 				<td>'.$lv->semester.'</td>
-				<td>'.($row->gruppen?'Ja':'Nein').'</td>
+				<td>'.($dbMoodleCourse->gruppen?'Ja':'Nein').'</td>
 				<td align="center"> - </td>';
 		}
-		elseif (!is_null($row->gruppe_kurzbz))
+		elseif (!is_null($dbMoodleCourse->gruppe_kurzbz))
 		{
 		echo '
 			<tr>
@@ -597,15 +566,15 @@ if (($studiengang_kz != '' && $studiensemester_kurzbz != '') || !empty($moodle_m
 				<td align="center"> - </td>
 				<td align="center"> - </td>
 				<td align="center"> - </td>
-				<td>'. $row->gruppe_kurzbz. '</td>';
+				<td>'. $dbMoodleCourse->gruppe_kurzbz. '</td>';
 		}
 		echo '
 				<td>
-					<a href="'.ADDON_MOODLE_PATH.'/course/view.php?id='.$row->mdl_course_id.'" target="_blank">
-					'.$mdl_course_bezeichnung[$row->mdl_course_id].' ('.$row->mdl_course_id.')
+					<a href="'.LogicCourses::getBaseURL().'/course/view.php?id='.$dbMoodleCourse->mdl_course_id.'" target="_blank">
+					'.$mdl_course_bezeichnung.' ('.$dbMoodleCourse->mdl_course_id.')
 					</a>
 				</td>
-		
+
 				<td>
 					<a href="'.$delpath.'">
 					<img src="../skin/images/tree-diagramm-delete.png" height="20px" title="Zuordnung zu Kurs löschen">
@@ -662,7 +631,7 @@ echo '
 						$selected = '';
 					echo '<option value="'.$row->studiensemester_kurzbz.'" '.$selected.'>'.$row->studiensemester_kurzbz.'</option>';
 				}
-				
+
 				echo '
 				</select>
 			</td>

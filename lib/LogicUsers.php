@@ -319,7 +319,7 @@ class LogicUsers extends Logic
 		while (count($moodleCoursesIDsArraySlice = array_slice($moodleCoursesIDsArray, $offset, ADDON_MOODLE_POST_PARAMS_NUMBER)) > 0)
 		{
 			// Retrieves a chunk of courses from moodle
-			$tmpMoodleCourses = self::_core_course_get_courses($moodleCoursesIDsArraySlice);
+			$tmpMoodleCourses = self::core_course_get_courses($moodleCoursesIDsArraySlice);
 
 			// Adds this chunk to array $moodleCourses
 			$moodleCourses = array_merge($moodleCourses, $tmpMoodleCourses);
@@ -1239,18 +1239,6 @@ class LogicUsers extends Logic
 
 	// --------------------------------------------------------------------------------------------
 	// Private MoodleAPI wrappers methods
-
-	/**
-	 *
-	 */
-	private static function _core_course_get_courses($moodleCoursesIDsArray)
-	{
-		return parent::_moodleAPICall(
-			'core_course_get_courses',
-			array($moodleCoursesIDsArray),
-			'An error occurred while retrieving courses from moodle'
-		);
-	}
 
 	/**
 	 *
