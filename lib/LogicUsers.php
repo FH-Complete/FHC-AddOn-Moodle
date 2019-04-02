@@ -8,52 +8,6 @@ require_once('Logic.php');
 class LogicUsers extends Logic
 {
 	// --------------------------------------------------------------------------------------------
-    // Public Database wrappers methods
-
-	/**
-	 *
-	 */
-	public static function getDBMoodleCoursesIDsArray($currentOrNextStudiensemester)
-	{
-		$moodleCoursesIDsArray = array();
-
-		$moodleCoursesIDs = parent::_dbCall(
-			'getMoodleCoursesIDs',
-			array($currentOrNextStudiensemester),
-			'An error occurred while retrieving the moodle courses'
-		);
-
-		//
-		while ($moodleCoursesID = Database::fetchRow($moodleCoursesIDs))
-		{
-			$moodleCoursesIDsArray[] = $moodleCoursesID->id;
-		}
-
-		return $moodleCoursesIDsArray;
-	}
-
-	// --------------------------------------------------------------------------------------------
-    // Public MoodleAPI wrappers methods
-
-	/**
-	 *
-	 */
-	public static function core_enrol_get_enrolled_users($moodleCourseId)
-	{
-		$moodleEnrolledUsers = parent::_moodleAPICall(
-			'core_enrol_get_enrolled_users',
-			array($moodleCourseId),
-			'An error occurred while retrieving enrolled users from moodle >> course id '.$moodleCourseId
-		);
-
-		self::_printDebugEmptyline();
-		Output::printDebug('Number of enrolled users in moodle: '.count($moodleEnrolledUsers));
-		self::_printDebugEmptyline();
-
-		return $moodleEnrolledUsers;
-	}
-
-	// --------------------------------------------------------------------------------------------
     // Public business logic methods
 
 	/**
@@ -71,6 +25,71 @@ class LogicUsers extends Logic
 		}
 
 		return $isMoodleUser;
+	}
+
+	/**
+	 *
+	 */
+	public static function createMoodleUser($uid)
+	{
+		$users = null;
+
+		// Then create user
+		$benutzerRow = self::_getBenutzerByUID($uid);
+		if ($benutzer = Database::fetchRow($benutzerRow))
+		{
+			$user = new stdClass();
+			$user->username = $benutzer->uid;
+			// Passwort muss gesetzt werden damit das Anlegen funktioniert.
+			// Es wird ein random Passwort gesetzt
+			// Dieses wird beim Login nicht verwendet da ueber ldap authentifiziert wird.
+			// Prefix ist noetig damit es nicht zu Problemen kommt wenn
+			// im Moodle die Passwort Policy aktiviert ist
+			//
+			// Wenn das Passwort uebergeben wird, dann versucht Moodle das auch
+			// im LDAP zu setzen. Das fuehrt dazu dass der Account nicht mehr funktioniert.
+			// Anlegen eines Users ohne Passwortuebergabe ist jedoch nicht moeglich-
+			// Deshalb wird die Authentifizierungsmethode beim Anlegen auf manual
+			// gesetzt und nach dem anlegen auf ldap geändert
+			$user->password = ADDON_MOODLE_USER_PWD_PREFIX.hash('sha512', rand());
+			$user->firstname = $benutzer->vorname;
+			$user->lastname = $benutzer->nachname;
+			$user->email = $benutzer->uid.'@'.DOMAIN;
+			$user->auth = ADDON_MOODLE_USER_MANUAL_AUTH;
+			$user->idnumber = $benutzer->uid;
+			$user->lang = ADDON_MOODLE_DEFAULT_LANGUAGE;
+
+			// If activated in the configs (=== true), the student's personal identifier (matrikelnummer)
+			// will be wrote in the CustomField pkz in Moodle
+			if (ADDON_MOODLE_SYNC_PERSONENKENNZEICHEN === true)
+			{
+				$student = new student();
+				if ($student->load($benutzer->uid))
+				{
+					$pkz = new stdClass();
+					$pkz->type = ADDON_MOODLE_USER_PKZ_TYPE;
+					$pkz->value = $student->matrikelnr;
+
+					$user->customfields = array($pkz);
+				}
+			}
+
+			$users = self::_core_user_create_users($user);
+			if (count($users) > 0)
+			{
+				$user = array();
+				$user['id'] = $users[0]->id;
+				$user['auth'] = ADDON_MOODLE_USER_LDAP_AUTH;
+
+				self::_core_user_update_users($user);
+			}
+		}
+		else
+		{
+			// benutzer not found
+		}
+
+		return $users;
 	}
 
 	/**
@@ -834,7 +853,7 @@ class LogicUsers extends Logic
 		foreach ($uidsToUnenrol as $uidToUnenrol)
 		{
 			//
-			$users = self::_core_user_get_users_by_field($uidToUnenrol);
+			$users = self::core_user_get_users_by_field($uidToUnenrol);
 			if (count($users) > 0) //
 			{
 				$debugMessage = 'Group member '.$uidToUnenrol.':"'.$users[0]->firstname.' '.$users[0]->lastname.'"';
@@ -970,14 +989,14 @@ class LogicUsers extends Logic
 	 */
 	private static function _getOrCreateMoodleUser($uid, &$numCreatedUsers)
 	{
-		$users = self::_core_user_get_users_by_field($uid);
+		$users = self::core_user_get_users_by_field($uid);
 
 		// If not found
 		if (is_array($users) && count($users) == 0)
 		{
 			if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 			{
-				$users = self::_createMoodleUser($uid);
+				$users = self::createMoodleUser($uid);
 
 				Output::printDebug('User '.$uid.' does not exist, it has been created');
 			}
@@ -987,71 +1006,6 @@ class LogicUsers extends Logic
 			}
 
 			$numCreatedUsers++;
-		}
-
-		return $users;
-	}
-
-	/**
-	 *
-	 */
-	private static function _createMoodleUser($uid)
-	{
-		$users = null;
-
-		// Then create user
-		$benutzerRow = self::_getBenutzerByUID($uid);
-		if ($benutzer = Database::fetchRow($benutzerRow))
-		{
-			$user = new stdClass();
-			$user->username = $benutzer->uid;
-			// Passwort muss gesetzt werden damit das Anlegen funktioniert.
-			// Es wird ein random Passwort gesetzt
-			// Dieses wird beim Login nicht verwendet da ueber ldap authentifiziert wird.
-			// Prefix ist noetig damit es nicht zu Problemen kommt wenn
-			// im Moodle die Passwort Policy aktiviert ist
-			//
-			// Wenn das Passwort uebergeben wird, dann versucht Moodle das auch
-			// im LDAP zu setzen. Das fuehrt dazu dass der Account nicht mehr funktioniert.
-			// Anlegen eines Users ohne Passwortuebergabe ist jedoch nicht moeglich-
-			// Deshalb wird die Authentifizierungsmethode beim Anlegen auf manual
-			// gesetzt und nach dem anlegen auf ldap geändert
-			$user->password = ADDON_MOODLE_USER_PWD_PREFIX.hash('sha512', rand());
-			$user->firstname = $benutzer->vorname;
-			$user->lastname = $benutzer->nachname;
-			$user->email = $benutzer->uid.'@'.DOMAIN;
-			$user->auth = ADDON_MOODLE_USER_MANUAL_AUTH;
-			$user->idnumber = $benutzer->uid;
-			$user->lang = ADDON_MOODLE_DEFAULT_LANGUAGE;
-
-			// If activated in the configs (=== true), the student's personal identifier (matrikelnummer)
-			// will be wrote in the CustomField pkz in Moodle
-			if (ADDON_MOODLE_SYNC_PERSONENKENNZEICHEN === true)
-			{
-				$student = new student();
-				if ($student->load($benutzer->uid))
-				{
-					$pkz = new stdClass();
-					$pkz->type = ADDON_MOODLE_USER_PKZ_TYPE;
-					$pkz->value = $student->matrikelnr;
-
-					$user->customfields = array($pkz);
-				}
-			}
-
-			$users = self::_core_user_create_users($user);
-			if (count($users) > 0)
-			{
-				$user = array();
-				$user['id'] = $users[0]->id;
-				$user['auth'] = ADDON_MOODLE_USER_LDAP_AUTH;
-
-				self::_core_user_update_users($user);
-			}
-		}
-		else
-		{
-			// benutzer not found
 		}
 
 		return $users;
@@ -1243,15 +1197,13 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	private static function _core_user_get_users_by_field($uid)
+	private static function _core_user_create_users($user)
 	{
-		$users = parent::_moodleAPICall(
-			'core_user_get_users_by_field',
-			array($uid),
-			'An error occurred while retrieving users info from moodle'
+		return parent::_moodleAPICall(
+			'core_user_create_users',
+			array($user),
+			'An error occurred while creating a new user in moodle'
 		);
-
-		return $users;
 	}
 
 	/**
@@ -1260,18 +1212,6 @@ class LogicUsers extends Logic
 	private static function _enrol_manual_enrol_users($users)
 	{
 		self::_moodleAPICallChunks($users, 'enrol_manual_enrol_users', 'An error occurred while enrolling users in moodle');
-	}
-
-	/**
-	 *
-	 */
-	private static function _core_user_create_users($user)
-	{
-		return parent::_moodleAPICall(
-			'core_user_create_users',
-			array($user),
-			'An error occurred while creating a new user in moodle'
-		);
 	}
 
 	/**

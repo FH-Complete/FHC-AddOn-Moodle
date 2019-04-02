@@ -666,6 +666,33 @@ class Database extends basis_db
 		return $this->_execQuery($query);
 	}
 
+	/**
+	 *
+	 */
+	public function searchPerson($searchString)
+	{
+		$query = 'SELECT
+					DISTINCT p.person_id,
+					p.nachname,
+					p.vorname,
+					b.aktiv,
+					b.uid
+				FROM
+					public.tbl_person p
+					JOIN public.tbl_benutzer b USING(person_id)
+				WHERE
+					p.nachname ~* '.$this->db_add_param($searchString).'
+					OR p.vorname ~* '.$this->db_add_param($searchString).'
+					OR b.alias ~* '.$this->db_add_param($searchString).'
+					OR p.nachname || \' \' || p.vorname = '.$this->db_add_param($searchString).'
+					OR p.vorname || \' \' || p.nachname = '.$this->db_add_param($searchString).'
+					OR b.uid ~* '.$this->db_add_param($searchString).'
+				ORDER BY
+					nachname, vorname';
+
+		return $this->_execQuery($query);
+	}
+
 	// --------------------------------------------------------------------------------------------
     // Public static methods
 

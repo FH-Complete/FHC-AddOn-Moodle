@@ -23,19 +23,12 @@
  * Bestehende Moodle IDs werden angezeigt, fuer alle anderen wird die Moeglichkeit
  * der Neuanlage geboten.
  */
-require_once('../../../config/vilesci.config.inc.php');
-require_once('../../../config/global.config.inc.php');
-require_once('../../../include/functions.inc.php');
-require_once('../../../include/basis_db.class.php');
-require_once('../../../include/functions.inc.php');
-require_once('../../../include/benutzerberechtigung.class.php');
-require_once('../config.inc.php');
-require_once('../include/moodle_user.class.php');
+require_once('../lib/LogicUsers.php'); // A lot happens here!
 
-$user = get_uid();
+require_once('../../../include/functions.inc.php');
 
 $rechte = new benutzerberechtigung();
-$rechte->getBerechtigungen($user);
+$rechte->getBerechtigungen(get_uid());
 
 echo '<!DOCTYPE HTML>
 <html>
@@ -62,107 +55,89 @@ echo '<!DOCTYPE HTML>
 <h1>Moodle - Accountverwaltung</h1>
 ';
 
-if(!$rechte->isBerechtigt('addon/moodle'))
-	die('Sie haben keine Berechtigung für diese Seite');
+if (!$rechte->isBerechtigt('addon/moodle')) die('Sie haben keine Berechtigung für diese Seite');
 
-if (!$db = new basis_db())
-	die('Fehler bei der Datenbankverbindung');
+$uid = (isset($_POST['uid']) ? trim($_POST['uid']) : '');
+$mdl_user_id = (isset($_REQUEST['mdl_user_id']) ? trim($_REQUEST['mdl_user_id']) : '');
+$searchString = (isset($_REQUEST['searchString']) ? trim($_REQUEST['searchString']) : '');
 
-$uid = (isset($_POST['uid'])?trim($_POST['uid']):'');
-$mdl_user_id = (isset($_REQUEST['mdl_user_id'])?trim($_REQUEST['mdl_user_id']):'');
-$searchstr = (isset($_REQUEST['searchstr'])?trim($_REQUEST['searchstr']):'');
-
-$moodle = new moodle_user();
-
-if($uid!='')
+if ($uid != '')
 {
 	// Check ob User nicht bereits angelegt ist
-	if (!$moodle->loaduser($uid))
+	$users = LogicUsers::core_user_get_users_by_field($uid);
+	if (count($users) == 0) //
 	{
-		//  User ist noch nicht in Moodle angelegt => Neuanlage
-		if (!$moodle->createUser($uid))
-				echo$moodle->errormsg;
+		LogicUsers::createMoodleUser($uid);
 	}
 }
 
 echo '
-	<form name="search" method="GET" action="'.$_SERVER["PHP_SELF"].'" target="_self">
+	<form name="search" method="GET" action="'.$_SERVER['PHP_SELF'].'" target="_self">
   		Bitte Suchbegriff eingeben:
-  		<input type="text" name="searchstr" size="30" value="'.$db->convert_html_chars($searchstr).'">
+  		<input type="text" name="searchString" size="30" value="'.LogicUsers::convertHtmlChars($searchString).'">
   		<input type="submit" value="Suchen">
   	</form>
 	';
 
-if($searchstr!='' && $searchstr!='?'  && $searchstr!='*')
+if ($searchString != '' && $searchString != '?'  && $searchString != '*')
 {
-	// SQL Select-String
-	$qry = "SELECT
-				distinct tbl_person.person_id,tbl_person.nachname,tbl_person.vorname,
-				tbl_benutzer.aktiv,tbl_benutzer.uid
-			FROM
-				public.tbl_person
-				JOIN public.tbl_benutzer USING(person_id)
-			WHERE
-				tbl_person.nachname ~* ".$db->db_add_param($searchstr)." OR
-				tbl_person.vorname ~* ".$db->db_add_param($searchstr)." OR
-				tbl_benutzer.alias ~* ".$db->db_add_param($searchstr)." OR
-				tbl_person.nachname || ' ' || tbl_person.vorname = ".$db->db_add_param($searchstr)." OR
-				tbl_person.vorname || ' ' || tbl_person.nachname = ".$db->db_add_param($searchstr)." OR
-				tbl_benutzer.uid ~* ".$db->db_add_param($searchstr)."
-			ORDER BY nachname, vorname;";
+	$persons = LogicUsers::searchPerson($searchString);
 
-		if($result = $db->db_query($qry))
+	// Header Top mit Anzahl der gelisteten Kurse
+	echo Database::rowsNumber($persons).' Person(en) gefunden';
+
+	echo'<table id="t1" class="tablesorter" style="width: auto">
+			<thead>
+				<tr>
+					<th>Nachname</th>
+					<th>Vorname</th>
+					<th>UserID</th>
+					<th>Status</th>
+					<th>MoodleAccount</th>
+				</tr>
+			</thead>
+		<tbody>';
+
+	// Alle gefundenen User in einer Schleife anzeigen.
+	while ($person = Database::fetchRow($persons))
+	{
+		// Listenzeile
+		echo '<tr>';
+		echo '<td>
+				<a href="../../../vilesci/personen/personen_details.php?person_id='.LogicUsers::convertHtmlChars($person->person_id).'">'.
+					LogicUsers::convertHtmlChars($person->nachname).
+				'</a>
+			</td>';
+		echo '<td>'.LogicUsers::convertHtmlChars($person->vorname).'</td>';
+		echo '<td>'.LogicUsers::convertHtmlChars($person->uid).'</td>';
+		echo '<td>'.
+				(!empty($person->aktiv) && mb_strtoupper($person->aktiv) != 'F' && mb_strtoupper($person->aktiv) != 'FALSE' ? 'Aktiv' : 'Deaktiviert').
+			'</td>';
+
+		// Es gibt noch keinen Moodle User - Anlage ermoeglichen
+		$users = LogicUsers::core_user_get_users_by_field($person->uid);
+		if (count($users) == 0) //
 		{
-			// Header Top mit Anzahl der gelisteten Kurse
-			echo $db->db_num_rows($result).' Person(en) gefunden';
-
-			echo'<table id="t1" class="tablesorter" style="width: auto">
-				<thead>
-					<tr>
-						<th>Nachname</th>
-						<th>Vorname</th>
-						<th>UserID</th>
-						<th>Status</th>
-						<th>MoodleAccount</th>
-					</tr>
-				</thead>
-				<tbody>';
-
-			// Alle gefundenen User in einer Schleife anzeigen.
-			while($row = $db->db_fetch_object($result))
-			{
-
-				// Listenzeile
-				echo '<tr>';
-				echo '<td><a href="../../../vilesci/personen/personen_details.php?person_id='.$db->convert_html_chars($row->person_id).'">'.$db->convert_html_chars($row->nachname).'</a></td>';
-				echo '<td>'.$db->convert_html_chars($row->vorname).'</td>';
-				echo '<td>'.$db->convert_html_chars($row->uid).'</td>';
-				echo '<td>'.(!empty($row->aktiv) && mb_strtoupper($row->aktiv)!='F' && mb_strtoupper($row->aktiv)!='FALSE' ?'aktiv':'deaktiviert').'</td>';
-
-				if (!$moodle->loaduser($row->uid))
-					$moodle->mdl_user_id='';
-
-				// Es gibt noch keinen Moodle User - Anlage ermoeglichen
-				if (!isset($moodle->mdl_user_id) || empty($moodle->mdl_user_id))
-				{
-					echo '<td>';
-					echo'<form style="display: inline;border:0px;" method="POST" target="_self" action="'.$_SERVER["PHP_SELF"].'">';
-				  	echo '<input style="display:none" type="text" name="uid" value="'.$db->convert_html_chars($row->uid).'" />';
-				  	echo '<input style="display:none" type="text" name="searchstr" value="'.$db->convert_html_chars($searchstr).'" />';
-					echo '<input type="submit" value="anlegen" />';
-					echo'</form>';
-					echo '</td>';
-				}
-				else // Anzeige bestehende Moodle User ID
-				{
-					echo '<td>'.((isset($moodle->mdl_user_id) && !empty($moodle->mdl_user_id))?$moodle->mdl_user_id:'').'</td>';
-				}
-				echo '</tr>';
-			}
-			echo '</tbody></table>';
+			echo '<td>';
+			echo '	<form style="display: inline; border: 0px; text-align: center;" method="POST" target="_self" action="'.$_SERVER['PHP_SELF'].'">';
+		  	echo '		<input type="hidden" name="uid" value="'.LogicUsers::convertHtmlChars($person->uid).'" />';
+		  	echo '		<input type="hidden" name="searchString" value="'.LogicUsers::convertHtmlChars($searchString).'" />';
+			echo '		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+			echo '		<input type="submit" value="Anlegen" />';
+			echo '	</form>';
+			echo '</td>';
 		}
+		else // Anzeige bestehende Moodle User ID
+		{
+			$user = $users[0];
+			echo '<td style="text-align: center;">'.((isset($user->id) && !empty($user->id)) ? $user->id : '').'</td>';
+		}
+		echo '</tr>';
+	}
+	echo '</tbody></table>';
 }
 echo '
-</body>
-	</html>';
+	</body>
+</html>';
+
 ?>
