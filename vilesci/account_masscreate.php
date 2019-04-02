@@ -17,52 +17,41 @@
  *
  * Authors: Andreas Oesterreicher 	< andreas.oesterreicher@technikum-wien.at >
  */
+
 /**
  * Script um mehrere User auf einmal im Moodle anzulegen
  * Die UID der User die angelegt werden sollen, werden in einem Textfeld uebergeben
  */
-require_once('../../../config/vilesci.config.inc.php');
-require_once('../../../config/global.config.inc.php');
-require_once('../../../include/functions.inc.php');
-require_once('../../../include/basis_db.class.php');
-require_once('../../../include/functions.inc.php');
-require_once('../../../include/benutzerberechtigung.class.php');
-require_once('../config.inc.php');
-require_once('../include/moodle_user.class.php');
 
-$user = get_uid();
+require_once('../lib/LogicUsers.php'); // A lot happens here!
+
+require_once('../../../include/functions.inc.php');
 
 $rechte = new benutzerberechtigung();
-$rechte->getBerechtigungen($user);
+$rechte->getBerechtigungen(get_uid());
 
-if(!$rechte->isBerechtigt('addon/moodle'))
-	die('Sie haben keine Berechtigung für diese Seite');
+if(!$rechte->isBerechtigt('addon/moodle')) die('Sie haben keine Berechtigung für diese Seite');
 
-if (!$db = new basis_db())
-	die('Fehler bei der Datenbankverbindung');
+$userliste = (isset($_POST['userliste']) ? trim($_POST['userliste']) : '');
+$messages = '';
 
-$userliste = (isset($_POST['userliste'])?trim($_POST['userliste']):'');
-$messages='';
-
-if($userliste!='')
+if ($userliste != '')
 {
-	$moodle = new moodle_user();
-
-	$uids = explode("\n",$userliste);
-	foreach($uids as $uid)
+	$uids = explode("\n", $userliste);
+	foreach ($uids as $uid)
 	{
-		$uid=trim($uid);
-		// Check ob User nicht bereits angelegt ist
-		if (!$moodle->loaduser($uid))
+		$uid = trim($uid);
+
+		$users = LogicUsers::core_user_get_users_by_field($uid);
+		if (count($users) == 0) //
 		{
-			//  User ist noch nicht in Moodle angelegt => Neuanlage
-			if (!$moodle->createUser($uid))
-					$messages.=$moodle->errormsg.'X'.$uid.'X';
-			else
-				$messages.='<br>User '.$uid.' angelegt';
+			$users = LogicUsers::createMoodleUser($uid);
+			$messages.='<br>User "'.$uid.'" angelegt. Moodle ID: '.$users[0]->id;
 		}
 		else
-			$messages.='<br>User '.$uid.' bereits vorhanden';
+		{
+			$messages.='<br>User "'.$uid.'" bereits vorhanden. Moodle ID: '.$users[0]->id;
+		}
 	}
 }
 echo '<!DOCTYPE HTML>
@@ -81,6 +70,7 @@ echo '<!DOCTYPE HTML>
 	</form>	';
 echo $messages;
 echo '
-</body>
-	</html>';
+	</body>
+</html>';
+
 ?>
