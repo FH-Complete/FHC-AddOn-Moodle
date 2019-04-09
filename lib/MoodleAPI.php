@@ -346,4 +346,19 @@ class MoodleAPI extends MoodleClient
 			)
 		);
 	}
+
+	/**
+	 *
+	 */
+	public function fhcomplete_get_course_grades($moodleCoursesId, $type)
+	{
+		return $this->call(
+			'fhcomplete_get_course_grades',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'courseid' => $moodleCoursesId,
+				'type' => $type
+			)
+		);
+	}
 }

@@ -20,27 +20,23 @@
  *          Rudolf Hangl 		< rudolf.hangl@technikum-wien.at >
  *          Gerald Simane-Sequens 	< gerald.simane-sequens@technikum-wien.at >
  */
-require_once('../../../config/cis.config.inc.php');
-require_once('../../../include/basis_db.class.php');
+require_once(dirname(__FILE__).'/../lib/LogicCourses.php'); // A lot happens here!
+
 require_once('../../../include/functions.inc.php');
 require_once('../../../include/phrasen.class.php');
 require_once('../../../include/lehreinheit.class.php');
-require_once('../config.inc.php');
-require_once('../include/moodle_course.class.php');
 
-if (!$db = new basis_db())
-	die('Fehler beim Herstellen der Datenbankverbindung');
+if (!$db = new basis_db()) die('Fehler beim Herstellen der Datenbankverbindung');
 
 $user = get_uid();
-
 $p = new phrasen(getSprache());
 
-if(isset($_GET['lvid']))
-	$lvid=$_GET['lvid'];
+if (isset($_GET['lvid']))
+	$lvid = $_GET['lvid'];
 else
 	die('lvid muss uebergeben werden');
 
-if(isset($_GET['stsem']))
+if (isset($_GET['stsem']))
 	$stsem = $_GET['stsem'];
 else
 	die('Es wurde kein Studiensemester uebergeben');
@@ -55,39 +51,35 @@ echo '<!DOCTYPE HTML>
 <h1>'.$p->t('moodle/kursUebersicht').'</h1>
 ';
 
-$moodle = new moodle_course();
-$moodle->getAll($lvid, $stsem);
-
 $meinekurse = '';
 $allgemeinekurse = '';
 
-foreach ($moodle->result as $row)
+$courses = LogicCourses::getCoursesByLehrveranstaltungLehreinheit($lvid, $stsem);
+while ($course = Database::fetchRow($courses))
 {
-	$kurs = '';
+	$moodleCourses = LogicCourses::core_course_get_courses(array($course->mdl_course_id));
 
-	$mdlcourse = new moodle_course();
-	$mdlcourse->loadMoodleCourse($row->mdl_course_id);
-	$bezeichnung = $mdlcourse->mdl_fullname;
-	if ($bezeichnung == '')
-		$bezeichnung = 'Course '.$row->mdl_course_id;
-	$kurs = "<a href='".ADDON_MOODLE_PATH."course/view.php?id=".$row->mdl_course_id."' class='Item'>$bezeichnung</a><br>";
+	$bezeichnung = $moodleCourses[0]->fullname;
+	if ($bezeichnung == '') $bezeichnung = 'Course '.$course->mdl_course_id;
 
-	if($row->lehreinheit_id!='')
+	$kurs = "<a href='".LogicCourses::getBaseURL()."/course/view.php?id=".$course->mdl_course_id."' class='Item'>$bezeichnung</a><br>";
+
+	if ($course->lehreinheit_id != '')
 	{
-		$le = new lehreinheit();
-		$stud = $le->getStudenten($row->lehreinheit_id);
 		$zugeordnet = false;
 
-		foreach($stud as $row_stud)
+		$le = new lehreinheit();
+		$stud = $le->getStudenten($course->lehreinheit_id);
+		foreach($stud as $course_stud)
 		{
-			if($row_stud->uid == $user)
+			if ($course_stud->uid == $user)
 			{
 				$zugeordnet = true;
 				break;
 			}
 		}
 
-		if($zugeordnet)
+		if ($zugeordnet)
 		{
 			$meinekurse .= $kurs;
 		}

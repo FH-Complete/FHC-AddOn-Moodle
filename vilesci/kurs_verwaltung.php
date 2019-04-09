@@ -26,7 +26,7 @@
  * Jeder der angezeigten Moodle IDs kann geloescht werden.
  */
 
-require_once('../lib/LogicCourses.php'); // A lot happens here!
+require_once('../lib/Logic.php'); // A lot happens here!
 
 require_once('../../../include/functions.inc.php');
 require_once('../../../include/lehreinheit.class.php');
@@ -57,7 +57,7 @@ if (isset($_POST['work']) && $_POST['work'] == 'getMoodleCourse' && isset($_POST
 {
 	$data = array();
 
-	$moodleCourses = LogicCourses::core_course_get_courses(array($_POST['mdl_course_id']));
+	$moodleCourses = Logic::core_course_get_courses(array($_POST['mdl_course_id']));
 	if (count($moodleCourses) > 0)
 		$data['mdl_fullname'] = $moodleCourses[0]->fullname;
 	else
@@ -116,7 +116,7 @@ if(isset($_POST['saveZuteilung']))
 		$moodle_course_has_groups = false;	// true if moodle course has moodles with groups assigned yet
 		$moodle_course_has_lv_or_le = false;	// true if moodel course hase moodles with lv or le assigned yet
 
-		$dbMoodleCourses = LogicCourses::getDBCoursesByIDs($mdl_course_id);
+		$dbMoodleCourses = Logic::getDBCoursesByIDs($mdl_course_id);
 		while ($dbMoodleCourse = Database::fetchRow($dbMoodleCourses))
 		{
 			if (!is_null($dbMoodleCourse->gruppe_kurzbz))
@@ -143,7 +143,7 @@ if(isset($_POST['saveZuteilung']))
 			&& !$moodle_course_has_groups)
 		{
 			// Save assignment
-			LogicCourses::insertMoodleTable(
+			Logic::insertMoodleTable(
 				$mdl_course_id, $lehreinheit_id, $lehrveranstaltung_id, $studiensemester_kurzbz, 'NOW()', $insertvon = $user, $gruppen, $gruppe_kurzbz
 			);
 			$msgBox = 'Gespeichert!';
@@ -207,17 +207,17 @@ if ($method == 'delete')
 	{
 		// Delete
 		$error = false;
-		$dbMoodleCourses = LogicCourses::getCourseByMoodleId($moodle_id);
+		$dbMoodleCourses = Logic::getCourseByMoodleId($moodle_id);
 		$dbMoodleCourse = Database::fetchRow($dbMoodleCourses);
 		if ($dbMoodleCourse)
 		{
 			if (isset($_GET['all']))
 			{
 				// Mittels webservice moodlekurs
-				$response = LogicCourses::core_course_delete_courses(array($dbMoodleCourse->mdl_course_id));
+				$response = Logic::core_course_delete_courses(array($dbMoodleCourse->mdl_course_id));
 				if ($response != null && count($response->warnings) == 0)
 				{
-					LogicCourses::deleteDBCoursesByMoodleCourseId($dbMoodleCourse->mdl_course_id);
+					Logic::deleteDBCoursesByMoodleCourseId($dbMoodleCourse->mdl_course_id);
 				}
 				else
 				{
@@ -226,7 +226,7 @@ if ($method == 'delete')
 			}
 			else
 			{
-				LogicCourses::deleteDBCourseByMoodleId($moodle_id);
+				Logic::deleteDBCourseByMoodleId($moodle_id);
 			}
 		}
 	}
@@ -491,11 +491,11 @@ if (($studiengang_kz != '' && $studiensemester_kurzbz != '') || !empty($moodle_m
 {
 	if ($moodle_mdl_course_id == '')
 	{
-		$dbMoodleCourses = LogicCourses::getDBCoursesByStudiengangStudiensemester($studiengang_kz, $studiensemester_kurzbz);
+		$dbMoodleCourses = Logic::getDBCoursesByStudiengangStudiensemester($studiengang_kz, $studiensemester_kurzbz);
 	}
 	else
 	{
-		$dbMoodleCourses = LogicCourses::getDBCoursesByIDs($moodle_mdl_course_id);
+		$dbMoodleCourses = Logic::getDBCoursesByIDs($moodle_mdl_course_id);
 	}
 
 	echo '
@@ -535,7 +535,7 @@ if (($studiengang_kz != '' && $studiensemester_kurzbz != '') || !empty($moodle_m
 			$lehreinheit = getLehreinheitBezeichnung($dbMoodleCourse->lehreinheit_id);
 		}
 
-		$moodleCourses = LogicCourses::core_course_get_courses(array($dbMoodleCourse->mdl_course_id));
+		$moodleCourses = Logic::core_course_get_courses(array($dbMoodleCourse->mdl_course_id));
 		if (count($moodleCourses) > 0) $mdl_course_bezeichnung = $moodleCourses[0]->fullname;
 
 		$delpath = 'kurs_verwaltung.php?method=delete';
@@ -570,7 +570,7 @@ if (($studiengang_kz != '' && $studiensemester_kurzbz != '') || !empty($moodle_m
 		}
 		echo '
 				<td>
-					<a href="'.LogicCourses::getBaseURL().'/course/view.php?id='.$dbMoodleCourse->mdl_course_id.'" target="_blank">
+					<a href="'.Logic::getBaseURL().'/course/view.php?id='.$dbMoodleCourse->mdl_course_id.'" target="_blank">
 					'.$mdl_course_bezeichnung.' ('.$dbMoodleCourse->mdl_course_id.')
 					</a>
 				</td>

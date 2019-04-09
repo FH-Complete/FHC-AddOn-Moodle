@@ -20,59 +20,55 @@
 /**
  * Hinzufuegen von neuen Menuepunkten bei CIS Lehrveranstaltungen
  */
-require_once(dirname(__FILE__).'/../config.inc.php');
-require_once(dirname(__FILE__).'/../include/moodle_course.class.php');
+require_once(dirname(__FILE__).'/../lib/LogicCourses.php'); // A lot happens here!
 
-$showmoodle=false;
-$link_target='';
-$link_onclick='';
-$text='';
-$link='';
+$showmoodle = false;
+$link_target = '';
+$link_onclick = '';
+$text = '';
+$link = '';
 
 $stg = new studiengang();
 $stg->load($lv->studiengang_kz);
-if ($stg->moodle)
-	$showmoodle = true;
+if ($stg->moodle) $showmoodle = true;
 
-$moodle = new moodle_course();
-if(!$moodle->getAll($lvid, $angezeigtes_stsem))
-	echo "ERROR:".$moodle->errormsg;
-if (count($moodle->result)>0)
-	$showmoodle = true;
+$courses = LogicCourses::getCoursesByLehrveranstaltungLehreinheit($lvid, $angezeigtes_stsem);
+if (Database::rowsNumber($courses) > 0) $showmoodle = true;
 
 if ($angemeldet)
 {
 	if ($showmoodle)
 	{
 		$link = APP_ROOT."addons/moodle/cis/moodle_choice.php?lvid=".urlencode($lvid)."&stsem=".urlencode($angezeigtes_stsem);
-		if (count($moodle->result) > 0)
+
+		if (Database::rowsNumber($courses) > 0)
 		{
 			if (!$is_lector)
 			{
-				$mdl_user_course = new moodle_course();
-				$mdl_user_course->getCourse($lvid, $angezeigtes_stsem, $user);
+				$coursesStudent = LogicCourses::getCoursesByStudent($lvid, $angezeigtes_stsem, $user);
 
-				if(count($moodle->result)==1 || count($mdl_user_course->result)==1)
+				if (Database::rowsNumber($courses) == 1 || Database::rowsNumber($coursesStudent) == 1)
 				{
-					if(count($mdl_user_course->result)==1)
-						$mdl_course_id = $mdl_user_course->result[0]->mdl_course_id;
+					if (Database::rowsNumber($coursesStudent) == 1)
+					{
+						$courseStudent = Database::fetchRow($coursesStudent);
+						$mdl_course_id = $courseStudent->mdl_course_id;
+					}
 					else
-						$mdl_course_id = $moodle->result[0]->mdl_course_id;
-					$link = ADDON_MOODLE_PATH.'course/view.php?id='.urlencode($mdl_course_id);
+					{
+						$course = Database::fetchRow($courses);
+						$mdl_course_id = $course->mdl_course_id;
+					}
+
+					$link = LogicCourses::getBaseURL().'/course/view.php?id='.urlencode($mdl_course_id);
 				}
-				else
-					$link = APP_ROOT."addons/moodle/cis/moodle_choice.php?lvid=".urlencode($lvid)."&stsem=".urlencode($angezeigtes_stsem);
 			}
 			else
 			{
-				if (count($moodle->result) == 1)
+				if (Database::rowsNumber($courses) == 1)
 				{
-					$link = ADDON_MOODLE_PATH.'course/view.php?id='.urlencode($moodle->result[0]->mdl_course_id);
-				}
-				else
-				{
-					$link = APP_ROOT."addons/moodle/cis/moodle_choice.php";
-					$link .= "?lvid=".urlencode($lvid)."&stsem=".urlencode($angezeigtes_stsem);
+					$course = Database::fetchRow($courses);
+					$link = LogicCourses::getBaseURL().'/course/view.php?id='.urlencode($course->mdl_course_id);
 				}
 			}
 			$link_target = '_blank';
@@ -82,21 +78,18 @@ if ($angemeldet)
 			$link = '';
 		}
 
-		if ($is_lector &&
-			(
-				!defined('ADDON_MOODLE_LECTOR_CREATE_COURSE')
-				|| (defined('ADDON_MOODLE_LECTOR_CREATE_COURSE') && ADDON_MOODLE_LECTOR_CREATE_COURSE)
-			))
+		if ($is_lector
+			&& (!defined('ADDON_MOODLE_LECTOR_CREATE_COURSE') || (defined('ADDON_MOODLE_LECTOR_CREATE_COURSE') && ADDON_MOODLE_LECTOR_CREATE_COURSE))
+		)
 		{
-			$text .=  $p->t('moodle/subTextIcon', array(urlencode($lvid),urlencode($angezeigtes_stsem)));
+			$text .= $p->t('moodle/subTextIcon', array(urlencode($lvid), urlencode($angezeigtes_stsem)));
 		}
 	}
 }
 
 if ($showmoodle)
 {
-	$menu[] = array
-	(
+	$menu[] = array (
 		'id' => 'addon_moodle_menu_moodle',
 		'position' => '70',
 		'name' => $p->t('moodle/moodle'),

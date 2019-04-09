@@ -242,7 +242,7 @@ class LogicUsers extends Logic
 			}
 			else
 			{
-				$category = self::_core_course_get_categories($moodleCourse->categoryid);
+				$category = self::_core_course_get_categories_by_id($moodleCourse->categoryid);
 
 				if ($category != null) $moodleCourseCategoryId = $moodleParentCategoryIds[$moodleCourse->categoryid] = $category[0]->parent;
 			}
@@ -892,6 +892,31 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
+	public static function enrolUserToCourses($uid, $moodleCoursesIDsArray, $roleid)
+	{
+		$usersToEnroll = array();
+		$numCreatedUsers = 0 ;
+
+		foreach($moodleCoursesIDsArray as $moodleCourseId)
+		{
+			$users = self::_getOrCreateMoodleUser($uid, $numCreatedUsers);
+
+			$usersToEnroll[] = array(
+				'roleid' => $roleid,
+				'userid' => $users[0]->id,
+				'courseid' => $moodleCourseId
+			);
+		}
+
+		if (count($usersToEnroll) > 0)
+		{
+			self::_enrol_manual_enrol_users($usersToEnroll);
+		}
+	}
+
+	/**
+	 *
+	 */
 	public static function getCourseGroups($moodleCourseId)
 	{
 		return parent::_dbCall(
@@ -1312,7 +1337,7 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	private static function _core_course_get_categories($id)
+	private static function _core_course_get_categories_by_id($id)
 	{
 		return parent::_moodleAPICall(
 			'core_course_get_categories_by_id',

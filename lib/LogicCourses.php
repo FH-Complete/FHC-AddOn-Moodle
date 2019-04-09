@@ -11,58 +11,6 @@ class LogicCourses extends Logic
     // Public business logic methods
 
 	/**
-	 *
-	 */
-	public static function setEndDateEnabled()
-	{
-		return self::_getMoodleVersion() >= ADDON_MOODLE_VERSION_SET_END_DATE;
-	}
-
-	/**
-	 * Generates the parameter enddate for all courses
-	 */
-	public static function getEndDate($studiensemester)
-	{
-		$endDate = null;
-
-		if (self::setEndDateEnabled())
-		{
-			$datum = new Datum();
-
-			$endDate = $datum->mktime_fromdate($studiensemester->ende);
-		}
-
-		return $endDate;
-	}
-
-	/**
-	 * Generates the parameter startdate for all courses
-	 */
-	public static function getStartDate($studiensemester)
-	{
-		$datum = new Datum();
-
-		return $datum->mktime_fromdate($studiensemester->start);
-	}
-
-	/**
-	 * Generates the parameter courseformatoptions for all courses
-	 */
-	public static function getCourseFormatOptions()
-	{
-		$courseFormatOptions = null;
-		if (ADDON_MOODLE_NUMSECTIONS_VALUE > 0)
-		{
-			$numsectionsOptions = new stdClass();
-			$numsectionsOptions->name = ADDON_MOODLE_NUMSECTIONS_NAME;
-			$numsectionsOptions->value = ADDON_MOODLE_NUMSECTIONS_VALUE;
-			$courseFormatOptions = array($numsectionsOptions);
-		}
-
-		return $courseFormatOptions;
-	}
-
-	/**
 	 * Generates the parameter shortname for the given course
 	 */
 	public static function getCourseShortname($course, $studiensemester_kurzbz)
@@ -233,7 +181,7 @@ class LogicCourses extends Logic
 
 				Output::printDebug('Root category '.$studiensemester_kurzbz.'->'.ADDON_MOODLE_ROOT_CATEGORY_ID.' ID: '.$rootCategoryId);
 
-				$moodleCourseId = self::_core_course_create_courses(
+				$moodleCourseId = self::core_course_create_courses(
 					ADDON_MOODLE_GROUPS_COURSE_FULLNAME, ADDON_MOODLE_GROUPS_COURSE_SHORTNAME,
 					$rootCategoryId, $startDate, ADDON_MOODLE_COURSE_FORMAT, $courseFormatOptions, $endDate
 				);
@@ -391,10 +339,10 @@ class LogicCourses extends Logic
 	private static function _getOrCreateCategory($name, $parent, &$numCategoriesAddedToMoodle)
 	{
 		// Department
-		$categories = self::_core_course_get_categories($name, $parent);
+		$categories = self::core_course_get_categories_by_name_parent($name, $parent);
 		if (count($categories) == 0)
 		{
-			$categories = self::_core_course_create_categories($name, $parent);
+			$categories = self::core_course_create_categories($name, $parent);
 			$numCategoriesAddedToMoodle++;
 		}
 
@@ -410,7 +358,7 @@ class LogicCourses extends Logic
 
 		if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 		{
-			$moodleCourseId = self::_core_course_create_courses(
+			$moodleCourseId = self::core_course_create_courses(
 				$fullname, $shortname, $categoryId, $startDate, ADDON_MOODLE_COURSE_FORMAT, $courseFormatOptions, $endDate
 			);
 
@@ -546,46 +494,6 @@ class LogicCourses extends Logic
 	/**
 	 *
 	 */
-	private static function _core_course_get_categories($name, $parent)
-	{
-		return parent::_moodleAPICall(
-			'core_course_get_categories_by_name_parent',
-			array($name, $parent),
-			'An error occurred while retrieving categories from moodle'
-		);
-	}
-
-	/**
-	 *
-	 */
-	private static function _core_course_create_categories($name, $parent)
-	{
-		return parent::_moodleAPICall(
-			'core_course_create_categories',
-			array($name, $parent),
-			'An error occurred while creating a category in moodle'
-		);
-	}
-
-	/**
-	 *
-	 */
-	private static function _core_course_create_courses(
-		$fullname, $shortname, $categoryId, $startDate, $format = 'topics', $courseFormatOptions = null, $endDate = null
-	)
-	{
-		$courses = parent::_moodleAPICall(
-			'core_course_create_courses',
-			array($fullname, $shortname, $categoryId, $format, $courseFormatOptions, $startDate, $endDate),
-			'An error occurred while creating a new course in moodle'
-		);
-
-		return $courses[0]->id;
-	}
-
-	/**
-	 *
-	 */
 	private static function _getCourseByShortname($shortname)
 	{
 		$courses = parent::_moodleAPICall(
@@ -597,21 +505,5 @@ class LogicCourses extends Logic
 		if (count($courses->courses) == 0) return null;
 
 		return $courses->courses[0];
-	}
-
-	/**
-	 *
-	 */
-	private static function _getMoodleVersion()
-	{
-		$info = parent::_moodleAPICall(
-			'core_webservice_get_site_info',
-			array(),
-			'An error occurred while retrieving moodle infos'
-		);
-
-		$release = $info->release;
-
-		return substr($release, 0, ADDON_MOODLE_VERSION_LENGTH);
 	}
 }

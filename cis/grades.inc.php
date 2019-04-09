@@ -20,81 +20,75 @@
 /**
  * Load grades from Moodle
  */
-require_once(dirname(__FILE__).'/../config.inc.php');
-require_once(dirname(__FILE__).'/../include/moodle_course.class.php');
+require_once(dirname(__FILE__).'/../lib/Logic.php'); // A lot happens here!
 
-$moodle = new moodle_course();
-$moodle->loadNoten($lvid, $stsem);
+$courseGrades = Logic::loadCourseGrades($lvid, $stsem);
 
 $moodle_course_bezeichnung = array();
 $moodle_course_gewicht = array();
 
-if (isset($moodle) && count($moodle->result) > 0)
+foreach ($courseGrades as $courseGrade)
 {
-	foreach ($moodle->result as $moodle_noten)
+	// Kursbezeichnung laden falls noch nicht bekannt
+	if (!isset($moodle_course_bezeichnung[$courseGrade->mdl_course_id]))
 	{
-		// Kursbezeichnung laden falls noch nicht bekannt
-		if (!isset($moodle_course_bezeichnung[$moodle_noten->mdl_course_id]))
+		$courses = Logic::core_course_get_courses(array($courseGrade->mdl_course_id));
+		if (count($courses) > 0)
 		{
-			$moodlecourse = new moodle_course();
-			$moodlecourse->loadMoodleCourse($moodle_noten->mdl_course_id);
-
-			$moodle_course_bezeichnung[$moodle_noten->mdl_course_id] = $moodlecourse->mdl_shortname;
+			$moodle_course_bezeichnung[$courseGrade->mdl_course_id] = $courses[0]->shortname;
 		}
+	}
 
-		// Gewichtung des Kurses laden falls noch nicht bekannt
-		if (!isset($moodle_course_gewicht[$moodle_noten->mdl_course_id]))
+	// Gewichtung des Kurses laden falls noch nicht bekannt
+	if (!isset($moodle_course_gewicht[$courseGrade->mdl_course_id]))
+	{
+		$les = Logic::getLeFromCourse($courseGrade->mdl_course_id);
+		while ($le = Database::fetchRow($les))
 		{
-			$mdl_obj = new moodle_course();
-			$mdl_lehreinheiten = $mdl_obj->getLeFromCourse($moodle_noten->mdl_course_id);
-
-			foreach ($mdl_lehreinheiten as $row_mdl_lehreinheit)
+			if ($le->lehreinheit_id != '')
 			{
-				if ($row_mdl_lehreinheit != '')
-				{
-					$lehreinheit_gewicht_obj = new lehreinheit();
-					$lehreinheit_gewicht_obj->load($row_mdl_lehreinheit);
+				$lehreinheit_gewicht_obj = new lehreinheit();
+				$lehreinheit_gewicht_obj->load($row_mdl_lehreinheit);
 
-					if ($lehreinheit_gewicht_obj->gewicht != '')
-					{
-						$moodle_course_gewicht[$moodle_noten->mdl_course_id] = $lehreinheit_gewicht_obj->gewicht;
-						break;
-					}
+				if ($lehreinheit_gewicht_obj->gewicht != '')
+				{
+					$moodle_course_gewicht[$courseGrade->mdl_course_id] = $lehreinheit_gewicht_obj->gewicht;
+					break;
 				}
 			}
 		}
+	}
 
+	$gewichtung = 1;
+	if (isset($moodle_course_gewicht[$courseGrade->mdl_course_id]))
+		$gewichtung = $moodle_course_gewicht[$courseGrade->mdl_course_id];
+
+	if ($gewichtung == '')
 		$gewichtung = 1;
-		if (isset($moodle_course_gewicht[$moodle_noten->mdl_course_id]))
-			$gewichtung = $moodle_course_gewicht[$moodle_noten->mdl_course_id];
 
-		if ($gewichtung == '')
-			$gewichtung = 1;
+	if (defined('CIS_GESAMTNOTE_PUNKTE') && CIS_GESAMTNOTE_PUNKTE)
+	{
+		$points = $courseGrade->note;
+		$grade = null;
+	}
+	else
+	{
+		$points = null;
+		$grade = $courseGrade->note;
+	}
 
-		if (defined('CIS_GESAMTNOTE_PUNKTE') && CIS_GESAMTNOTE_PUNKTE)
-		{
-			$points = $moodle_noten->note;
-			$grade = null;
-		}
-		else
-		{
-			$points = null;
-			$grade = $moodle_noten->note;
-		}
+	if (isset($noten_array[$courseGrade->note]))
+		$note_bezeichnung = $noten_array[$courseGrade->note]['anmerkung'];
+	else
+		$note_bezeichnung = $courseGrade->note;
 
-		if (isset($noten_array[$moodle_noten->note]))
-			$note_bezeichnung = $noten_array[$moodle_noten->note]['anmerkung'];
-		else
-			$note_bezeichnung = $moodle_noten->note;
-
-		if(isset($grades[$moodle_noten->uid]))
-		{
-			$grades[$moodle_noten->uid]['grades'][] = array(
-				'grade' => $grade,
-				'points' => $points,
-				'weight' => $gewichtung,
-				'text' => $note_bezeichnung.' ('.$moodle_course_bezeichnung[$moodle_noten->mdl_course_id].')'
-			);
-		}
+	if(isset($grades[$courseGrade->username]))
+	{
+		$grades[$courseGrade->username]['grades'][] = array(
+			'grade' => $grade,
+			'points' => $points,
+			'weight' => $gewichtung,
+			'text' => $note_bezeichnung.' ('.$moodle_course_bezeichnung[$courseGrade->mdl_course_id].')'
+		);
 	}
 }

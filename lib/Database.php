@@ -1,6 +1,6 @@
 <?php
 
-require_once('../../../include/basis_db.class.php');
+require_once(dirname(__FILE__).'/../../../include/basis_db.class.php');
 
 /**
  *
@@ -130,12 +130,11 @@ class Database extends basis_db
 						JOIN public.tbl_benutzer b USING(uid)
 						JOIN public.tbl_person p USING(person_id)
 					WHERE
-						bf.funktion_kurzbz IN (\''.ADDON_MOODLE_COURSE_FUNCTIONS.'\')
+						bf.funktion_kurzbz IN ('.ADDON_MOODLE_COURSE_FUNCTIONS.')
 						AND (bf.datum_von <= NOW() OR bf.datum_von IS NULL)
 						AND (bf.datum_bis >= NOW() OR bf.datum_bis IS NULL)
 						AND b.aktiv = TRUE
 						AND oes.organisationseinheittyp_kurzbz IN ('.ADDON_MOODLE_OUTYPES.')
-						)
 					';
 
  		return $this->_execQuery($query);
@@ -692,6 +691,102 @@ class Database extends basis_db
 
 		return $this->_execQuery($query);
 	}
+
+	/**
+	 *
+	 */
+	public function getCoursesByLehrveranstaltungStudiensemester($lehrveranstaltung_id, $studiensemester_kurzbz)
+ 	{
+ 		$query = 'SELECT
+						DISTINCT m.mdl_course_id
+					FROM
+						addon.tbl_moodle m
+						JOIN lehre.tbl_lehreinheit l USING(lehrveranstaltung_id, studiensemester_kurzbz)
+					WHERE
+						m.lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id).'
+						AND m.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+					UNION
+					SELECT
+						DISTINCT m.mdl_course_id
+					FROM
+						addon.tbl_moodle m
+						JOIN lehre.tbl_lehreinheit l USING(lehreinheit_id)
+					WHERE
+						l.lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id).'
+						AND m.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz);
+
+ 		return $this->_execQuery($query);
+ 	}
+
+	/**
+	 *
+	 */
+	public function getLeFromCourse($moodleCourseId)
+ 	{
+ 		$query = 'SELECT
+					lehreinheit_id
+				FROM
+					addon.tbl_moodle
+				WHERE
+					mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER);
+
+ 		return $this->_execQuery($query);
+ 	}
+
+	/**
+	 *
+	 */
+	public function getCoursesByLehrveranstaltungLehreinheit($lehrveranstaltung_id, $studiensemester_kurzbz)
+ 	{
+ 		$query = 'SELECT
+						DISTINCT ON(mdl_course_id) *
+					FROM
+						lehre.tbl_lehrveranstaltung lv, lehre.tbl_lehreinheit lh, addon.tbl_moodle m
+					WHERE
+						lv.lehrveranstaltung_id = lh.lehrveranstaltung_id
+						AND	lv.lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id, FHC_INTEGER).'
+						AND	lh.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+						AND	(
+								(
+									lv.lehrveranstaltung_id = m.lehrveranstaltung_id
+									AND m.studiensemester_kurzbz = lh.studiensemester_kurzbz
+								)
+								OR lh.lehreinheit_id = m.lehreinheit_id
+							)';
+
+ 		return $this->_execQuery($query);
+ 	}
+
+	/**
+	 *
+	 */
+	public function getCoursesByStudent($lehrveranstaltung_id, $studiensemester_kurzbz, $uid)
+ 	{
+ 		$query = 'SELECT *
+				FROM (
+					SELECT
+						lh.lehreinheit_id, mdl_course_id
+					FROM
+						addon.tbl_moodle m
+						JOIN lehre.tbl_lehreinheit lh USING(lehrveranstaltung_id, studiensemester_kurzbz)
+					WHERE
+						m.lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id, FHC_INTEGER).'
+						AND m.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+					UNION
+					SELECT
+						lh.lehreinheit_id, mdl_course_id
+					FROM
+						addon.tbl_moodle m
+						JOIN lehre.tbl_lehreinheit lh USING(lehreinheit_id)
+					WHERE
+						lh.lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id, FHC_INTEGER).'
+						AND lh.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+					) courses
+				JOIN campus.vw_student_lehrveranstaltung vwsl USING(lehreinheit_id)
+				WHERE vwsl.uid = '.$this->db_add_param($uid);
+
+ 		return $this->_execQuery($query);
+ 	}
 
 	// --------------------------------------------------------------------------------------------
     // Public static methods

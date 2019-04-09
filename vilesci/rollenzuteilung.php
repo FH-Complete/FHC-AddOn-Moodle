@@ -20,19 +20,15 @@
 /**
  * Script um eine Person gleichzeitig zu mehreren Moodle Kursen zuzuteilen
  */
-require_once('../../../config/vilesci.config.inc.php');
-require_once('../../../config/global.config.inc.php');
+require_once('../lib/LogicUsers.php'); // A lot happens here!
+
 require_once('../../../include/functions.inc.php');
-require_once('../../../include/benutzerberechtigung.class.php');
-require_once('../config.inc.php');
-require_once('../include/moodle_user.class.php');
 
 $user = get_uid();
 $rechte = new benutzerberechtigung();
 $rechte->getBerechtigungen($user);
 
-if(!$rechte->isBerechtigt('addon/moodle'))
-	die('Sie haben keine Berechtigung fuer diese Seite');
+if(!$rechte->isBerechtigt('addon/moodle')) die('Sie haben keine Berechtigung fuer diese Seite');
 
 echo '<!DOCTYPE html>
 <html>
@@ -78,23 +74,17 @@ echo '<!DOCTYPE html>
 	</table>
 </form>
 ';
-if(isset($_POST['add']))
+if (isset($_POST['add']))
 {
-	if(isset($_POST['uid']) && $_POST['uid']!='' &&
-		isset($_POST['role']) && $_POST['role']!='' &&
-		isset($_POST['mdl_course_ids']) && $_POST['mdl_course_ids']!='')
+	if (isset($_POST['uid']) && $_POST['uid'] != ''
+		&& isset($_POST['role']) && $_POST['role'] != ''
+		&& isset($_POST['mdl_course_ids']) && $_POST['mdl_course_ids'] != '')
 	{
-		$mdl_course_id_array = explode(',',$_POST['mdl_course_ids']);
+		$mdl_course_id_array = explode(',', $_POST['mdl_course_ids']);
 		$uid = $_POST['uid'];
 		$role_id=$_POST['role'];
 
-		$moodle = new moodle_user();
-		if($moodle->MassEnroll($uid, $mdl_course_id_array, $role_id))
-		{
-			echo 'Zuteilung erfolgreich';
-		}
-		else
-			echo 'Fehler bei der Zuteilung:'.$moodle->errormsg;
+		LogicUsers::enrolUserToCourses($uid, $mdl_course_id_array, $role_id);
 	}
 	else
 	{

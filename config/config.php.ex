@@ -58,6 +58,10 @@ define('ADDON_MOODLE_KOMPETENZFELDLEITUNG_ROLEID', 19);
 define('ADDON_MOODLE_DEPARTMENTLEITUNG_ROLEID', 20);
 define('ADDON_MOODLE_STUDIENGANGSLEITUNG_ROLEID', 17);
 
+// Organisation unit types deifinition
+define('ADDON_MOODLE_DEPARTMENT', 'Department');
+define('ADDON_MOODLE_KOMPETENZFELD', 'Kompetenzfeld');
+
 // Organisation unit types
 define('ADDON_MOODLE_OUTYPES', '\'Department\', \'Kompetenzfeld\'');
 

@@ -1,19 +1,21 @@
 <?php
 
-require_once('../../../config/global.config.inc.php');
-require_once('../../../config/vilesci.config.inc.php');
+require_once(dirname(__FILE__).'/../../../config/global.config.inc.php');
 
-require_once('../../../include/datum.class.php');
-require_once('../../../include/benutzerberechtigung.class.php');
-require_once('../../../include/student.class.php');
-require_once('../../../include/studiengang.class.php');
-require_once('../../../include/studiensemester.class.php');
+// Could be loaded by a CIS page so its not needed to load vilesci configs
+if (!defined('DB_SYSTEM')) require_once(dirname(__FILE__).'/../../../config/vilesci.config.inc.php');
+
+require_once(dirname(__FILE__).'/../../../include/datum.class.php');
+require_once(dirname(__FILE__).'/../../../include/benutzerberechtigung.class.php');
+require_once(dirname(__FILE__).'/../../../include/student.class.php');
+require_once(dirname(__FILE__).'/../../../include/studiengang.class.php');
+require_once(dirname(__FILE__).'/../../../include/studiensemester.class.php');
 
 require_once('Output.php');
 require_once('MoodleAPI.php');
 require_once('Database.php');
 
-require_once('../config/config.php');
+require_once(dirname(__FILE__).'/../config/config.php');
 
 /**
  *
@@ -50,6 +52,82 @@ abstract class Logic
 		}
 
 		return $currentOrNextStudiensemester;
+	}
+
+	/**
+	 *
+	 */
+	public static function setEndDateEnabled()
+	{
+		return self::_getMoodleVersion() >= ADDON_MOODLE_VERSION_SET_END_DATE;
+	}
+
+	/**
+	 * Generates the parameter enddate for all courses
+	 */
+	public static function getEndDate($studiensemester)
+	{
+		$endDate = null;
+
+		if (self::setEndDateEnabled())
+		{
+			$datum = new Datum();
+
+			$endDate = $datum->mktime_fromdate($studiensemester->ende);
+		}
+
+		return $endDate;
+	}
+
+	/**
+	 * Generates the parameter startdate for all courses
+	 */
+	public static function getStartDate($studiensemester)
+	{
+		$datum = new Datum();
+
+		return $datum->mktime_fromdate($studiensemester->start);
+	}
+
+	/**
+	 * Generates the parameter courseformatoptions for all courses
+	 */
+	public static function getCourseFormatOptions()
+	{
+		$courseFormatOptions = null;
+		if (ADDON_MOODLE_NUMSECTIONS_VALUE > 0)
+		{
+			$numsectionsOptions = new stdClass();
+			$numsectionsOptions->name = ADDON_MOODLE_NUMSECTIONS_NAME;
+			$numsectionsOptions->value = ADDON_MOODLE_NUMSECTIONS_VALUE;
+			$courseFormatOptions = array($numsectionsOptions);
+		}
+
+		return $courseFormatOptions;
+	}
+
+	/**
+	 *
+	 */
+	public static function loadCourseGrades($lehrveranstaltung_id, $studiensemester_kurzbz)
+	{
+		$courseGrades = array();
+		$courses = self::getCoursesByLehrveranstaltungStudiensemester($lehrveranstaltung_id, $studiensemester_kurzbz);
+
+		while ($course = Database::fetchRow($courses))
+		{
+			$grades = self::fhcomplete_get_course_grades($course->mdl_course_id, (CIS_GESAMTNOTE_PUNKTE ? 2 : 3));
+			foreach ($grades as $grade)
+			{
+				if ($grade->note != '-')
+				{
+					$grade->mdl_course_id = $course->mdl_course_id;
+					$courseGrades[] = $grade;
+				}
+			}
+		}
+
+		return $courseGrades;
 	}
 
 	// --------------------------------------------------------------------------------------------
@@ -201,6 +279,54 @@ abstract class Logic
 		);
 	}
 
+	/**
+	 *
+	 */
+	public static function getCoursesByLehrveranstaltungStudiensemester($lehrveranstaltung_id, $studiensemester_kurzbz)
+	{
+		return self::_dbCall(
+			'getCoursesByLehrveranstaltungStudiensemester',
+			array($lehrveranstaltung_id, $studiensemester_kurzbz),
+			'An error occurred while retrieving courses by lehrveranstaltung and studiensemester'
+		);
+	}
+
+	/**
+	 *
+	 */
+	public static function getLeFromCourse($moodleCourseId)
+	{
+		return self::_dbCall(
+			'getLeFromCourse',
+			array($moodleCourseId),
+			'An error occurred while retrieving lehrveranstaltung from a course'
+		);
+	}
+
+	/**
+	 *
+	 */
+	public static function getCoursesByLehrveranstaltungLehreinheit($lehrveranstaltung_id, $studiensemester_kurzbz)
+	{
+		return self::_dbCall(
+			'getCoursesByLehrveranstaltungLehreinheit',
+			array($lehrveranstaltung_id, $studiensemester_kurzbz),
+			'An error occurred while retrieving courses by lehrveranstaltung and lehreinheit studiensemester'
+		);
+	}
+
+	/**
+	 *
+	 */
+	public static function getCoursesByStudent($lehrveranstaltung_id, $studiensemester_kurzbz, $uid)
+	{
+		return self::_dbCall(
+			'getCoursesByStudent',
+			array($lehrveranstaltung_id, $studiensemester_kurzbz, $uid),
+			'An error occurred while retrieving courses by student'
+		);
+	}
+
 	// --------------------------------------------------------------------------------------------
     // Public MoodleAPI wrappers methods
 
@@ -270,6 +396,58 @@ abstract class Logic
 		return $users;
 	}
 
+	/**
+	 *
+	 */
+	public static function core_course_create_courses(
+		$fullname, $shortname, $categoryId, $startDate, $format = 'topics', $courseFormatOptions = null, $endDate = null
+	)
+	{
+		$courses = self::_moodleAPICall(
+			'core_course_create_courses',
+			array($fullname, $shortname, $categoryId, $format, $courseFormatOptions, $startDate, $endDate),
+			'An error occurred while creating a new course in moodle'
+		);
+
+		return $courses[0]->id;
+	}
+
+	/**
+	 *
+	 */
+	public static function core_course_get_categories_by_name_parent($name, $parent)
+	{
+		return self::_moodleAPICall(
+			'core_course_get_categories_by_name_parent',
+			array($name, $parent),
+			'An error occurred while retrieving categories from moodle'
+		);
+	}
+
+	/**
+	 *
+	 */
+	public static function core_course_create_categories($name, $parent)
+	{
+		return self::_moodleAPICall(
+			'core_course_create_categories',
+			array($name, $parent),
+			'An error occurred while creating a category in moodle'
+		);
+	}
+
+	/**
+	 *
+	 */
+	public static function fhcomplete_get_course_grades($moodleCoursesId, $type)
+	{
+		return self::_moodleAPICall(
+			'fhcomplete_get_course_grades',
+			array($moodleCoursesId, $type),
+			'An error occurred while retrieving grades for a course'
+		);
+	}
+
 	// --------------------------------------------------------------------------------------------
     // Protected methods
 
@@ -329,6 +507,22 @@ abstract class Logic
 		}
 
 		return $result;
+	}
+
+	/**
+	 *
+	 */
+	private static function _getMoodleVersion()
+	{
+		$info = self::_moodleAPICall(
+			'core_webservice_get_site_info',
+			array(),
+			'An error occurred while retrieving moodle infos'
+		);
+
+		$release = $info->release;
+
+		return substr($release, 0, ADDON_MOODLE_VERSION_LENGTH);
 	}
 
 	// --------------------------------------------------------------------------------------------
