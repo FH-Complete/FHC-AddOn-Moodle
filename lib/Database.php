@@ -788,6 +788,18 @@ class Database extends basis_db
  		return $this->_execQuery($query);
  	}
 
+	/**
+	 *
+	 */
+	public function getNewUsers($days)
+ 	{
+ 		$query = 'SELECT b.uid
+					FROM public.tbl_benutzer b
+				   WHERE b.insertamum >= (NOW() - interval \''.$days.' day\')';
+
+ 		return $this->_execQuery($query);
+ 	}
+
 	// --------------------------------------------------------------------------------------------
     // Public static methods
 

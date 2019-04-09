@@ -322,6 +322,39 @@ class LogicUsers extends Logic
 	}
 
 	/**
+	 *
+	 */
+	public static function synchronizeNewUsers($newUsers)
+	{
+		//
+		$numCreatedUsers = 0;
+
+		if (Database::rowsNumber($newUsers) > 0) Output::printDebug('------------------------------------------------------------');
+
+		// Loops through the users retrived from database
+		while ($newUser = Database::fetchRow($newUsers))
+		{
+			Output::printDebug('>>> Syncing new user '.$newUser->uid.'" <<<');
+
+			$users = self::_getOrCreateMoodleUser($newUser->uid, $numCreatedUsers); // self-explanatory ;)
+
+			Output::printDebug('------------------------------------------------------------');
+		}
+
+		// Summary
+		Output::printInfo('----------------------------------------------------------------------');
+		if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
+		{
+			Output::printInfo('Total amount of users created in moodle: '. $numCreatedUsers);
+		}
+		else
+		{
+			Output::printInfo('Total amount of users that would be created in moodle: '. $numCreatedUsers);
+		}
+		Output::printInfo('----------------------------------------------------------------------');
+	}
+
+	/**
 	 * Returns all the courses from moodle identified by a list of IDs given
 	 * with the parameter $moodleCoursesIDsArray
 	 * The call is divided by chunks, the size of these chunks is given
@@ -923,6 +956,18 @@ class LogicUsers extends Logic
 			'getCourseGroups',
 			array($moodleCourseId),
 			'An error occurred while retrieving course groups'
+		);
+	}
+
+	/**
+	 *
+	 */
+	public static function getNewUsers($days)
+	{
+		return parent::_dbCall(
+			'getNewUsers',
+			array($days),
+			'An error occurred while retrieving new users'
 		);
 	}
 
