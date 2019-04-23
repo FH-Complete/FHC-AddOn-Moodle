@@ -54,7 +54,10 @@ echo '<!DOCTYPE HTML>
 $meinekurse = '';
 $allgemeinekurse = '';
 
-$courses = LogicCourses::getCoursesByLehrveranstaltungLehreinheit($lvid, $stsem);
+$myCourses = array();
+$otherCourses = array();
+
+$courses = LogicCourses::getCoursesByLehrveranstaltungLehreinheitNoDistinct($lvid, $stsem);
 while ($course = Database::fetchRow($courses))
 {
 	$moodleCourses = LogicCourses::core_course_get_courses(array($course->mdl_course_id));
@@ -62,9 +65,15 @@ while ($course = Database::fetchRow($courses))
 	$bezeichnung = $moodleCourses[0]->fullname;
 	if ($bezeichnung == '') $bezeichnung = 'Course '.$course->mdl_course_id;
 
-	$kurs = "<a href='".LogicCourses::getBaseURL()."/course/view.php?id=".$course->mdl_course_id."' class='Item'>$bezeichnung</a><br>";
+	// List of all courses
+	if (!in_array($course->mdl_course_id, $otherCourses))
+	{
+		$allgemeinekurse .= "<a href='".LogicCourses::getBaseURL()."/course/view.php?id=".$course->mdl_course_id."' class='Item'>$bezeichnung</a><br>";
+		$otherCourses[] = $course->mdl_course_id;
+	}
 
-	if ($course->lehreinheit_id != '')
+	// Test if the course belongs to the user
+	if ($course->lehreinheit_id != '' && !in_array($course->mdl_course_id, $myCourses))
 	{
 		$zugeordnet = false;
 
@@ -81,10 +90,10 @@ while ($course = Database::fetchRow($courses))
 
 		if ($zugeordnet)
 		{
-			$meinekurse .= $kurs;
+			$meinekurse .= "<a href='".LogicCourses::getBaseURL()."/course/view.php?id=".$course->mdl_course_id."' class='Item'>$bezeichnung</a><br>";;
+			$myCourses[] = $course->mdl_course_id;
 		}
 	}
-	$allgemeinekurse .= $kurs;
 }
 
 if($meinekurse!='')

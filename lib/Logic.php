@@ -130,6 +130,22 @@ abstract class Logic
 		return $courseGrades;
 	}
 
+	/**
+	 *
+	 */
+	public static function getOrCreateCategory($name, $parent, &$numCategoriesAddedToMoodle)
+	{
+		// Department
+		$categories = self::core_course_get_categories_by_name_parent($name, $parent);
+		if (count($categories) == 0)
+		{
+			$categories = self::core_course_create_categories($name, $parent);
+			$numCategoriesAddedToMoodle++;
+		}
+
+		return $categories[0]->id;
+	}
+
 	// --------------------------------------------------------------------------------------------
     // Public Database wrappers methods
 
@@ -318,12 +334,84 @@ abstract class Logic
 	/**
 	 *
 	 */
+	public static function getCoursesByLehrveranstaltungLehreinheitNoDistinct($lehrveranstaltung_id, $studiensemester_kurzbz)
+	{
+		return self::_dbCall(
+			'getCoursesByLehrveranstaltungLehreinheitNoDistinct',
+			array($lehrveranstaltung_id, $studiensemester_kurzbz),
+			'An error occurred while retrieving courses by lehrveranstaltung and lehreinheit studiensemester'
+		);
+	}
+
+	/**
+	 *
+	 */
 	public static function getCoursesByStudent($lehrveranstaltung_id, $studiensemester_kurzbz, $uid)
 	{
 		return self::_dbCall(
 			'getCoursesByStudent',
 			array($lehrveranstaltung_id, $studiensemester_kurzbz, $uid),
 			'An error occurred while retrieving courses by student'
+		);
+	}
+
+	/**
+	 *
+	 */
+	public static function updateGruppen($moodle_id, $gruppen)
+	{
+		return self::_dbCall(
+			'updateGruppen',
+			array($moodle_id, $gruppen),
+			'An error occurred while updating the field gruppen'
+		);
+	}
+
+	/**
+	 *
+	 */
+	public static function coursesLehrveranstaltungStudiensemesterExists($lehrveranstaltung_id, $studiensemester_kurzbz)
+	{
+		return self::_dbCall(
+			'coursesLehrveranstaltungStudiensemesterExists',
+			array($lehrveranstaltung_id, $studiensemester_kurzbz),
+			'An error occurred while counting number of courses by lehrveranstaltung and studiensemester'
+		);
+	}
+
+	/**
+	 *
+	 */
+	public static function coursesAllLehreinheitStudiensemesterExists($lehrveranstaltung_id, $studiensemester_kurzbz)
+	{
+		return self::_dbCall(
+			'coursesAllLehreinheitStudiensemesterExists',
+			array($lehrveranstaltung_id, $studiensemester_kurzbz),
+			'An error occurred while counting number of courses by all lehreinheit and studiensemester'
+		);
+	}
+
+	/**
+	 *
+	 */
+	public static function coursesLehreinheitExists($lehreinheit_id)
+	{
+		return self::_dbCall(
+			'coursesLehreinheitExists',
+			array($lehreinheit_id),
+			'An error occurred while counting number of courses by lehreinheit'
+		);
+	}
+
+	/**
+	 *
+	 */
+	public static function getTestCourses($lehrveranstaltung_id, $studiensemester_kurzbz, $prefix = 'TK')
+	{
+		return self::_dbCall(
+			'getTestCourses',
+			array($lehrveranstaltung_id, $studiensemester_kurzbz, $prefix),
+			'An error occurred while retrieving test courses'
 		);
 	}
 
@@ -446,6 +534,22 @@ abstract class Logic
 			array($moodleCoursesId, $type),
 			'An error occurred while retrieving grades for a course'
 		);
+	}
+
+	/**
+	 *
+	 */
+	public static function getCourseByShortname($shortname)
+	{
+		$courses = self::_moodleAPICall(
+			'core_course_get_courses_by_field',
+			array('shortname', $shortname),
+			'An error occurred while retrieving a course from moodle by shortname'
+		);
+
+		if (count($courses->courses) == 0) return null;
+
+		return $courses->courses[0];
 	}
 
 	// --------------------------------------------------------------------------------------------

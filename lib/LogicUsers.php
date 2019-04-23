@@ -778,6 +778,51 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
+	public static function synchronizeTestStudenten($moodleCourseId, $moodleEnrolledUsers, $uidsArray)
+	{
+		$usersToEnroll = array(); //
+
+		//
+		foreach ($uidsArray as $uid)
+		{
+			$userFound = false; //
+
+			//
+			foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
+			{
+				//
+				if ($uid == $moodleEnrolledUser->username)
+				{
+					$userFound = true;
+					break;
+				}
+			}
+
+			//
+			if (!$userFound)
+			{
+				$users = self::core_user_get_users_by_field($uid);
+				if (count($users) > 0) //
+				{
+					$usersToEnroll[] = array(
+						'roleid' => ADDON_MOODLE_STUDENT_ROLEID,
+						'userid' => $users[0]->id,
+						'courseid' => $moodleCourseId
+					);
+				}
+			}
+		}
+
+		//
+		if (count($usersToEnroll) > 0)
+		{
+			self::_enrol_manual_enrol_users($usersToEnroll);
+		}
+	}
+
+	/**
+	 *
+	 */
 	public static function synchronizeCompetenceFieldDepartmentLeaders(
 		$moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol, &$numCreatedUsers, &$numEnrolledLeaders
 	)

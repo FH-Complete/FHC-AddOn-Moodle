@@ -739,7 +739,7 @@ class Database extends basis_db
 	public function getCoursesByLehrveranstaltungLehreinheit($lehrveranstaltung_id, $studiensemester_kurzbz)
  	{
  		$query = 'SELECT
-						DISTINCT ON(mdl_course_id) *
+						DISTINCT ON(m.mdl_course_id) *
 					FROM
 						lehre.tbl_lehrveranstaltung lv, lehre.tbl_lehreinheit lh, addon.tbl_moodle m
 					WHERE
@@ -752,7 +752,33 @@ class Database extends basis_db
 									AND m.studiensemester_kurzbz = lh.studiensemester_kurzbz
 								)
 								OR lh.lehreinheit_id = m.lehreinheit_id
-							)';
+							)
+				ORDER BY m.mdl_course_id';
+
+ 		return $this->_execQuery($query);
+ 	}
+
+	/**
+	 *
+	 */
+	public function getCoursesByLehrveranstaltungLehreinheitNoDistinct($lehrveranstaltung_id, $studiensemester_kurzbz)
+ 	{
+ 		$query = 'SELECT
+						*
+					FROM
+						lehre.tbl_lehrveranstaltung lv, lehre.tbl_lehreinheit lh, addon.tbl_moodle m
+					WHERE
+						lv.lehrveranstaltung_id = lh.lehrveranstaltung_id
+						AND	lv.lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id, FHC_INTEGER).'
+						AND	lh.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+						AND	(
+								(
+									lv.lehrveranstaltung_id = m.lehrveranstaltung_id
+									AND m.studiensemester_kurzbz = lh.studiensemester_kurzbz
+								)
+								OR lh.lehreinheit_id = m.lehreinheit_id
+							)
+				ORDER BY m.mdl_course_id';
 
  		return $this->_execQuery($query);
  	}
@@ -796,6 +822,79 @@ class Database extends basis_db
  		$query = 'SELECT b.uid
 					FROM public.tbl_benutzer b
 				   WHERE b.insertamum >= (NOW() - interval \''.$days.' day\')';
+
+ 		return $this->_execQuery($query);
+ 	}
+
+	/**
+	 *
+	 */
+	public function updateGruppen($moodle_id, $gruppen)
+ 	{
+ 		$query = 'UPDATE addon.tbl_moodle
+					SET gruppen = '.$this->db_add_param($gruppen, FHC_BOOLEAN).'
+				  WHERE moodle_id = '.$this->db_add_param($moodle_id, FHC_INTEGER);
+
+ 		return $this->_execQuery($query);
+ 	}
+
+	/**
+	 *
+	 */
+	public function coursesLehrveranstaltungStudiensemesterExists($lehrveranstaltung_id, $studiensemester_kurzbz)
+ 	{
+ 		$query = 'SELECT
+					COUNT(moodle_id)
+				FROM
+					addon.tbl_moodle
+				WHERE
+					lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id, FHC_INTEGER).'
+					AND studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz);
+
+ 		return $this->_execQuery($query);
+ 	}
+
+	/**
+	 *
+	 */
+	public function coursesAllLehreinheitStudiensemesterExists($lehrveranstaltung_id, $studiensemester_kurzbz)
+ 	{
+ 		$query = 'SELECT
+					COUNT(lehreinheit_id)
+				FROM
+					lehre.tbl_lehreinheit
+				WHERE
+					lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id, FHC_INTEGER).'
+					AND studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+					AND lehreinheit_id NOT IN (
+						SELECT lehreinheit_id
+						  FROM addon.tbl_moodle
+						 WHERE lehreinheit_id = tbl_lehreinheit.lehreinheit_id)';
+
+ 		return $this->_execQuery($query);
+ 	}
+
+	/**
+	 *
+	 */
+	public function coursesLehreinheitExists($lehreinheit_id)
+ 	{
+ 		$query = 'SELECT COUNT(moodle_id) FROM addon.tbl_moodle WHERE lehreinheit_id = '.$this->db_add_param($lehreinheit_id, FHC_INTEGER);
+
+ 		return $this->_execQuery($query);
+ 	}
+
+	/**
+	 *
+	 */
+	public function getTestCourses($lehrveranstaltung_id, $studiensemester_kurzbz, $prefix)
+ 	{
+ 		$query = 'SELECT
+					\''.$prefix.'-'.$studiensemester_kurzbz.'-\' || UPPER(tbl_studiengang.typ::varchar(1) || tbl_studiengang.kurzbz) || \'-\' || lh.semester || \'-\' || lh.kurzbz AS courseName
+				FROM
+					lehre.tbl_lehrveranstaltung lh JOIN public.tbl_studiengang USING(studiengang_kz)
+				WHERE
+					lh.lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id, FHC_INTEGER, false);
 
  		return $this->_execQuery($query);
  	}

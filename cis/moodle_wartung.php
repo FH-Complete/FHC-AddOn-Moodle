@@ -64,8 +64,27 @@ if (!$berechtigt)
 	die('Sie haben keine Berechtigung für diese Seite');
 }
 
-$lv = new lehrveranstaltung();
-$lv->load($lvid);
+$lehrveranstaltung = new lehrveranstaltung();
+$lehrveranstaltung->load($lvid);
+
+$studiengang = new studiengang();
+$studiengang->load($lehrveranstaltung->studiengang_kz);
+
+$studiensemester = new studiensemester();
+$studiensemester->load($stsem);
+
+$courseFormatOptions = LogicCourses::getCourseFormatOptions(); // Generates the parameter courseformatoptions for all courses
+$startDate = LogicCourses::getStartDate($studiensemester); // Generates the parameter startdate for all courses
+$endDate = LogicCourses::getEndDate($studiensemester); // Generates the parameter enddate for all courses
+
+$numCoursesAddedToMoodle = 0;
+$numCategoriesAddedToMoodle = 0;
+$numCreatedUsers = 0;
+$numEnrolledLectors = 0;
+$numEnrolledStudents = 0;
+$numCreatedGroups = 0;
+
+$uidsToUnenrol = array();
 
 echo '<!DOCTYPE HTML>
 <html>
@@ -73,8 +92,55 @@ echo '<!DOCTYPE HTML>
 	<meta charset="utf-8">
 	<link href="../../../skin/style.css.php" rel="stylesheet" type="text/css">
 </head>
-<body onload="togglediv()">
-<h1>'.LogicCourses::convertHtmlChars($lv->bezeichnung).'&nbsp;('.LogicCourses::convertHtmlChars($stsem).')</h1>
+
+<script>
+	function showLoader()
+	{
+		var div = document.createElement(\'div\');
+		div.style.cssText = "position: fixed; top: 0; left: 0; z-index: 5000; width: 100%; height: 100%; text-align: center; background: #00000;";
+
+		var divSpace = document.createElement(\'div\');
+		divSpace.style.cssText = "height: 150px; background: #00000;";
+
+        var img = document.createElement(\'img\');
+		img.src = "/core/public/images/loader.gif";
+
+		var divLoad = document.createElement(\'div\');
+		divLoad.style.cssText = "font-size: 20px;";
+		divLoad.innerHTML = "<b>Loading...</b>";
+
+		div.appendChild(divSpace);
+		div.appendChild(img);
+		div.appendChild(divLoad);
+
+        document.body.appendChild(div);
+	}
+
+	function toggleRadio()
+	{
+		console.log("asdfasdf");
+
+		var chks = document.querySelectorAll("#lehreinheitencheckboxen > input[type=checkbox]");
+
+		if (document.getElementById("radiole").checked)
+		{
+			for (var i = 0; i < chks.length; i++)
+			{
+				if (chks[i].disabled != true) chks[i].checked = false;
+			}
+		}
+		else
+		{
+			for (var i = 0; i < chks.length; i++)
+			{
+				if (chks[i].disabled != true) chks[i].checked = true;
+			}
+		}
+	}
+</script>
+
+<body>
+<h1>'.LogicCourses::convertHtmlChars($lehrveranstaltung->bezeichnung).'&nbsp;('.LogicCourses::convertHtmlChars($stsem).')</h1>
 <table width="100%">
 <tr>
 <td valign="top">';
@@ -87,29 +153,21 @@ if (isset($_POST['neu']))
 	}
 	else
 	{
-		$lehrveranstaltung = new lehrveranstaltung();
-		$lehrveranstaltung->load($lvid);
-		$studiengang = new studiengang();
-		$studiengang->load($lehrveranstaltung->studiengang_kz);
+		$courseFormatOptions = LogicCourses::getCourseFormatOptions(); // Generates the parameter courseformatoptions for all courses
+		$startDate = LogicCourses::getStartDate($studiensemester); // Generates the parameter startdate for all courses
+		$endDate = LogicCourses::getEndDate($studiensemester); // Generates the parameter enddate for all courses
 
 		$orgform = ($lehrveranstaltung->orgform_kurzbz != '' ? $lehrveranstaltung->orgform_kurzbz : $studiengang->orgform_kurzbz);
 		$shortname = $studiengang->kuerzel.'-'.$orgform.'-'.$lehrveranstaltung->semester.'-'.$stsem.'-'.$lehrveranstaltung->kurzbz;
 
+		$course = new stdClass();
+		$course->bezeichnung = $lehrveranstaltung->bezeichnung;
+		$course->studiengang = $studiengang->typ.$studiengang->kurzbz;
+		$course->semester = $lehrveranstaltung->semester;
+
 		//Gesamte LV zu einem Moodle Kurs zusammenlegen
 		if ($art == 'lv')
 		{
-			$courseFormatOptions = LogicCourses::getCourseFormatOptions(); // Generates the parameter courseformatoptions for all courses
-			$startDate = LogicCourses::getStartDate($studiensemester); // Generates the parameter startdate for all courses
-			$endDate = LogicCourses::getEndDate($studiensemester); // Generates the parameter enddate for all courses
-
-			$course = new stdClass();
-			$course->bezeichnung = $lv->bezeichnung;
-			$course->studiengang = $studiengang->typ.$studiengang->kurzbz;
-			$course->semester = $lv->semester;
-
-			$numCoursesAddedToMoodle = 0;
-			$numCategoriesAddedToMoodle = 0;
-
 			$moodleCourseId = LogicCourses::getOrCreateMoodleCourse(
 				$course, $stsem, $_POST['bezeichnung'], $shortname, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle
 			);
@@ -118,21 +176,14 @@ if (isset($_POST['neu']))
 				$moodleCourseId, null, $lvid, $stsem, date('Y-m-d H:i:s'), $user, isset($_POST['gruppen'])
 			);
 
-			$numCreatedUsers = 0;
-			$numEnrolledLectors = 0;
-
 			$moodleEnrolledUsers = LogicUsers::core_enrol_get_enrolled_users($moodleCourseId);
 
 			LogicUsers::synchronizeLektoren(
 				$moodleCourseId, $moodleEnrolledUsers, $numCreatedUsers, $numEnrolledLectors
 			);
 
-			$numCreatedUsers = 0;
-			$numEnrolledStudents = 0;
-			$numCreatedGroups = 0;
-
 			LogicUsers::synchronizeStudenten(
-				$moodleCourseId, $moodleEnrolledUsers, array(), $numCreatedUsers, $numEnrolledStudents, $numCreatedGroups
+				$moodleCourseId, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledStudents, $numCreatedGroups
 			);
 		}
 		elseif ($art == 'le') //Getrennte Kurse fuer die Lehreinheiten
@@ -150,39 +201,27 @@ if (isset($_POST['neu']))
 
 			if (count($lehreinheiten) > 0)
 			{
-				$mdl_course = new moodle_course();
+				$moodleCourseId = LogicCourses::getOrCreateMoodleCourse(
+					$course, $stsem, $_POST['bezeichnung'], $shortname, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle
+				);
 
-				$mdl_course->mdl_fullname = $_POST['bezeichnung'];
-				$mdl_course->mdl_shortname = $shortname;
-				$mdl_course->studiensemester_kurzbz = $stsem;
-				$mdl_course->insertamum = date('Y-m-d H:i:s');
-				$mdl_course->insertvon = $user;
-				$mdl_course->lehreinheit_id = $lehreinheiten[0];
-				$mdl_course->gruppen = isset($_POST['gruppen']);
-
-				//Kurs im Moodle anlegen
-				if ($mdl_course->create_moodle())
+				// Fuer jede Lehreinheit einen Eintrag in VilesciDB anlegen
+				foreach ($lehreinheiten as $lehreinheit_id)
 				{
-					//fuer jede Lehreinheit einen Eintrag in VilesciDB anlegen
-					foreach ($lehreinheiten as $value)
-					{
-						$mdl_course->lehreinheit_id = $value;
-						if (!$mdl_course->create_vilesci())
-							echo '<br>'.$p->t('moodle/fehlerBeimAnlegenAufgetreten').':'.$mdl_course->errormsg;
-					}
-
-					$mdl_user = new moodle_user();
-					//Lektoren Synchronisieren
-					if (!$mdl_user->sync_lektoren($mdl_course->mdl_course_id))
-						echo $mdl_user->errormsg;
-
-					$mdl_user = new moodle_user();
-					//Studenten Synchronisieren
-					if (!$mdl_user->sync_studenten($mdl_course->mdl_course_id))
-						echo $mdl_user->errormsg;
+					LogicCourses::insertMoodleTable(
+						$moodleCourseId, $lehreinheit_id, null, $stsem, date('Y-m-d H:i:s'), $user, isset($_POST['gruppen'])
+					);
 				}
-				else
-					echo '<span class="error">Failed:'.$mdl_course->errormsg.'</span>';
+
+				$moodleEnrolledUsers = LogicUsers::core_enrol_get_enrolled_users($moodleCourseId);
+
+				LogicUsers::synchronizeLektoren(
+					$moodleCourseId, $moodleEnrolledUsers, $numCreatedUsers, $numEnrolledLectors
+				);
+
+				LogicUsers::synchronizeStudenten(
+					$moodleCourseId, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledStudents, $numCreatedGroups
+				);
 			}
 			else
 			{
@@ -193,16 +232,15 @@ if (isset($_POST['neu']))
 			die($p->t('moodle/artIstUnbekannt'));
 	}
 }
-//Gruppen Syncro ein/aus schalten
+
+// Gruppen Syncro ein/aus schalten
 if (isset($_POST['changegruppe']))
 {
 	if (isset($_POST['moodle_id']) && is_numeric($_POST['moodle_id']))
 	{
-		$mcourse = new moodle_course();
-		if ($mcourse->updateGruppenSync($_POST['moodle_id'], isset($_POST['gruppen'])))
-			echo '<b>'.$p->t('moodle/datenWurdenAktualisiert').'</b><br>';
-		else
-			echo '<span class="error">'.$p->t('global/fehlerBeimAktualisierenDerDaten').'</span>';
+		LogicCourses::updateGruppen($_POST['moodle_id'], isset($_POST['gruppen']));
+
+		echo '<b>'.$p->t('moodle/datenWurdenAktualisiert').'</b><br>';
 	}
 	else
 	{
@@ -210,44 +248,42 @@ if (isset($_POST['changegruppe']))
 	}
 }
 
-//Anlegen eines Testkurses
-if (isset($_GET['action']) && $_GET['action']=='createtestkurs')
+// Anlegen eines Testkurses
+if (isset($_GET['action']) && $_GET['action'] == 'createtestkurs')
 {
-	$mdl_course = new moodle_course();
-	if (!$mdl_course->loadTestkurs($lvid, $stsem))
+	$testCourseFound = false;
+	$testCourses = LogicCourses::getTestCourses($lvid, $stsem);
+	if (Database::rowsNumber($testCourses) > 0)
 	{
-		$lehrveranstaltung = new lehrveranstaltung();
-		$lehrveranstaltung->load($lvid);
-		$studiengang = new studiengang();
-		$studiengang->load($lehrveranstaltung->studiengang_kz);
+		$testCourse = Database::fetchRow($testCourses);
 
-		//Kurzbezeichnung generieren
-		$shortname = mb_strtoupper('TK-'.$stsem.'-'.$studiengang->kuerzel.'-'.$lehrveranstaltung->semester.'-'.$lehrveranstaltung->kurzbz);
-
-		$mdl_course->lehrveranstaltung_id = $lvid;
-		$mdl_course->studiensemester_kurzbz = $stsem;
-		$mdl_course->mdl_fullname = 'Testkurs - '.$lehrveranstaltung->bezeichnung;
-		$mdl_course->mdl_shortname = $shortname;
-
-		//TestKurs erstellen
-		if ($mdl_course->createTestkurs($lvid, $stsem))
+		$moodleCourse = LogicCourses::getCourseByShortname($testCourse->coursename);
+		if ($moodleCourse != null)
 		{
-			$id = $mdl_course->mdl_course_id;
-			$errormsg = '';
-
-			$mdl_user = new moodle_user();
-			//Lektoren zuweisen
-			if (!$mdl_user->sync_lektoren($id, $lvid, $stsem))
-				$errormsg .= $p->t('moodle/fehlerBeiDerLektorenZuordnung').':'.$mdl_user->errormsg.'<br>';
-			//Teststudenten zuweisen
-			if (!$mdl_user->createTestStudentenZuordnung($id))
-				$errormsg .= $p->t('moodle/fehlerBeiDerStudentenZuordnung').':'.$mdl_user->errormsg.'<br>';
-
-			if ($errormsg != '')
-				echo $errormsg;
-			else
-				echo '<b>'.$p->t('moodle/testkursWurdeErfolgreichAngelegt').'</b><br>';
+			$testCourseFound = true;
 		}
+	}
+
+	if (!$testCourseFound)
+	{
+		$course = new stdClass();
+		$course->bezeichnung = $lehrveranstaltung->bezeichnung;
+		$course->studiengang = $studiengang->typ.$studiengang->kurzbz;
+		$course->semester = $stsem;
+
+		$categoryId = LogicCourses::getOrCreateCategory('Testkurse', ADDON_MOODLE_ROOT_CATEGORY_ID, $numCategoriesAddedToMoodle);
+
+		$moodleCourseId = LogicCourses::core_course_create_courses(
+			'Testkurs - '.$lehrveranstaltung->bezeichnung, $testCourse->coursename, $categoryId, $startDate, ADDON_MOODLE_COURSE_FORMAT, $courseFormatOptions, $endDate
+		);
+
+		$moodleEnrolledUsers = LogicUsers::core_enrol_get_enrolled_users($moodleCourseId);
+
+		LogicUsers::synchronizeLektoren(
+			$moodleCourseId, $moodleEnrolledUsers, $numCreatedUsers, $numEnrolledLectors
+		);
+
+		LogicUsers::synchronizeTestStudenten($moodleCourseId, $moodleEnrolledUsers, array('student1', 'student2', 'student3'));
 	}
 	else
 	{
@@ -255,13 +291,20 @@ if (isset($_GET['action']) && $_GET['action']=='createtestkurs')
 	}
 }
 
-$moodle = new moodle_course();
-if ($moodle->course_exists_for_lv($lvid, $stsem) || $moodle->course_exists_for_allLE($lvid, $stsem))
+$coursesLvStsem = LogicCourses::coursesLehrveranstaltungStudiensemesterExists($lvid, $stsem);
+$coursesAllLhStsem = LogicCourses::coursesAllLehreinheitStudiensemesterExists($lvid, $stsem);
+
+$coursesLvStsem = Database::fetchRow($coursesLvStsem);
+$coursesAllLhStsem = Database::fetchRow($coursesAllLhStsem);
+
+if ($coursesLvStsem->count > 0 || $coursesAllLhStsem->count == 0)
 {
 	echo $p->t('moodle/esIstBereitsEinMoodleKursVorhanden');
 }
 else
 {
+	$db = new basis_db();
+
 	//wenn bereits ein Moodle Kurs fuer eine Lehreinheit angelegt wurde, dann dass
 	//anlegen fuer die Lehrveranstaltung verhindern
 	$qry = "SELECT 1 FROM lehre.tbl_moodle
@@ -279,14 +322,23 @@ else
 				$art = 'le';
 		}
 
+	$le = new lehreinheit();
+	$le->load_lehreinheiten($lehrveranstaltung->lehrveranstaltung_id, $stsem);
+
+	$lvChecked = 'checked';
+	$leChecked = '';
+	if (count($le->lehreinheiten) > 0)
+	{
+		$lvChecked = '';
+		$leChecked = 'checked';
+	}
+
 	echo '<b>'.$p->t('moodle/moodleKursAnlegen').': </b><br><br>
 			<form action="'.htmlentities($_SERVER['PHP_SELF']).'?lvid='.$lvid.'&stsem='.$stsem.'" method="POST">
-			<input type="radio" '.$disable_lv.' name="art" value="lv" onclick="togglediv()" '.($art=='lv'?'checked':'').'>'.$p->t('moodle/kursfuerganzeLV').'<br>
-			<input type="radio" id="radiole" name="art" value="le" onclick="togglediv()" '.($art=='le'?'checked':'').'>'.$p->t('moodle/kursfuerLE').'
+			<input type="radio" '.$disable_lv.' name="art" value="lv" '.($art=='lv'?'checked':'').' '.$lvChecked.' onClick="toggleRadio()">'.$p->t('moodle/kursfuerganzeLV').'<br>
+			<input type="radio" id="radiole" name="art" value="le" '.($art=='le'?'checked':'').' '.$leChecked.' onClick="toggleRadio()">'.$p->t('moodle/kursfuerLE').'
 		  ';
 
-	$le = new lehreinheit();
-	$le->load_lehreinheiten($lv->lehrveranstaltung_id, $stsem);
 	echo '<div id="lehreinheitencheckboxen">';
 	foreach ($le->lehreinheiten as $row)
 	{
@@ -315,54 +367,80 @@ else
 			$lektoren .= ' '.$benutzer->vorname.' '.$benutzer->nachname;
 		}
 
-		if ($moodle->course_exists_for_le($row->lehreinheit_id))
+		$coursesLehreinheitExists = LogicCourses::coursesLehreinheitExists($row->lehreinheit_id);
+		$coursesLehreinheit = Database::fetchRow($coursesLehreinheitExists);
+
+		if ($coursesLehreinheit->count > 0)
+		{
 			$disabled = 'disabled';
+			$checked = 'checked';
+		}
 		else
+		{
 			$disabled = '';
+			$checked = '';
+		}
+
 		echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				<input type="checkbox" name="lehreinheit_'.$row->lehreinheit_id.'" value="'.$row->lehreinheit_id.'" '.$disabled.'>'.$row->lehrform_kurzbz.' '.$gruppen.' '.$lektoren;
+				<input type="checkbox" name="lehreinheit_'.$row->lehreinheit_id.'" value="'.$row->lehreinheit_id.'" '.$disabled.' '.$checked.'>'.$row->lehrform_kurzbz.' '.$gruppen.' '.$lektoren;
 		echo '<br>';
 	}
 	echo '</div>';
 
 	$studiengang = new studiengang();
-	$studiengang->load($lv->studiengang_kz);
-	$orgform = ($lv->orgform_kurzbz != ''?$lv->orgform_kurzbz:$studiengang->orgform_kurzbz);
-	$longbezeichnung = $studiengang->kuerzel.'-'.$orgform.'-'.$lv->semester.'-'.$stsem.' - '.$lv->bezeichnung;
+	$studiengang->load($lehrveranstaltung->studiengang_kz);
+	$orgform = ($lehrveranstaltung->orgform_kurzbz != '' ? $lehrveranstaltung->orgform_kurzbz:$studiengang->orgform_kurzbz);
+	$longbezeichnung = $studiengang->kuerzel.'-'.$orgform.'-'.$lehrveranstaltung->semester.'-'.$stsem.' - '.$lehrveranstaltung->bezeichnung;
 
 	echo '<br>'.$p->t('moodle/kursbezeichnung').': <input type="text" name="bezeichnung" maxlength="254" size="40" value="'.LogicCourses::convertHtmlChars($longbezeichnung).'">';
 	echo '<br>'.$p->t('moodle/gruppenUebernehmen').': <input type="checkbox" name="gruppen">';
-	echo '<br><br><input type="submit" name="neu" value="'.$p->t('moodle/kursAnlegen').'">
-			</form>';
+	echo '<br><br><input type="submit" name="neu" value="'.$p->t('moodle/kursAnlegen').'" onClick="showLoader()">
+		</form>';
 }
 echo '</td>';
 
 echo '<td valign="top">';
 echo '<b>'.$p->t('moodle/vorhandeneMoodleKurse').'</b>';
-if (!$moodle->getAll($lvid, $stsem))
-	echo $moodle->errormsg;
+
 echo '<table>';
-foreach ($moodle->result as $course)
+
+$coursesByLehrveranstaltungLehreinheit = LogicCourses::getCoursesByLehrveranstaltungLehreinheit($lvid, $stsem);
+
+while ($course = Database::fetchRow($coursesByLehrveranstaltungLehreinheit))
 {
-	$mdlcourse = new moodle_course();
-	$mdlcourse->loadMoodleCourse($course->mdl_course_id);
+	$moodleCourses = LogicCourses::core_course_get_courses(array($course->mdl_course_id));
+
 	echo '<tr>';
-	echo '<td><a href="'.ADDON_MOODLE_PATH.'course/view.php?id='.$course->mdl_course_id.'" class="Item" target="_blank">'.$mdlcourse->mdl_fullname.'</a></td>';
+	echo '<td><a href="'.LogicCourses::getBaseURL().'/course/view.php?id='.$course->mdl_course_id.'" class="Item" target="_blank">'.$moodleCourses[0]->fullname.'</a></td>';
+	echo '</tr>';
 }
+
 echo '</table>';
 echo '</td></tr></table>';
 echo $p->t('moodle/zusatztextWartung');
-// echo '<br><br><br>';
+echo '<br><br><br>';
 echo '<b>'.$p->t('moodle/testkurse').'</b><br><br>';
-$mdlcourse = new moodle_course();
-if ($mdlcourse->loadTestkurs($lvid, $stsem))
+
+// Link to create test courses
+$testCourseFound = false;
+$testCourses = LogicCourses::getTestCourses($lvid, $stsem);
+if (Database::rowsNumber($testCourses) > 0)
 {
-	echo '<a href="'.ADDON_MOODLE_PATH.'course/view.php?id='.$mdlcourse->mdl_course_id.'" class="Item" target="_blank">'.LogicCourses::convertHtmlChars($mdlcourse->mdl_fullname).'</a>';
+	$testCourse = Database::fetchRow($testCourses);
+
+	$moodleCourse = LogicCourses::getCourseByShortname($testCourse->coursename);
+	if ($moodleCourse != null)
+	{
+		$testCourseFound = true;
+		echo '<a href="'.LogicCourses::getBaseURL().'/course/view.php?id='.$moodleCourse->id.'" class="Item" target="_blank">'.LogicCourses::convertHtmlChars($moodleCourse->fullname).'</a>';
+	}
 }
-else
+
+if (!$testCourseFound)
 {
 	echo "<a href='".$_SERVER['PHP_SELF']."?lvid=$lvid&stsem=$stsem&action=createtestkurs' class='Item'>".$p->t('moodle/klickenSieHierUmTestkursErstellen')."</a>";
 }
+
 echo '
 </body>
 </html>';
