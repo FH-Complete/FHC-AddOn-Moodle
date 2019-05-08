@@ -136,10 +136,10 @@ abstract class Logic
 	public static function getOrCreateCategory($name, $parent, &$numCategoriesAddedToMoodle)
 	{
 		// Department
-		$categories = self::core_course_get_categories_by_name_parent($name, $parent);
+		$categories = self::core_course_get_categories_by_name_parent(mb_strtoupper($name), $parent);
 		if (count($categories) == 0)
 		{
-			$categories = self::core_course_create_categories($name, $parent);
+			$categories = self::core_course_create_categories(mb_strtoupper($name), $parent);
 			$numCategoriesAddedToMoodle++;
 		}
 
