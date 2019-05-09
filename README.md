@@ -14,7 +14,7 @@ FH-Complete AddOn for Moodle integration
 * Create Webservice Token in Moodle
 
 * Copy the Repository to the FHComplete Subfolder /addon/moodle/
-* Copy config-default.inc.php to config.inc.php and adapt ADDON_MOODLE_PATH and ADDON_MOODLE_TOKEN
+* Copy /config/config.php.ex to /config/config.php and adapt HOST, PATH and TOKEN of the connection
 * Add the Addon to the ACTIVE_ADDONS FHComplete Config
 * Run dbcheck.php to create tables an migrate existing data
 * enable cronjobs
