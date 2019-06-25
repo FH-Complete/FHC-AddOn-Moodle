@@ -105,7 +105,7 @@ class LogicUsers extends Logic
 		$numCreatedGroups = 0;
 		$numEnrolledGroupsMembers = 0;
 		$numUnenrolledGroupsMembers = 0;
-		$numEnrolledLeaders = 0;
+		$numAssignedLeaders = 0;
 
 		if (count($moodleCourses) > 0) Output::printDebug('------------------------------------------------------------');
 
@@ -156,7 +156,7 @@ class LogicUsers extends Logic
 
 				// Synchronizes groups members
 				self::synchronizeCompetenceFieldDepartmentLeaders(
-					$moodleCourseId, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledLeaders
+					$moodleCourseId, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numAssignedLeaders
 				);
 			}
 
@@ -176,7 +176,7 @@ class LogicUsers extends Logic
 			Output::printInfo('Total amount of students enrolled in moodle: '. $numEnrolledStudents);
 			Output::printInfo('Total amount of groups created in moodle: '. $numCreatedGroups);
 			Output::printInfo('Total amount of groups members enrolled in moodle: '. $numEnrolledGroupsMembers);
-			Output::printInfo('Total amount of leaders enrolled in moodle: '. $numEnrolledLeaders);
+			Output::printInfo('Total amount of leaders assigned in moodle: '. $numAssignedLeaders);
 			Output::printInfo('Total amount of UNrolled groups members in moodle: '. $numUnenrolledGroupsMembers);
 		}
 		else
@@ -187,7 +187,7 @@ class LogicUsers extends Logic
 			Output::printInfo('Total amount of students that would be enrolled in moodle: '. $numEnrolledStudents);
 			Output::printInfo('Total amount of groups that would be created in moodle: '. $numCreatedGroups);
 			Output::printInfo('Total amount of groups members that would be enrolled in moodle: '. $numEnrolledGroupsMembers);
-			Output::printInfo('Total amount of leaders that would be enrolled in moodle: '. $numEnrolledLeaders);
+			Output::printInfo('Total amount of leaders that would be assigned in moodle: '. $numAssignedLeaders);
 			Output::printInfo('Total amount of groups members that would be UNenrolled in moodle: '. $numUnenrolledGroupsMembers);
 		}
 		Output::printInfo('----------------------------------------------------------------------');
@@ -824,10 +824,10 @@ class LogicUsers extends Logic
 	 *
 	 */
 	public static function synchronizeCompetenceFieldDepartmentLeaders(
-		$moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol, &$numCreatedUsers, &$numEnrolledLeaders
+		$moodleCourseId, $moodleEnrolledUsers, &$uidsToUnenrol, &$numCreatedUsers, &$numAssignedLeaders
 	)
 	{
-		$usersToEnroll = array(); //
+		$usersToAssign = array(); //
 
 		$organisationUnits = self::_getOrganisationunitsCourseUnit($moodleCourseId); //
 
@@ -864,7 +864,7 @@ class LogicUsers extends Logic
 					//
 					if ($leader->uid == $moodleEnrolledUser->username)
 					{
-						$debugMessage .= ' >> already enrolled in moodle';
+						$debugMessage .= ' >> already assigned in moodle';
 						$userFound = true;
 						break;
 					}
@@ -887,20 +887,21 @@ class LogicUsers extends Logic
 							$roleid = ADDON_MOODLE_KOMPETENZFELDLEITUNG_ROLEID;
 						}
 
-						$usersToEnroll[] = array(
+						$usersToAssign[] = array(
 							'roleid' => $roleid,
 							'userid' => $users[0]->id,
-							'courseid' => $moodleCourseId
+							'contextlevel' => 'course',
+							'instanceid' => $moodleCourseId
 						);
 
-						$debugMessage .= ' >> will be enrolled in moodle in a later step';
+						$debugMessage .= ' >> will be assigned in moodle in a later step';
 					}
 					else
 					{
-						$debugMessage .= ' >> dry run >> should be enrolled in moodle in a later step';
+						$debugMessage .= ' >> dry run >> should be assigned in moodle in a later step';
 					}
 
-					$numEnrolledLeaders++;
+					$numAssignedLeaders++;
 				}
 
 				Output::printDebug($debugMessage);
@@ -908,11 +909,11 @@ class LogicUsers extends Logic
 		}
 
 		//
-		if (count($usersToEnroll) > 0)
+		if (count($usersToAssign) > 0)
 		{
-			self::_enrol_manual_enrol_users($usersToEnroll);
+			self::_core_role_assign_roles($usersToAssign);
 
-			Output::printDebug('Number of leaders enrolled in moodle: '.count($usersToEnroll));
+			Output::printDebug('Number of leaders assigned to a course in moodle: '.count($usersToAssign));
 		}
 
 		self::_printDebugEmptyline();
