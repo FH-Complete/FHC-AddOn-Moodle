@@ -39,6 +39,8 @@ $user = get_uid();
 $rechte = new benutzerberechtigung();
 $rechte->getBerechtigungen($user);
 
+$db = new basis_db();
+
 if(!$rechte->isBerechtigt('addon/moodle'))
 	die('Sie haben keine Berechtigung für diese Seite');
 
@@ -111,7 +113,7 @@ if(isset($_POST['saveZuteilung']))
 		$lehreinheit_id = (isset($_POST['lehreinheit_id']) && is_numeric($_POST['lehreinheit_id'])) ? $_POST['lehreinheit_id'] : null;
 		$lehrveranstaltung_id = (isset($_POST['lehrveranstaltung_id']) && is_numeric($_POST['lehrveranstaltung_id'])) ? $_POST['lehrveranstaltung_id'] : null;
 		$studiensemester_kurzbz = (isset($_POST['studiensemester_kurzbz']) && !empty($_POST['studiensemester_kurzbz'])) ? $_POST['studiensemester_kurzbz'] : null;
-		$gruppen = (isset($_POST['gruppen']) && !empty($_POST['gruppen'])) ? $_POST['gruppen'] : null;
+		$gruppen = (isset($_POST['gruppen']) && !empty($_POST['gruppen'])) ? true : false;
 
 		$moodle_course_has_groups = false;	// true if moodle course has moodles with groups assigned yet
 		$moodle_course_has_lv_or_le = false;	// true if moodel course hase moodles with lv or le assigned yet
@@ -235,11 +237,10 @@ if ($method == 'delete')
 }
 
 ?>
-
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE HTML>
 <html>
 	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta charset="UTF-8">
 		<title>Moodle - Kursverwaltung</title>
 		<link rel="stylesheet" href="../../../skin/fhcomplete.css" type="text/css">
 		<link rel="stylesheet" href="../../../skin/vilesci.css" type="text/css">
@@ -554,7 +555,7 @@ if (($studiengang_kz != '' && $studiensemester_kurzbz != '') || !empty($moodle_m
 				<td>'.$lehreinheit.'</td>
 				<td>'.$lv->kurzbz.'</td>
 				<td>'.$lv->semester.'</td>
-				<td>'.($dbMoodleCourse->gruppen?'Ja':'Nein').'</td>
+				<td>'.($db->db_parse_bool($dbMoodleCourse->gruppen)?'Ja':'Nein').'</td>
 				<td align="center"> - </td>';
 		}
 		elseif (!is_null($dbMoodleCourse->gruppe_kurzbz))
