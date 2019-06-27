@@ -341,13 +341,14 @@ if ($method == 'delete')
 			var stg_kz = $("#studiengang").val();
 			var semester = $("#semester").val();
 			var lvid = $("#lehrveranstaltung").val();
+			var stsem = $("#studiensemester_kurzbz").val();
 
 			// LV holen
 			data = {
 				stg: stg_kz,
 				sem: semester,
 				lvid: lvid,
-				stsem: "<?php echo $studiensemester_kurzbz ?>",
+				stsem: stsem,
 				work: "getLEs"
 			};
 
@@ -376,12 +377,13 @@ if ($method == 'delete')
 		{
 			var stg_kz = $("#studiengang").val();
 			var semester = $("#semester").val();
+			var stsem = $("#studiensemester_kurzbz").val();
 
 			// LV holen
 			data = {
 				stg: stg_kz,
 				sem: semester,
-				stsem: "<?php echo $studiensemester_kurzbz ?>",
+				stsem: stsem,
 				work: "getLVs"
 			};
 
