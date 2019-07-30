@@ -52,7 +52,7 @@ set_time_limit(10000);
 $db = new basis_db();
 
 $stsem_obj = new studiensemester();
-$stsem = $stsem_obj->getAktOrNext();
+$stsem = $stsem_obj->getNearest();
 $neue_kurse = 0;
 $vorhandene_kurse = 0;
 $anzahl_fehler = 0;
