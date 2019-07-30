@@ -57,6 +57,23 @@ abstract class Logic
 	/**
 	 *
 	 */
+	public static function getNearestStudiensemester()
+	{
+		$studiensemester = new studiensemester();
+
+		$NearestStudiensemester = $studiensemester->getNearest();
+		if (!$NearestStudiensemester)
+		{
+			Output::printError('An error occurred while retrieving the nearest studiensemester');
+ 			die();
+		}
+
+		return $NearestStudiensemester;
+	}
+
+	/**
+	 *
+	 */
 	public static function setEndDateEnabled()
 	{
 		return self::_getMoodleVersion() >= ADDON_MOODLE_VERSION_SET_END_DATE;

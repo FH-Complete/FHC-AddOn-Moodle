@@ -16,7 +16,7 @@ Output::printLineSeparator();
 Output::printInfo('Starting synchronize courses script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 
 // Retrieves the current studiensemester
-$currentOrNextStudiensemester = LogicCourses::getCurrentOrNextStudiensemester();
+$currentOrNextStudiensemester = LogicCourses::getNearestStudiensemester();
 
 Output::printInfo('Working studiensemester: '.$currentOrNextStudiensemester);
 
