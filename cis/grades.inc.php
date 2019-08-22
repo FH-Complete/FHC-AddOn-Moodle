@@ -23,7 +23,6 @@
 require_once(dirname(__FILE__).'/../lib/Logic.php'); // A lot happens here!
 
 $courseGrades = Logic::loadCourseGrades($lvid, $stsem);
-
 $moodle_course_bezeichnung = array();
 $moodle_course_gewicht = array();
 
@@ -48,7 +47,7 @@ foreach ($courseGrades as $courseGrade)
 			if ($le->lehreinheit_id != '')
 			{
 				$lehreinheit_gewicht_obj = new lehreinheit();
-				$lehreinheit_gewicht_obj->load($row_mdl_lehreinheit);
+				$lehreinheit_gewicht_obj->load($le->lehreinheit_id);
 
 				if ($lehreinheit_gewicht_obj->gewicht != '')
 				{
