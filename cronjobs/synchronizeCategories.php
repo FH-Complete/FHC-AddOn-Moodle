@@ -1,7 +1,26 @@
 <?php
-
-/**
+/* Copyright (C) 2019 fhcomplete.org
  *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * Authors: Paolo Bison <bison@technikum-wien.at>,
+ *          Andreas Oesterreicher <andreas.oesterreicher@technikum-wien.at>
+ */
+/**
+ * Cronjob that set Permissions of Leaders an Assistants to 
+ * the DegreeProgram Course Categories
  */
 
 require_once('../lib/LogicUsers.php');
@@ -12,8 +31,21 @@ LogicUsers::isExecutionAllowed();
 Output::printLineSeparator();
 Output::printInfo('Starting synchronize categories script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 
-// Retrieves the current studiensemester
-$currentOrNextStudiensemester = LogicUsers::getCurrentOrNextStudiensemester();
+// Studiensemester can be passed as Commandline Option
+// zb php synchronizeCategories.php --stsem WS2019
+$longopt = array(
+	"stsem:",
+);
+$commandlineparams = getopt('', $longopt);
+if (isset($commandlineparams['stsem']))
+{
+	$currentOrNextStudiensemester = $commandlineparams['stsem'];
+}
+else
+{
+	// Retrieves the current studiensemester
+	$currentOrNextStudiensemester = LogicUsers::getCurrentOrNextStudiensemester();
+}
 
 Output::printInfo('Working studiensemester: '.$currentOrNextStudiensemester);
 
