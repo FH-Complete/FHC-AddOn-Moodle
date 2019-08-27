@@ -146,7 +146,7 @@ if(isset($_POST['saveZuteilung']))
 		{
 			// Save assignment
 			Logic::insertMoodleTable(
-				$mdl_course_id, $lehreinheit_id, $lehrveranstaltung_id, $studiensemester_kurzbz, 'NOW()', $insertvon = $user, $gruppen, $gruppe_kurzbz
+				$mdl_course_id, $lehreinheit_id, (($lehreinheit_id=='')?$lehrveranstaltung_id:null), $studiensemester_kurzbz, 'NOW()', $insertvon = $user, $gruppen, $gruppe_kurzbz
 			);
 			$msgBox = 'Gespeichert!';
 			$moodle_mdl_course_id = $mdl_course_id;
