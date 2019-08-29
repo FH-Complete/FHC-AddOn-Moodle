@@ -491,6 +491,73 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
+	public static function synchronizeTestLektoren(
+		$moodleCourseId, $lvid, $stsem, $moodleEnrolledUsers, &$numCreatedUsers, &$numEnrolledLectors
+	)
+	{
+		$usersToEnroll = array(); //
+		$employees = self::_getLektorenByLvidStsem($lvid, $stsem); //
+
+		Output::printDebug('Number of lectors in database: '.Database::rowsNumber($employees));
+
+		//
+		while ($employee = Database::fetchRow($employees))
+		{
+			$debugMessage = 'Syncing lector '.$employee->mitarbeiter_uid.':"'.$employee->vorname.' '.$employee->nachname.'"';
+			$userFound = false; //
+
+			//
+			foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
+			{
+				//
+				if ($employee->mitarbeiter_uid == $moodleEnrolledUser->username)
+				{
+					$debugMessage .= ' >> already enrolled in moodle';
+					$userFound = true;
+					break;
+				}
+			}
+
+			//
+			if (!$userFound)
+			{
+				$users = self::_getOrCreateMoodleUser($employee->mitarbeiter_uid, $numCreatedUsers);
+
+				if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
+				{
+					$usersToEnroll[] = array(
+						'roleid' => ADDON_MOODLE_LEKTOREN_ROLEID,
+						'userid' => $users[0]->id,
+						'courseid' => $moodleCourseId
+					);
+
+					$debugMessage .= ' >> will be enrolled in moodle in a later step';
+				}
+				else
+				{
+					$debugMessage .= ' >> dry run >> should be enrolled in moodle in a later step';
+				}
+
+				$numEnrolledLectors++;
+			}
+
+			Output::printDebug($debugMessage);
+		}
+
+		//
+		if (count($usersToEnroll) > 0)
+		{
+			self::_enrol_manual_enrol_users($usersToEnroll);
+
+			Output::printDebug('Number of lectors enrolled in moodle: '.count($usersToEnroll));
+		}
+
+		self::_printDebugEmptyline();
+	}
+
+	/**
+	 *
+	 */
 	public static function synchronizeFachbereichsleitung(
 		$moodleCourseId, $moodleEnrolledUsers, &$numCreatedUsers, &$numEnrolledManagementStaff
 	)
@@ -1158,6 +1225,18 @@ class LogicUsers extends Logic
 			'getCourseMitarbeiter',
 			array($moodleCourseId),
 			'An error occurred while retrieving the mitarbeiter'
+		);
+	}
+
+	/**
+	 *
+	 */
+	private static function _getLektorenByLvidStsem($lehrveranstaltung_id, $studiensemester_kurzbz)
+	{
+		return parent::_dbCall(
+			'getLektorenByLvidStsem',
+			array($lehrveranstaltung_id, $studiensemester_kurzbz),
+			'An error occurred while retrieving the mitarbeiter with lehrveranstaltung_id and studiensemester_kurzbz'
 		);
 	}
 
