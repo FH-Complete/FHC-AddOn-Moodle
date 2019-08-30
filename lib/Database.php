@@ -384,7 +384,7 @@ class Database extends basis_db
 	/**
 	 *
 	 */
-	public function getGroupsMembers($gruppe_kurzbz)
+	public function getGroupsMembers($gruppe_kurzbz, $moodleCourseId)
 	{
 		$query = 'SELECT
 					bg.uid, p.vorname, p.nachname
@@ -395,6 +395,7 @@ class Database extends basis_db
 					JOIN public.tbl_person p USING(person_id)
 				WHERE
 					bg.gruppe_kurzbz = '.$this->db_add_param($gruppe_kurzbz).'
+					AND m.mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER).'
 					AND bg.uid NOT ILIKE \'%dummy%\'
 					AND (
 						bg.studiensemester_kurzbz = m.studiensemester_kurzbz

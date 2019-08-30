@@ -780,7 +780,7 @@ class LogicUsers extends Logic
 
 			Output::printDebug('Syncing group '.$courseGroup->gruppe_kurzbz);
 
-			$groupMembers = self::_getGroupsMembers($courseGroup->gruppe_kurzbz); //
+			$groupMembers = self::_getGroupsMembers($courseGroup->gruppe_kurzbz, $moodleCourseId); //
 
 			Output::printDebug('Number of groups members in database: '.Database::rowsNumber($groupMembers));
 
@@ -1351,11 +1351,11 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	private static function _getGroupsMembers($gruppe_kurzbz)
+	private static function _getGroupsMembers($gruppe_kurzbz, $moodleCourseId)
 	{
 		return parent::_dbCall(
 			'getGroupsMembers',
-			array($gruppe_kurzbz),
+			array($gruppe_kurzbz, $moodleCourseId),
 			'An error occurred while retrieving groups members'
 		);
 	}
