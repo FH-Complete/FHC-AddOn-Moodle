@@ -126,8 +126,9 @@ class LogicUsers extends Logic
 			// Retrieves a list of UIDs of users to be unenrolled selecting them by role
 			$uidsToUnenrol = self::getUsersToUnenrol($moodleEnrolledUsers);
 
-			// Checks if there are groups
-			if (Database::rowsNumber($courseGroups) > 0)
+			// Checks if there are groups assigned to this moodle course
+			$groupsAssigned = Database::rowsNumber($courseGroups) > 0;
+			if ($groupsAssigned)
 			{
 				// Synchronizes groups members
 				self::synchronizeGroupsMembers(
@@ -160,8 +161,12 @@ class LogicUsers extends Logic
 				);
 			}
 
-			// Unenrol users for this group
-			self::unenrolUsers($moodleCourseId, $uidsToUnenrol, $numUnenrolledGroupsMembers);
+			// Unenrol users only if groups are present
+			if ($groupsAssigned)
+			{
+				// Unenrol users for this group
+				self::unenrolUsers($moodleCourseId, $uidsToUnenrol, $numUnenrolledGroupsMembers);
+			}
 
 			Output::printDebug('------------------------------------------------------------');
 		}
