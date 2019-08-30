@@ -279,9 +279,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'createtestkurs')
 
 		$moodleEnrolledUsers = LogicUsers::core_enrol_get_enrolled_users($moodleCourseId);
 
-		LogicUsers::synchronizeLektoren(
-			$moodleCourseId, $moodleEnrolledUsers, $numCreatedUsers, $numEnrolledLectors
-		);
+		LogicUsers::synchronizeTestLektoren($moodleCourseId, $lvid, $stsem, $moodleEnrolledUsers, $numCreatedUsers, $numEnrolledLectors);
 
 		LogicUsers::synchronizeTestStudenten($moodleCourseId, $moodleEnrolledUsers, array('student1', 'student2', 'student3'));
 	}

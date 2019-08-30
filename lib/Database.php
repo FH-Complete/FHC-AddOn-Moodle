@@ -72,6 +72,27 @@ class Database extends basis_db
 		return $this->_execQuery($query);
 	}
 
+
+	/**
+	 *
+	 */
+	public function getLektorenByLvidStsem($lehrveranstaltung_id, $studiensemester_kurzbz)
+	{
+		$query = 'SELECT mitarbeiter_uid, p.vorname, p.nachname
+					FROM lehre.tbl_lehreinheitmitarbeiter lm
+					JOIN lehre.tbl_lehreinheit l USING(lehreinheit_id)
+					JOIN public.tbl_benutzer b ON(lm.mitarbeiter_uid = b.uid)
+					JOIN public.tbl_person p USING(person_id)
+				   WHERE mitarbeiter_uid NOT ILIKE \'%dummy%\'
+				   	 AND b.aktiv = TRUE
+					 AND l.lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id, FHC_INTEGER).'
+					 AND l.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+				GROUP BY mitarbeiter_uid, p.vorname, p.nachname
+				ORDER BY p.vorname, p.nachname';
+
+		return $this->_execQuery($query);
+	}
+
 	/**
 	 *
 	 */
