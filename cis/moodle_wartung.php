@@ -94,16 +94,17 @@ echo '<!DOCTYPE HTML>
 </head>
 
 <script>
+
 	function showLoader()
 	{
 		var div = document.createElement(\'div\');
-		div.style.cssText = "position: fixed; top: 0; left: 0; z-index: 5000; width: 100%; height: 100%; text-align: center; background: #00000;";
+		div.style.cssText = "position: fixed; top: 0; left: 0; z-index: 5000; width: 100%; height: 100%; text-align: center; background-color: white;";
 
 		var divSpace = document.createElement(\'div\');
-		divSpace.style.cssText = "height: 150px; background: #00000;";
+		divSpace.style.cssText = "height: 150px";
 
-        var img = document.createElement(\'img\');
-		img.src = "/core/public/images/loader.gif";
+		var img = document.createElement(\'img\');
+		img.src = "../../../public/images/loader.gif";
 
 		var divLoad = document.createElement(\'div\');
 		divLoad.style.cssText = "font-size: 20px;";
@@ -118,8 +119,6 @@ echo '<!DOCTYPE HTML>
 
 	function toggleRadio()
 	{
-		console.log("asdfasdf");
-
 		var chks = document.querySelectorAll("#lehreinheitencheckboxen > input[type=checkbox]");
 
 		if (document.getElementById("radiole").checked)
@@ -408,8 +407,11 @@ while ($course = Database::fetchRow($coursesByLehrveranstaltungLehreinheit))
 {
 	$moodleCourses = LogicCourses::core_course_get_courses(array($course->mdl_course_id));
 
+	$courseName = '';
+	if (count($moodleCourses) > 0) $courseName = $moodleCourses[0]->fullname;
+
 	echo '<tr>';
-	echo '<td><a href="'.LogicCourses::getBaseURL().'/course/view.php?id='.$course->mdl_course_id.'" class="Item" target="_blank">'.$moodleCourses[0]->fullname.'</a></td>';
+	echo '<td><a href="'.LogicCourses::getBaseURL().'/course/view.php?id='.$course->mdl_course_id.'" class="Item" target="_blank">'.$courseName.'</a></td>';
 	echo '</tr>';
 }
 
