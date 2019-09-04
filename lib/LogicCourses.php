@@ -177,7 +177,7 @@ class LogicCourses extends Logic
 		{
 			if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 			{
-				$rootCategoryId = self::getOrCreateCategory($studiensemester_kurzbz, ADDON_MOODLE_ROOT_CATEGORY_ID, $numCategoriesAddedToMoodle);
+				$rootCategoryId = self::getOrCreateCategory(mb_strtoupper($studiensemester_kurzbz), ADDON_MOODLE_ROOT_CATEGORY_ID, $numCategoriesAddedToMoodle);
 
 				Output::printDebug('Root category '.$studiensemester_kurzbz.'->'.ADDON_MOODLE_ROOT_CATEGORY_ID.' ID: '.$rootCategoryId);
 
@@ -384,12 +384,12 @@ class LogicCourses extends Logic
 		$studiensemester = new studiensemester();
 
 		// Department category
-		$departmentId = self::getOrCreateCategory($course->bezeichnung, ADDON_MOODLE_ROOT_CATEGORY_ID, $numCategoriesAddedToMoodle);
+		$departmentId = self::getOrCreateCategory(mb_strtoupper($course->bezeichnung), ADDON_MOODLE_ROOT_CATEGORY_ID, $numCategoriesAddedToMoodle);
 
 		Output::printDebug('Department category '.$course->bezeichnung.'->'.ADDON_MOODLE_ROOT_CATEGORY_ID.' ID: '.$departmentId);
 
 		// Studiengang category
-		$studiengangId = self::getOrCreateCategory($course->studiengang, $departmentId, $numCategoriesAddedToMoodle);
+		$studiengangId = self::getOrCreateCategory(mb_strtoupper($course->studiengang), $departmentId, $numCategoriesAddedToMoodle);
 
 		Output::printDebug('Studiengang category '.$course->studiengang.'->'.$departmentId.' ID: '.$studiengangId);
 
@@ -408,12 +408,12 @@ class LogicCourses extends Logic
 		$jahrgang = $datum->formatDatum($studiensemester->start, 'Y');
 
 		// Jahrgang category
-		$jahrgangId = self::getOrCreateCategory(ADDON_MOODLE_JAHRGANG_CATEGORY_NAME.$jahrgang, $studiengangId, $numCategoriesAddedToMoodle);
+		$jahrgangId = self::getOrCreateCategory(mb_strtoupper(ADDON_MOODLE_JAHRGANG_CATEGORY_NAME.$jahrgang), $studiengangId, $numCategoriesAddedToMoodle);
 
 		Output::printDebug('Jahrgang category '.ADDON_MOODLE_JAHRGANG_CATEGORY_NAME.$jahrgang.'->'.$jahrgangId.' ID: '.$jahrgangId);
 
 		// Studiensemester category
-		$categoryId = self::getOrCreateCategory($studiensemester_kurzbz, $jahrgangId, $numCategoriesAddedToMoodle);
+		$categoryId = self::getOrCreateCategory(mb_strtoupper($studiensemester_kurzbz), $jahrgangId, $numCategoriesAddedToMoodle);
 
 		Output::printDebug('Course category '.$studiensemester_kurzbz.'->'.$jahrgangId.' ID: '.$categoryId);
 
@@ -426,17 +426,17 @@ class LogicCourses extends Logic
 	private static function _createCategoriesTreeB($course, $studiensemester_kurzbz, &$numCategoriesAddedToMoodle)
 	{
 		// Studiensemester category
-		$studiensemesterId = self::getOrCreateCategory($studiensemester_kurzbz, ADDON_MOODLE_ROOT_CATEGORY_ID, $numCategoriesAddedToMoodle);
+		$studiensemesterId = self::getOrCreateCategory(mb_strtoupper($studiensemester_kurzbz), ADDON_MOODLE_ROOT_CATEGORY_ID, $numCategoriesAddedToMoodle);
 
 		Output::printDebug('Studiensemester category '.$studiensemester_kurzbz.'->'.ADDON_MOODLE_ROOT_CATEGORY_ID.' ID: '.$studiensemesterId);
 
 		// Studiengang category
-		$studiengangId = self::getOrCreateCategory($course->studiengang, $studiensemesterId, $numCategoriesAddedToMoodle);
+		$studiengangId = self::getOrCreateCategory(mb_strtoupper($course->studiengang), $studiensemesterId, $numCategoriesAddedToMoodle);
 
 		Output::printDebug('Studiengang category '.$course->studiengang.'->'.$studiensemesterId.' ID: '.$studiengangId);
 
 		// Semester category
-		$categoryId = self::getOrCreateCategory($course->semester, $studiengangId, $numCategoriesAddedToMoodle);
+		$categoryId = self::getOrCreateCategory(mb_strtoupper($course->semester), $studiengangId, $numCategoriesAddedToMoodle);
 
 		Output::printDebug('Course category '.$course->semester.'->'.$studiengangId.' ID: '.$categoryId);
 

@@ -98,7 +98,7 @@ echo '<!DOCTYPE HTML>
 	function showLoader()
 	{
 		var div = document.createElement(\'div\');
-		div.style.cssText = "position: fixed; top: 0; left: 0; z-index: 5000; width: 100%; height: 100%; text-align: center; background-color: white;";
+		div.style.cssText = "position: fixed; top: 0; left: 0; z-index: 5000; width: 100%; height: 100%; text-align: center; background-color: white;opacity: 0.5;";
 
 		var divSpace = document.createElement(\'div\');
 		divSpace.style.cssText = "height: 150px";
@@ -271,9 +271,10 @@ if (isset($_GET['action']) && $_GET['action'] == 'createtestkurs')
 		$course->semester = $stsem;
 
 		$categoryId = LogicCourses::getOrCreateCategory('Testkurse', ADDON_MOODLE_ROOT_CATEGORY_ID, $numCategoriesAddedToMoodle);
+		$TKcategoryId = LogicCourses::getOrCreateCategory('Testkurse für LVs', $categoryId, $numCategoriesAddedToMoodle);
 
 		$moodleCourseId = LogicCourses::core_course_create_courses(
-			'Testkurs - '.$lehrveranstaltung->bezeichnung, $testCourse->coursename, $categoryId, $startDate, ADDON_MOODLE_COURSE_FORMAT, $courseFormatOptions, $endDate
+			'Testkurs - '.$lehrveranstaltung->bezeichnung, $testCourse->coursename, $TKcategoryId, $startDate, ADDON_MOODLE_COURSE_FORMAT, $courseFormatOptions, $endDate
 		);
 
 		$moodleEnrolledUsers = LogicUsers::core_enrol_get_enrolled_users($moodleCourseId);
@@ -387,7 +388,14 @@ else
 	$studiengang = new studiengang();
 	$studiengang->load($lehrveranstaltung->studiengang_kz);
 	$orgform = ($lehrveranstaltung->orgform_kurzbz != '' ? $lehrveranstaltung->orgform_kurzbz:$studiengang->orgform_kurzbz);
-	$longbezeichnung = $studiengang->kuerzel.'-'.$orgform.'-'.$lehrveranstaltung->semester.'-'.$stsem.' - '.$lehrveranstaltung->bezeichnung;
+
+	$longbezeichnung = sprintf(ADDON_MOODLE_COURSE_NAME,
+		$studiengang->kuerzel,
+		$orgform,
+		$lehrveranstaltung->semester,
+		$stsem,
+		$lehrveranstaltung->bezeichnung
+	);
 
 	echo '<br>'.$p->t('moodle/kursbezeichnung').': <input type="text" name="bezeichnung" maxlength="254" size="40" value="'.LogicCourses::convertHtmlChars($longbezeichnung).'">';
 	echo '<br>'.$p->t('moodle/gruppenUebernehmen').': <input type="checkbox" name="gruppen">';

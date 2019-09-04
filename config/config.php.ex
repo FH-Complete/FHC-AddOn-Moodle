@@ -8,6 +8,14 @@
 // STSEM-STG-SEM (default) or DEP-STG-JG-STSEM
 define('ADDON_MOODLE_COURSE_SCHEMA', 'STSEM-STG-SEM');
 
+// Format des Kursnamens
+// %1$s Studiengangskuerzel
+// %2$s Organisationsform
+// %3$s Ausbildungssemester
+// %4$s Studiensemester
+// %5$s Lehrveranstaltungsbezeichnung
+define('ADDON_MOODLE_COURSE_NAME', '%1$s-%2$s-%3$s-%4$s - %5$s');
+
 // Defines the number of topics for new courses
 // Possible values: 0 (default), 1, 5, 10, ...
 define('ADDON_MOODLE_NUMSECTIONS_VALUE', 0);
