@@ -271,7 +271,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'createtestkurs')
 		$course->semester = $stsem;
 
 		$categoryId = LogicCourses::getOrCreateCategory('Testkurse', ADDON_MOODLE_ROOT_CATEGORY_ID, $numCategoriesAddedToMoodle);
-		$TKcategoryId = LogicCourses::getOrCreateCategory('Testkurse für LVs', $categoryId, $numCategoriesAddedToMoodle);
+		$TKcategoryId = LogicCourses::getOrCreateCategory('Testkurse zu LVs', $categoryId, $numCategoriesAddedToMoodle);
 
 		$moodleCourseId = LogicCourses::core_course_create_courses(
 			'Testkurs - '.$lehrveranstaltung->bezeichnung, $testCourse->coursename, $TKcategoryId, $startDate, ADDON_MOODLE_COURSE_FORMAT, $courseFormatOptions, $endDate
