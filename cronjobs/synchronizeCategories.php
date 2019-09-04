@@ -19,7 +19,7 @@
  *          Andreas Oesterreicher <andreas.oesterreicher@technikum-wien.at>
  */
 /**
- * Cronjob that set Permissions of Leaders an Assistants to 
+ * Cronjob that set Permissions of Leaders an Assistants to
  * the DegreeProgram Course Categories
  */
 

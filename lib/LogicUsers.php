@@ -272,14 +272,43 @@ class LogicUsers extends Logic
 				// Loops through category leaders
 				while ($cLeader = Database::fetchRow($cLeaders))
 				{
-					$debugMessage = 'Syncing category leader '.$cLeader->uid.':'.$cLeader->funktion_kurzbz.':"'.$cLeader->vorname.' '.$cLeader->nachname.'"';
+					$debugMessage = 'Syncing category leader '.$cLeader->uid.':'.
+						$cLeader->organisationseinheittyp_kurzbz.':'.$cLeader->funktion_kurzbz.
+						':"'.$cLeader->vorname.' '.$cLeader->nachname.'"';
 
 					$users = self::_getOrCreateMoodleUser($cLeader->uid, $numCreatedUsers); // self-explanatory ;)
 
 					if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 					{
+						$roleid = -42;
+
+						// If faculty type and function is leader
+						if ($cLeader->organisationseinheittyp_kurzbz == ADDON_MOODLE_OUTYPE_FACULTY
+							&& $cLeader->funktion_kurzbz == ADDON_MOODLE_CATEGORY_FUNCTION_LEADER)
+						{
+							$roleid = ADDON_MOODLE_FACULTY_LEADER_ROLEID; // Faculty leader role
+						}
+						// If faculty type and function is assistent
+						elseif ($cLeader->organisationseinheittyp_kurzbz == ADDON_MOODLE_OUTYPE_FACULTY
+							&& $cLeader->funktion_kurzbz == ADDON_MOODLE_CATEGORY_FUNCTION_ASSISTENT)
+						{
+							$roleid = ADDON_MOODLE_ASSISTENT_ROLEID; // Assistent role
+						}
+						// If degree or course type
+						elseif ($cLeader->organisationseinheittyp_kurzbz == ADDON_MOODLE_OUTYPE_DEGREE
+							|| $cLeader->organisationseinheittyp_kurzbz == ADDON_MOODLE_OUTYPE_COURSE)
+						{
+							$roleid = ADDON_MOODLE_STUDIENGANGSLEITUNG_ROLEID; // Leader role by default
+
+							// Otherwise if function is assistent then assistent role
+							if ($cLeader->funktion_kurzbz == ADDON_MOODLE_CATEGORY_FUNCTION_ASSISTENT)
+							{
+								$roleid = ADDON_MOODLE_ASSISTENT_ROLEID;
+							}
+						}
+
 						$usersToAssign[] = array(
-							'roleid' => ADDON_MOODLE_STUDIENGANGSLEITUNG_ROLEID,
+							'roleid' => $roleid,
 							'userid' => $users[0]->id,
 							'contextlevel' => 'coursecat',
 							'instanceid' => $moodleCourseCategoryId

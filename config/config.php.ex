@@ -65,6 +65,8 @@ define('ADDON_MOODLE_LV_ANGERECHNET_ROLEID', 11);
 define('ADDON_MOODLE_KOMPETENZFELDLEITUNG_ROLEID', 19);
 define('ADDON_MOODLE_DEPARTMENTLEITUNG_ROLEID', 20);
 define('ADDON_MOODLE_STUDIENGANGSLEITUNG_ROLEID', 17);
+define('ADDON_MOODLE_ASSISTENT_ROLEID', 30);
+define('ADDON_MOODLE_FACULTY_LEADER_ROLEID', 40);
 
 // Organisation unit types deifinition
 define('ADDON_MOODLE_DEPARTMENT', 'Department');
@@ -72,10 +74,18 @@ define('ADDON_MOODLE_KOMPETENZFELD', 'Kompetenzfeld');
 
 // Organisation unit types
 define('ADDON_MOODLE_OUTYPES', '\'Department\', \'Kompetenzfeld\'');
+define('ADDON_MOODLE_OUTYPES_CATEGORIES', '\'Fakultaet\', \'Studiengang\', \'Lehrgang\'');
+define('ADDON_MOODLE_OUTYPE_COURSE', 'Lehrgang');
+define('ADDON_MOODLE_OUTYPE_FACULTY', 'Fakultaet');
+define('ADDON_MOODLE_OUTYPE_DEGREE', 'Studiengang');
 
-// User functions
+// User functions used to retrieve users from database
 define('ADDON_MOODLE_COURSE_FUNCTIONS', '\'Leitung\'');
 define('ADDON_MOODLE_CATEGORY_FUNCTIONS', '\'Leitung\', \'ass\', \'stvLtg\'');
+
+// User functions values
+define('ADDON_MOODLE_CATEGORY_FUNCTION_ASSISTENT', 'ass');
+define('ADDON_MOODLE_CATEGORY_FUNCTION_LEADER', 'Leitung');
 
 // Parameters used to create a new user in moodle
 define('ADDON_MOODLE_USER_MANUAL_AUTH', 'manual');

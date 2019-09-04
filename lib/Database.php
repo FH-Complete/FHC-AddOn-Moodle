@@ -196,20 +196,37 @@ class Database extends basis_db
 	 */
 	public function getCourseleadersDelegatesAssistentsOE($oe_kurzbz)
  	{
-		$query = '
+		$query = 'WITH RECURSIVE oes(oe_kurzbz, oe_parent_kurzbz, organisationseinheittyp_kurzbz) AS (
 					SELECT
-						b.uid, p.vorname, p.nachname, bf.funktion_kurzbz
+						oe_kurzbz, oe_parent_kurzbz, organisationseinheittyp_kurzbz
 					FROM
-						public.tbl_benutzerfunktion bf
-						JOIN public.tbl_benutzer b USING(uid)
-						JOIN public.tbl_person p USING(person_id)
+						public.tbl_organisationseinheit
 					WHERE
-						bf.oe_kurzbz = '.$this->db_add_param($oe_kurzbz).'
-						AND (bf.datum_von <= NOW() OR bf.datum_von IS NULL)
-						AND (bf.datum_bis >= NOW() OR bf.datum_bis IS NULL)
-						AND bf.funktion_kurzbz IN ('.ADDON_MOODLE_CATEGORY_FUNCTIONS.')
-						AND b.aktiv = TRUE
-					';
+						oe_kurzbz = '.$this->db_add_param($oe_kurzbz).'
+						AND aktiv = TRUE
+					UNION ALL
+					SELECT
+						o.oe_kurzbz, o.oe_parent_kurzbz, o.organisationseinheittyp_kurzbz
+					FROM
+						public.tbl_organisationseinheit o, oes
+					WHERE
+						o.oe_kurzbz = oes.oe_parent_kurzbz
+						AND o.aktiv = TRUE
+				)
+				SELECT
+					b.uid, p.vorname, p.nachname, oes.organisationseinheittyp_kurzbz, bf.funktion_kurzbz
+				FROM
+					oes
+					JOIN public.tbl_benutzerfunktion bf USING(oe_kurzbz)
+					JOIN public.tbl_benutzer b USING(uid)
+					JOIN public.tbl_person p USING(person_id)
+				WHERE
+					bf.funktion_kurzbz IN ('.ADDON_MOODLE_CATEGORY_FUNCTIONS.')
+					AND (bf.datum_von <= NOW() OR bf.datum_von IS NULL)
+					AND (bf.datum_bis >= NOW() OR bf.datum_bis IS NULL)
+					AND b.aktiv = TRUE
+					AND oes.organisationseinheittyp_kurzbz IN ('.ADDON_MOODLE_OUTYPES_CATEGORIES.')
+				';
 
  		return $this->_execQuery($query);
  	}
