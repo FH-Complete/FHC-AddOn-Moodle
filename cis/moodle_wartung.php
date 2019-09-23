@@ -125,14 +125,14 @@ echo '<!DOCTYPE HTML>
 		{
 			for (var i = 0; i < chks.length; i++)
 			{
-				if (chks[i].disabled != true) chks[i].checked = false;
+				chks[i].checked = false;
 			}
 		}
 		else
 		{
 			for (var i = 0; i < chks.length; i++)
 			{
-				if (chks[i].disabled != true) chks[i].checked = true;
+				chks[i].checked = true;
 			}
 		}
 	}
@@ -371,7 +371,7 @@ else
 		if ($coursesLehreinheit->count > 0)
 		{
 			$disabled = 'disabled';
-			$checked = 'checked';
+			$checked = '';
 		}
 		else
 		{
