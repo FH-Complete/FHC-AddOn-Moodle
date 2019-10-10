@@ -549,7 +549,7 @@ abstract class Logic
 		return self::_moodleAPICall(
 			'fhcomplete_get_course_grades',
 			array($moodleCoursesId, $type),
-			'An error occurred while retrieving grades for a course'
+			'Please update grades in this moodle course'
 		);
 	}
 
@@ -567,6 +567,28 @@ abstract class Logic
 		if (count($courses->courses) == 0) return null;
 
 		return $courses->courses[0];
+	}
+
+	/**
+	 * Studiensemester can be passed as commandline option
+	 * ex: php synchronizeCategories.php --stsem WS2019
+	 */
+	public static function getCliOrCurrentOrNextStudiensemester()
+	{
+		$currentOrNextStudiensemester = null;
+		$commandlineparams = getopt('', array("stsem:"));
+
+		if (isset($commandlineparams['stsem']))
+		{
+			$currentOrNextStudiensemester = $commandlineparams['stsem'];
+		}
+		else
+		{
+			// Retrieves the current studiensemester
+			$currentOrNextStudiensemester = LogicUsers::getCurrentOrNextStudiensemester();
+		}
+
+		return $currentOrNextStudiensemester;
 	}
 
 	// --------------------------------------------------------------------------------------------

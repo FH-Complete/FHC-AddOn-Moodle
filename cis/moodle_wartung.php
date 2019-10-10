@@ -175,15 +175,14 @@ if (isset($_POST['neu']))
 				$moodleCourseId, null, $lvid, $stsem, date('Y-m-d H:i:s'), $user, isset($_POST['gruppen'])
 			);
 
-			$moodleEnrolledUsers = LogicUsers::core_enrol_get_enrolled_users($moodleCourseId);
+			// Retrieves the courses from moodle using the course ids given as POST parameters
+			$moodleCourses = LogicUsers::getMoodleCourses(array($moodleCourseId));
 
-			LogicUsers::synchronizeLektoren(
-				$moodleCourseId, $moodleEnrolledUsers, $numCreatedUsers, $numEnrolledLectors
-			);
+			LogicUsers::synchronizeLektoren($moodleCourses, false);
 
-			LogicUsers::synchronizeStudenten(
-				$moodleCourseId, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledStudents, $numCreatedGroups
-			);
+			LogicUsers::synchronizeStudenten($moodleCourses, false);
+
+			LogicUsers::synchronizeCompetenceFieldDepartmentLeaders($moodleCourses, false);
 		}
 		elseif ($art == 'le') //Getrennte Kurse fuer die Lehreinheiten
 		{
@@ -212,15 +211,14 @@ if (isset($_POST['neu']))
 					);
 				}
 
-				$moodleEnrolledUsers = LogicUsers::core_enrol_get_enrolled_users($moodleCourseId);
+				// Retrieves the courses from moodle using the course ids given as POST parameters
+				$moodleCourses = LogicUsers::getMoodleCourses(array($moodleCourseId));
 
-				LogicUsers::synchronizeLektoren(
-					$moodleCourseId, $moodleEnrolledUsers, $numCreatedUsers, $numEnrolledLectors
-				);
+				LogicUsers::synchronizeLektoren($moodleCourses, false);
 
-				LogicUsers::synchronizeStudenten(
-					$moodleCourseId, $moodleEnrolledUsers, $uidsToUnenrol, $numCreatedUsers, $numEnrolledStudents, $numCreatedGroups
-				);
+				LogicUsers::synchronizeStudenten($moodleCourses, false);
+
+				LogicUsers::synchronizeCompetenceFieldDepartmentLeaders($moodleCourses, false);
 			}
 			else
 			{
@@ -419,7 +417,16 @@ while ($course = Database::fetchRow($coursesByLehrveranstaltungLehreinheit))
 	if (count($moodleCourses) > 0) $courseName = $moodleCourses[0]->fullname;
 
 	echo '<tr>';
-	echo '<td><a href="'.LogicCourses::getBaseURL().'/course/view.php?id='.$course->mdl_course_id.'" class="Item" target="_blank">'.$courseName.'</a></td>';
+
+	if ($courseName != '')
+	{
+		echo '<td><a href="'.LogicCourses::getBaseURL().'/course/view.php?id='.$course->mdl_course_id.'" class="Item" target="_blank">'.$courseName.'</a></td>';
+	}
+	else
+	{
+		echo '<td>Moodle course with id '.$course->mdl_course_id.' not found</td>';
+	}
+
 	echo '</tr>';
 }
 

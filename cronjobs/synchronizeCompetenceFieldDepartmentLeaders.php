@@ -1,8 +1,7 @@
 <?php
 
 /**
- * This script adds all the users (lectors, students and management staff) present on FHComplete to moodle
- * It also adds all the users from groups linked to a moodle course, into the linked moodle course
+ * This script adds all the competence field and department leaders present on FHComplete to moodle
  * The database table used to link users to moodle courses is addon.tbl_moodle
  */
 
@@ -12,10 +11,11 @@ require_once('../lib/LogicUsers.php');
 LogicUsers::isExecutionAllowed();
 
 Output::printLineSeparator();
-Output::printInfo('Starting synchronize users script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
+Output::printInfo('Starting synchronize competence field and department leaders script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 
-// Retrieves the current studiensemester
-$currentOrNextStudiensemester = LogicUsers::getCurrentOrNextStudiensemester();
+// Studiensemester can be passed as commandline option or automatically retrieved
+// ex: php <this script> --stsem WS2019
+$currentOrNextStudiensemester = LogicUsers::getCliOrCurrentOrNextStudiensemester();
 
 Output::printInfo('Working studiensemester: '.$currentOrNextStudiensemester);
 
@@ -35,7 +35,7 @@ if (count($dbMoodleCoursesIDsArray) != count($moodleCourses))
 	Output::printWarning('The number of courses in the database and those present in moodle does not match!');
 }
 
-LogicUsers::synchronizeUsers($moodleCourses); // All the magic happens here!
+LogicUsers::synchronizeCompetenceFieldDepartmentLeaders($moodleCourses); // All the magic happens here!
 
-Output::printInfo('Ended synchronize users script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
+Output::printInfo('Ended synchronize competence field and department leaders script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 Output::printLineSeparator();

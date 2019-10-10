@@ -1,7 +1,8 @@
 <?php
 
 /**
- * Cronjob that set Permissions of Leaders an Assistants to the DegreeProgram Course Categories
+ * This script adds all the users from groups linked to a moodle course, into the linked moodle course
+ * The database table used to link users to moodle courses is addon.tbl_moodle
  */
 
 require_once('../lib/LogicUsers.php');
@@ -10,7 +11,7 @@ require_once('../lib/LogicUsers.php');
 LogicUsers::isExecutionAllowed();
 
 Output::printLineSeparator();
-Output::printInfo('Starting synchronize categories script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
+Output::printInfo('Starting synchronize groups script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 
 // Studiensemester can be passed as commandline option or automatically retrieved
 // ex: php <this script> --stsem WS2019
@@ -34,7 +35,7 @@ if (count($dbMoodleCoursesIDsArray) != count($moodleCourses))
 	Output::printWarning('The number of courses in the database and those present in moodle does not match!');
 }
 
-LogicUsers::synchronizeCategories($moodleCourses); // All the magic happens here!
+LogicUsers::synchronizeGroupsMembers($moodleCourses); // All the magic happens here!
 
-Output::printInfo('Ended synchronize categories script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
+Output::printInfo('Ended synchronize groups script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 Output::printLineSeparator();
