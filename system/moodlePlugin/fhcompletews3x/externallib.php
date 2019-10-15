@@ -60,6 +60,16 @@ class local_fhcompletews_external extends external_api
 		$final_id='';
 		$data = array();
 
+		// Checks if grades need to be regrated...
+		if (grade_needs_regrade_final_grades($courseid))
+		{
+			// ...if needed then regrade it!
+			if (!grade_regrade_final_grades($courseid))
+			{
+				error_log('Error while regrading course with id: '.$courseid);
+			}
+		}
+
 		// Kursdaten Laden
 		if (!$course = $DB->get_record('course', array('id'=>$courseid)))
 		{
