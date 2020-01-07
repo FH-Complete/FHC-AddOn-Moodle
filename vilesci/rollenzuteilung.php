@@ -56,10 +56,21 @@ echo '<!DOCTYPE html>
 					<OPTION value="4">Tutor/in</OPTION>
 					<OPTION value="">----</OPTION>
 					<OPTION value="1">Manager</OPTION>
-					<OPTION value="2">Course Creator</OPTION>
-					<OPTION value="6">Guest</OPTION>
-					<OPTION value="7">User</OPTION>
-					<OPTION value="8">frontpage</OPTION>
+					<OPTION value="6">Gast</OPTION>
+					<OPTION value="20">Fakultätsleitung</OPTION>
+					<OPTION value="23">Departmentleitung</OPTION>
+					<OPTION value="19">Kompetenzfeldleitung</OPTION>
+					<OPTION value="17">Studiengangsleitung</OPTION>
+					<OPTION value="26">Assistenz</OPTION>
+					<OPTION value="25">Verantwortlich</OPTION>
+					<OPTION value="27">Schreibzugriff</OPTION>
+					<OPTION value="28">Lesezugriff</OPTION>
+					<OPTION value="12">LV angerechnet</OPTION>
+					<OPTION value="21">Outgoing</OPTION>
+					<OPTION value="18">Gasthörer</OPTION>
+					<OPTION value="11">Testeinsicht</OPTION>
+					<OPTION value="13">Nachrichten blockieren</OPTION>
+					<OPTION value="16">Datenschutzbeauftragte/r</OPTION>
 				</SELECT>
 			</td>
 		</tr>
