@@ -136,6 +136,49 @@ echo '<!DOCTYPE HTML>
 			}
 		}
 	}
+';
+
+if(defined('ADDON_MOODLE_COURSE_NAME_LEKTOR') && ADDON_MOODLE_COURSE_NAME_LEKTOR)
+{
+	echo '
+	function ChangeLE()
+	{
+		var chks = document.querySelectorAll("#lehreinheitencheckboxen > input[type=checkbox]");
+		var lektor_arr = Array();
+		var lektor = " -";
+
+		if (document.getElementById("radiole").checked)
+		{
+			for (var i = 0; i < chks.length; i++)
+			{
+				if(chks[i].checked)
+				{
+					if(lektor_arr.indexOf(chks[i].getAttribute("data-lektor"))<0)
+					{
+						lektor_arr.push(chks[i].getAttribute("data-lektor"));
+					}
+				}
+			}
+		}
+
+		for(i in lektor_arr)
+		{
+			lektor = lektor + " " + lektor_arr[i];
+		}
+		var bezeichnung = document.getElementById("bezeichnung_default").value;
+		document.getElementById("bezeichnung").value = bezeichnung + lektor;
+	}
+	';
+}
+else
+{
+	echo '
+	function ChangeLE()
+	{
+	}
+	';
+}
+echo '
 </script>
 
 <body>
@@ -378,7 +421,7 @@ else
 		}
 
 		echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				<input type="checkbox" name="lehreinheit_'.$row->lehreinheit_id.'" value="'.$row->lehreinheit_id.'" '.$disabled.' '.$checked.'>'.$row->lehrform_kurzbz.' '.$gruppen.' '.$lektoren;
+				<input type="checkbox" onclick="ChangeLE()" data-lektor="'.trim($lektoren).'" id="lehreinheit_'.$row->lehreinheit_id.'" name="lehreinheit_'.$row->lehreinheit_id.'" value="'.$row->lehreinheit_id.'" '.$disabled.' '.$checked.'>'.$row->lehrform_kurzbz.' '.$gruppen.' '.$lektoren;
 		echo '<br>';
 	}
 	echo '</div>';
@@ -392,11 +435,11 @@ else
 		$orgform,
 		$lehrveranstaltung->semester,
 		$stsem,
-		$lehrveranstaltung->bezeichnung,
-		$lektoren
+		$lehrveranstaltung->bezeichnung
 	);
 
-	echo '<br>'.$p->t('moodle/kursbezeichnung').': <input type="text" name="bezeichnung" maxlength="254" size="40" value="'.LogicCourses::convertHtmlChars($longbezeichnung).'">';
+	echo '<input type="hidden" name="bezeichnung_default" id="bezeichnung_default" value="'.LogicCourses::convertHtmlChars($longbezeichnung).'">';
+	echo '<br>'.$p->t('moodle/kursbezeichnung').': <input type="text" name="bezeichnung" id="bezeichnung" maxlength="254" size="40" value="'.LogicCourses::convertHtmlChars($longbezeichnung).'">';
 	//echo '<br>'.$p->t('moodle/gruppenUebernehmen').': <input type="checkbox" name="gruppen">';
 	echo '<br><br><input type="submit" name="neu" value="'.$p->t('moodle/kursAnlegen').'" onClick="showLoader()">
 		</form>';
