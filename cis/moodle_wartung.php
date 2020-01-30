@@ -392,7 +392,8 @@ else
 		$orgform,
 		$lehrveranstaltung->semester,
 		$stsem,
-		$lehrveranstaltung->bezeichnung
+		$lehrveranstaltung->bezeichnung,
+		$lektoren
 	);
 
 	echo '<br>'.$p->t('moodle/kursbezeichnung').': <input type="text" name="bezeichnung" maxlength="254" size="40" value="'.LogicCourses::convertHtmlChars($longbezeichnung).'">';
