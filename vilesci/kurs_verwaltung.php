@@ -553,7 +553,7 @@ if (($studiengang_kz != '' && $studiensemester_kurzbz != '') || !empty($moodle_m
 		{
 		echo '
 			<tr>
-				<td>'.$stg_arr[$lv->studiengang_kz].' '.$lv->semester.' '.$lv->bezeichnung.' ('.$lv->lehrveranstaltung_id.')</td>
+				<td>'.(isset($stg_arr[$lv->studiengang_kz])?$stg_arr[$lv->studiengang_kz]:'').' '.$lv->semester.' '.$lv->bezeichnung.' ('.$lv->lehrveranstaltung_id.')</td>
 				<td>'.$lehreinheit.'</td>
 				<td>'.$lv->kurzbz.'</td>
 				<td>'.$lv->semester.'</td>
