@@ -62,7 +62,11 @@ while ($course = Database::fetchRow($courses))
 {
 	$moodleCourses = LogicCourses::core_course_get_courses(array($course->mdl_course_id));
 
-	$bezeichnung = $moodleCourses[0]->fullname;
+	if(isset($moodleCourses[0]))
+		$bezeichnung = $moodleCourses[0]->fullname;
+	else
+		$bezeichnung = '';
+
 	if ($bezeichnung == '') $bezeichnung = 'Course '.$course->mdl_course_id;
 
 	// List of all courses
