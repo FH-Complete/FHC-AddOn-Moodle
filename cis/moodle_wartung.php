@@ -145,7 +145,9 @@ if(defined('ADDON_MOODLE_COURSE_NAME_LEKTOR') && ADDON_MOODLE_COURSE_NAME_LEKTOR
 	{
 		var chks = document.querySelectorAll("#lehreinheitencheckboxen > input[type=checkbox]");
 		var lektor_arr = Array();
+		var lehreinheit_arr = Array();
 		var lektor = " -";
+		var lehreinheit = "";
 
 		if (document.getElementById("radiole").checked)
 		{
@@ -157,8 +159,14 @@ if(defined('ADDON_MOODLE_COURSE_NAME_LEKTOR') && ADDON_MOODLE_COURSE_NAME_LEKTOR
 					{
 						lektor_arr.push(chks[i].getAttribute("data-lektor"));
 					}
+					lehreinheit_arr.push(chks[i].getAttribute("data-lehreinheit"));
 				}
 			}
+		}
+
+		for(i in lehreinheit_arr)
+		{
+			lehreinheit = lehreinheit + " - " + lehreinheit_arr[i];
 		}
 
 		for(i in lektor_arr)
@@ -166,7 +174,7 @@ if(defined('ADDON_MOODLE_COURSE_NAME_LEKTOR') && ADDON_MOODLE_COURSE_NAME_LEKTOR
 			lektor = lektor + " " + lektor_arr[i];
 		}
 		var bezeichnung = document.getElementById("bezeichnung_default").value;
-		document.getElementById("bezeichnung").value = bezeichnung + lektor;
+		document.getElementById("bezeichnung").value = bezeichnung + lehreinheit + lektor;
 	}
 	';
 }
@@ -421,7 +429,13 @@ else
 		}
 
 		echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				<input type="checkbox" onclick="ChangeLE()" data-lektor="'.trim($lektoren).'" id="lehreinheit_'.$row->lehreinheit_id.'" name="lehreinheit_'.$row->lehreinheit_id.'" value="'.$row->lehreinheit_id.'" '.$disabled.' '.$checked.'>'.$row->lehrform_kurzbz.' '.$gruppen.' '.$lektoren;
+				<input type="checkbox" onclick="ChangeLE()"
+					data-lektor="'.trim($lektoren).'"
+					data-lehreinheit="'.$row->lehreinheit_id.'"
+					id="lehreinheit_'.$row->lehreinheit_id.'"
+					name="lehreinheit_'.$row->lehreinheit_id.'"
+					value="'.$row->lehreinheit_id.'" '.$disabled.' '.$checked.'>
+				'.$row->lehrform_kurzbz.' '.$gruppen.' '.$lektoren;
 		echo '<br>';
 	}
 	echo '</div>';
