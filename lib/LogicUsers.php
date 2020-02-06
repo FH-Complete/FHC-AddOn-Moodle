@@ -718,21 +718,18 @@ class LogicUsers extends Logic
 						}
 					}
 
-					//
+					$users = self::_getOrCreateMoodleUser($student->student_uid, $numCreatedUsers);
+
 					if (!$userFound)
 					{
-						$users = self::_getOrCreateMoodleUser($student->student_uid, $numCreatedUsers);
-
 						if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 						{
-							//
 							$roleId = ADDON_MOODLE_STUDENT_ROLEID;
 							if (array_search($student->student_uid, $courseAngerechnet) !== false)
 							{
 								$roleId = ADDON_MOODLE_LV_ANGERECHNET_ROLEID;
 							}
 
-							//
 							$usersToEnroll[] = array(
 								'roleid' => $roleId,
 								'userid' => $users[0]->id,
@@ -748,26 +745,26 @@ class LogicUsers extends Logic
 
 						$numEnrolledStudents++;
 
-						//
-						if ($synchronizeGroup)
+					}
+
+					if ($synchronizeGroup)
+					{
+						if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 						{
-							if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
-							{
-								//
-								$group = self::_getOrCreateMoodleGroup($moodleCourseId, $groupName, $numCreatedGroups);
+							//
+							$group = self::_getOrCreateMoodleGroup($moodleCourseId, $groupName, $numCreatedGroups);
 
-								//
-								if (!self::_isMoodleUserMemberMoodleGroup($users[0]->id, $group->id))
-								{
-									$groupsMembersToAdd[] = array('groupid' => $group->id, 'userid' => $users[0]->id);
-
-									$debugMessage .= ' >> will be added to moodle group '.$groupName.' in a later step';
-								}
-							}
-							else
+							//
+							if (!self::_isMoodleUserMemberMoodleGroup($users[0]->id, $group->id))
 							{
-								$debugMessage .= ' >> dry run >> should be added to moodle group '.$groupName.' in a later step';
+								$groupsMembersToAdd[] = array('groupid' => $group->id, 'userid' => $users[0]->id);
+
+								$debugMessage .= ' >> will be added to moodle group '.$groupName.' in a later step';
 							}
+						}
+						else
+						{
+							$debugMessage .= ' >> dry run >> should be added to moodle group '.$groupName.' in a later step';
 						}
 					}
 
