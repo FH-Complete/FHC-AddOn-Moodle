@@ -61,7 +61,7 @@ class LogicCourses extends Logic
 	public static function getOrCreateMoodleCourse(
 		$course, $studiensemester_kurzbz,
 		$fullname, $shortname, $startDate, $courseFormatOptions, $endDate,
-		&$numCoursesAddedToMoodle, &$numCategoriesAddedToMoodle
+		&$numCoursesAddedToMoodle, &$numCategoriesAddedToMoodle, $lehrveranstaltung_id = null
 	)
 	{
 		$moodleCourseId = -1;
@@ -73,7 +73,7 @@ class LogicCourses extends Logic
 			$categoryId = self::_createCategories($course, $studiensemester_kurzbz, $numCategoriesAddedToMoodle);
 
 			$moodleCourseId = self::_addMoodleCourse(
-				$fullname, $shortname, $categoryId, $startDate, $courseFormatOptions, $endDate
+				$fullname, $shortname, $categoryId, $startDate, $courseFormatOptions, $endDate, $lehrveranstaltung_id
 			);
 
 			$numCoursesAddedToMoodle++;
@@ -336,14 +336,14 @@ class LogicCourses extends Logic
 	/**
 	 *
 	 */
-	private static function _addMoodleCourse($fullname, $shortname, $categoryId, $startDate, $courseFormatOptions, $endDate)
+	private static function _addMoodleCourse($fullname, $shortname, $categoryId, $startDate, $courseFormatOptions, $endDate, $lehrveranstaltung_id = null)
 	{
 		$moodleCourseId = -1;
 
 		if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 		{
 			$moodleCourseId = self::core_course_create_courses(
-				$fullname, $shortname, $categoryId, $startDate, ADDON_MOODLE_COURSE_FORMAT, $courseFormatOptions, $endDate
+				$fullname, $shortname, $categoryId, $startDate, ADDON_MOODLE_COURSE_FORMAT, $courseFormatOptions, $endDate, $lehrveranstaltung_id
 			);
 
 			Output::printDebug('Added to moodle!');

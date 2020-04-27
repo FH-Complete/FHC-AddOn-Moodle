@@ -215,6 +215,13 @@ if (isset($_POST['neu']))
 		$course->studiengang = $studiengang->typ.$studiengang->kurzbz;
 		$course->semester = $lehrveranstaltung->semester;
 
+		// Checks if the course is already present in moodle
+		$checkCourse = LogicCourses::getCourseByShortname($shortname);
+		if ($checkCourse != null)
+		{
+			die($p->t('moodle/bezeichnungMussEingegebenWerden'));
+		}
+
 		//Gesamte LV zu einem Moodle Kurs zusammenlegen
 		if ($art == 'lv')
 		{

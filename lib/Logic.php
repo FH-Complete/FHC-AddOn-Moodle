@@ -505,12 +505,12 @@ abstract class Logic
 	 *
 	 */
 	public static function core_course_create_courses(
-		$fullname, $shortname, $categoryId, $startDate, $format = 'topics', $courseFormatOptions = null, $endDate = null
+		$fullname, $shortname, $categoryId, $startDate, $format = 'topics', $courseFormatOptions = null, $endDate = null, $idnumber = null
 	)
 	{
 		$courses = self::_moodleAPICall(
 			'core_course_create_courses',
-			array($fullname, $shortname, $categoryId, $format, $courseFormatOptions, $startDate, $endDate),
+			array($fullname, $shortname, $categoryId, $format, $courseFormatOptions, $startDate, $endDate, $idnumber),
 			'An error occurred while creating a new course in moodle'
 		);
 
