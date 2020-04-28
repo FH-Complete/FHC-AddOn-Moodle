@@ -219,14 +219,14 @@ if (isset($_POST['neu']))
 		$checkCourse = LogicCourses::getCourseByShortname($shortname);
 		if ($checkCourse != null)
 		{
-			die($p->t('moodle/bezeichnungMussEingegebenWerden'));
+			die('Dieser Kurs ist bereits in Moodle vorhanden - This course is already present in moodle');
 		}
 
 		//Gesamte LV zu einem Moodle Kurs zusammenlegen
 		if ($art == 'lv')
 		{
 			$moodleCourseId = LogicCourses::getOrCreateMoodleCourse(
-				$course, $stsem, $_POST['bezeichnung'], $shortname, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle
+				$course, $stsem, $_POST['bezeichnung'], $shortname, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle, $lehrveranstaltung->lehrveranstaltung_id
 			);
 
 			LogicCourses::insertMoodleTable(
@@ -258,7 +258,7 @@ if (isset($_POST['neu']))
 			if (count($lehreinheiten) > 0)
 			{
 				$moodleCourseId = LogicCourses::getOrCreateMoodleCourse(
-					$course, $stsem, $_POST['bezeichnung'], $shortname, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle
+					$course, $stsem, $_POST['bezeichnung'], $shortname, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle, $lehrveranstaltung->lehrveranstaltung_id
 				);
 
 				// Fuer jede Lehreinheit einen Eintrag in VilesciDB anlegen
