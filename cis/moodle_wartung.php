@@ -215,16 +215,16 @@ if (isset($_POST['neu']))
 		$course->studiengang = $studiengang->typ.$studiengang->kurzbz;
 		$course->semester = $lehrveranstaltung->semester;
 
-		// Checks if the course is already present in moodle
-		$checkCourse = LogicCourses::getCourseByShortname($shortname);
-		if ($checkCourse != null)
-		{
-			die('Dieser Kurs ist bereits in Moodle vorhanden - This course is already present in moodle');
-		}
-
 		//Gesamte LV zu einem Moodle Kurs zusammenlegen
 		if ($art == 'lv')
 		{
+			// Checks if the course is already present in moodle
+			$checkCourse = LogicCourses::getCourseByShortname($shortname);
+			if ($checkCourse != null)
+			{
+				die('Dieser Kurs ist bereits in Moodle vorhanden - This course is already present in moodle');
+			}
+
 			$moodleCourseId = LogicCourses::getOrCreateMoodleCourse(
 				$course, $stsem, $_POST['bezeichnung'], $shortname, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle, $lehrveranstaltung->lehrveranstaltung_id
 			);
@@ -253,6 +253,13 @@ if (isset($_POST['neu']))
 					$shortname .= '/'.$value;
 					$lehreinheiten[] = $value;
 				}
+			}
+
+			// Checks if the course is already present in moodle
+			$checkCourse = LogicCourses::getCourseByShortname($shortname);
+			if ($checkCourse != null)
+			{
+				die('Dieser Kurs ist bereits in Moodle vorhanden - This course is already present in moodle');
 			}
 
 			if (count($lehreinheiten) > 0)
