@@ -271,7 +271,7 @@ class MoodleAPI extends MoodleClient
 	/**
 	 *
 	 */
-	public function core_course_create_courses($fullname, $shortname, $categoryId, $format, $courseFormatOptions, $startDate, $endDate, $idnumber)
+	public function core_course_create_courses($fullname, $shortname, $categoryId, $format, $courseFormatOptions, $startDate, $endDate)
 	{
 		return $this->call(
 			'core_course_create_courses',
@@ -286,7 +286,6 @@ class MoodleAPI extends MoodleClient
 						'courseformatoptions' => $courseFormatOptions,
 						'startdate' => $startDate,
 						'enddate' => $endDate,
-						'idnumber' => $idnumber
 					)
 				)
 			)

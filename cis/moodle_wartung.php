@@ -368,7 +368,7 @@ else
 
 	//wenn bereits ein Moodle Kurs fuer eine Lehreinheit angelegt wurde, dann dass
 	//anlegen fuer die Lehrveranstaltung verhindern
-	$qry = "SELECT 1 FROM lehre.tbl_moodle
+	$qry = "SELECT 1 FROM addon.tbl_moodle
 			WHERE lehreinheit_id in(SELECT lehreinheit_id FROM lehre.tbl_lehreinheit
 									WHERE lehrveranstaltung_id=".$db->db_add_param($lvid, FHC_INTEGER)."
 									AND studiensemester_kurzbz=".$db->db_add_param($stsem).")";
