@@ -20,6 +20,9 @@
 /**
  * Initialisierung des Addons
  */
+require_once('../../../config/cis.config.inc.php');
+require_once('../config.inc.php');
+
 ?>
 if(typeof addon =='undefined')
 	var addon=Array();
@@ -37,9 +40,55 @@ addon.push(
 
 			case 'cis/private/lehre/lesson.php':
 				break;
+            case 'cis/private/lvplan/stpl_detail.php':
 
-			default:
+                var lvId = params.lvId;
+                var leId = params.leId;
+                var stsem = params.stsem;
+
+                getCourseId(lvId, leId, stsem);
+
+                break;
+
+            default:
 				break;
 		}
 	}
 });
+
+function getCourseId(lvId, leId, stsem)
+{
+    $.ajax({
+        type: "GET",
+        dataType: 'json',
+        url: '<?php echo APP_ROOT;?>addons/moodle/cis/course.php?lvId='+lvId+'&leId='+leId+'&stsem='+stsem,
+        success: function (result)
+        {
+            var first_moodle_course_id = result[0].mdl_course_id
+
+            if(!isEmpty(first_moodle_course_id))
+            {
+                var headerstag = '#stdplantablerow'
+                $(headerstag).append('<th>Moodle</th>')
+                for (i in result)
+                {
+                    //var testlink ='https://moodle.technikum-wien.at/course/view.php?id=' + result[i].mdl_course_id
+
+                    var link = '<?php echo ADDON_MOODLE_PATH;?>' + '/course/view.php?id=' + result[i].mdl_course_id
+                    var tag = '#moodlelink' + (i)
+
+                    $(tag).append('<a href=' + link + '>moodle</a>');
+                }
+            }
+
+        },
+        error: function(){
+            console.log("ERROR");
+            //alert("Error Casetime Load");
+        }
+    });
+}
+
+function isEmpty(str) {
+    return (!str || 0 === str.length);
+}
