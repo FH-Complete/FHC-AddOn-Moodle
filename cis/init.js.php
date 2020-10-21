@@ -77,7 +77,7 @@ function getCourseId(courses, stsem)
                     //let link = '<php echo ADDON_MOODLE_PATH;?>' + '/course/view.php?id=' + moodle_courses[i].mdl_course_id
                     let tag = '#moodlelink' + (i)
 
-                    $(tag).append('<a href=' + link + '>moodle</a>');
+                    $(tag).append('<a href=' + link + '>zum Moodlekurs</a>');
                 }
             }
 
