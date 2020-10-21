@@ -43,18 +43,5 @@ foreach ($courses as $course)
 }
 
 echo json_encode($moodle_courses);
-/*
-$moodle_course = new moodle_course();
 
-if($moodle_course->course_exists_for_le($leId))
-{
-    $moodle_course->getCourseByLeId($leId);
-}
-elseif($moodle_course->course_exists_for_lv($lvid,$stsem))
-{
-    $moodle_course->getAll($lvid, $stsem);
-}
-
-echo json_encode($moodle_course->result);
-*/
 ?>
