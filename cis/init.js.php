@@ -64,8 +64,6 @@ function getCourseId(courses, stsem)
         success: function (result)
         {
             let moodle_courses = result.map(x => x[0]);
-            console.log(moodle_courses);
-
             //checks if every element of moodle_courses is empty
             //-> if yes then there are no Moodle Courses for any of the requested JSON params
             if(!moodle_courses.every(x => isEmpty(x)))
