@@ -63,17 +63,21 @@ function getCourseId(courses, stsem)
         data: {courses: courses, stsem: stsem},
         success: function (result)
         {
-            let moodle_courses = result;
+            let moodle_courses = result.map(x => x[0]);
+            console.log(moodle_courses);
 
-            if(!isEmpty(moodle_courses[0][0].mdl_course_id))
+            //checks if every element of moodle_courses is empty
+            //-> if yes then there are no Moodle Courses for any of the requested JSON params
+            if(!moodle_courses.every(x => isEmpty(x)))
             {
-                var headerstag = '#stdplantablerow'
+                let headerstag = '#stdplantablerow'
                 $(headerstag).append('<th>Moodle</th>')
 
                 for (i in moodle_courses)
                 {
-                    var link = '<?php echo ADDON_MOODLE_PATH;?>' + '/course/view.php?id=' + moodle_courses[i][0].mdl_course_id
-                    var tag = '#moodlelink' + (i)
+                    let link = 'https://moodle.technikum-wien.at/course/view.php?id=' + moodle_courses[i].mdl_course_id
+                    //let link = '<php echo ADDON_MOODLE_PATH;?>' + '/course/view.php?id=' + moodle_courses[i].mdl_course_id
+                    let tag = '#moodlelink' + (i)
 
                     $(tag).append('<a href=' + link + '>moodle</a>');
                 }
