@@ -73,10 +73,10 @@ function getCourseId(courses, stsem)
 
                 for (i in moodle_courses)
                 {
-                    let link = '<?php echo ADDON_MOODLE_PATH;?>' + '/course/view.php?id=' + moodle_courses[i].mdl_course_id
+                        let link = '<?php echo ADDON_MOODLE_PATH;?>' + '/course/view.php?id=' + moodle_courses[i].mdl_course_id
                     let tag = '#moodlelink' + (i)
 
-                    $(tag).append('<a href=' + link + '>zum Moodlekurs</a>');
+                    $(tag).append('<a href=' + link +  ' target="_blank">zum Moodlekurs</a>');
                 }
             }
 
@@ -88,6 +88,8 @@ function getCourseId(courses, stsem)
     });
 }
 
-function isEmpty(str) {
+function isEmpty(str)
+{
     return (!str || 0 === str.length);
 }
+
