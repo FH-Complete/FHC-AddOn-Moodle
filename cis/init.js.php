@@ -73,8 +73,7 @@ function getCourseId(courses, stsem)
 
                 for (i in moodle_courses)
                 {
-                    let link = 'https://moodle.technikum-wien.at/course/view.php?id=' + moodle_courses[i].mdl_course_id
-                    //let link = '<php echo ADDON_MOODLE_PATH;?>' + '/course/view.php?id=' + moodle_courses[i].mdl_course_id
+                    let link = '<?php echo ADDON_MOODLE_PATH;?>' + '/course/view.php?id=' + moodle_courses[i].mdl_course_id
                     let tag = '#moodlelink' + (i)
 
                     $(tag).append('<a href=' + link + '>zum Moodlekurs</a>');
