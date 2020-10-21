@@ -16,13 +16,34 @@ if (!$db = new basis_db())
 
 $user = get_uid();
 
-if(isset($_GET['lvId']))
-    $lvid = $_GET['lvId'];
-if(isset($_GET['leId']))
-    $leId = $_GET['leId'];
 if(isset($_GET['stsem']))
     $stsem = $_GET['stsem'];
+if(isset($_GET['courses']))
+    $courses = $_GET['courses'];
 
+$moodle_courses = array();
+
+foreach ($courses as $course)
+{
+    $moodle_course = new moodle_course();
+    $lvId = $course['lvId'];
+    $leId = $course['leId'];
+
+    if($moodle_course->course_exists_for_le($leId))
+    {
+        $moodle_course->getCourseByLeId($leId);
+    }
+    elseif($moodle_course->course_exists_for_lv($lvId,$stsem))
+    {
+        $moodle_course->getAll($lvId, $stsem);
+    }
+
+    array_push($moodle_courses, $moodle_course->result);
+
+}
+
+echo json_encode($moodle_courses);
+/*
 $moodle_course = new moodle_course();
 
 if($moodle_course->course_exists_for_le($leId))
@@ -35,5 +56,5 @@ elseif($moodle_course->course_exists_for_lv($lvid,$stsem))
 }
 
 echo json_encode($moodle_course->result);
-
+*/
 ?>

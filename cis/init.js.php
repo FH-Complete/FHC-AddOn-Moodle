@@ -41,12 +41,10 @@ addon.push(
 			case 'cis/private/lehre/lesson.php':
 				break;
             case 'cis/private/lvplan/stpl_detail.php':
+                let courses = params.courses;
+                let stsem = params.stsem;
 
-                var lvId = params.lvId;
-                var leId = params.leId;
-                var stsem = params.stsem;
-
-                getCourseId(lvId, leId, stsem);
+                getCourseId(courses, stsem);
 
                 break;
 
@@ -56,25 +54,25 @@ addon.push(
 	}
 });
 
-function getCourseId(lvId, leId, stsem)
+function getCourseId(courses, stsem)
 {
     $.ajax({
         type: "GET",
+        url: '<?php echo APP_ROOT;?>addons/moodle/cis/course.php',
         dataType: 'json',
-        url: '<?php echo APP_ROOT;?>addons/moodle/cis/course.php?lvId='+lvId+'&leId='+leId+'&stsem='+stsem,
+        data: {courses: courses, stsem: stsem},
         success: function (result)
         {
-            var first_moodle_course_id = result[0].mdl_course_id
+            let moodle_courses = result;
 
-            if(!isEmpty(first_moodle_course_id))
+            if(!isEmpty(moodle_courses[0][0].mdl_course_id))
             {
                 var headerstag = '#stdplantablerow'
                 $(headerstag).append('<th>Moodle</th>')
-                for (i in result)
-                {
-                    //var testlink ='https://moodle.technikum-wien.at/course/view.php?id=' + result[i].mdl_course_id
 
-                    var link = '<?php echo ADDON_MOODLE_PATH;?>' + '/course/view.php?id=' + result[i].mdl_course_id
+                for (i in moodle_courses)
+                {
+                    var link = '<?php echo ADDON_MOODLE_PATH;?>' + '/course/view.php?id=' + moodle_courses[i][0].mdl_course_id
                     var tag = '#moodlelink' + (i)
 
                     $(tag).append('<a href=' + link + '>moodle</a>');
@@ -83,7 +81,7 @@ function getCourseId(lvId, leId, stsem)
 
         },
         error: function(){
-            console.log("ERROR");
+            console.log("ERROR WHILE MAKING AJAX CALL");
             //alert("Error Casetime Load");
         }
     });
