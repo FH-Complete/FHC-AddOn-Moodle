@@ -83,7 +83,6 @@ function getCourseId(courses, stsem)
         },
         error: function(){
             console.log("ERROR WHILE MAKING AJAX CALL");
-            //alert("Error Casetime Load");
         }
     });
 }
