@@ -1194,31 +1194,31 @@ class moodle_course extends basis_db
 	}
 
 	public function getCourseByLeId($lehreinheit_id)
-    {
-        $qry = "SELECT * FROM addon.tbl_moodle WHERE lehreinheit_id=".$this->db_add_param($lehreinheit_id, FHC_INTEGER);
-        if ($result = $this->db_query($qry))
-        {
-            while ($row = $this->db_fetch_object($result))
-            {
-                $obj = new stdClass();
+	{
+		$qry = "SELECT * FROM addon.tbl_moodle WHERE lehreinheit_id=" . $this->db_add_param($lehreinheit_id, FHC_INTEGER);
+		if ($result = $this->db_query($qry))
+		{
+			while ($row = $this->db_fetch_object($result))
+			{
+				$obj = new stdClass();
 
-                $obj->moodle_id = $row->moodle_id;
-                $obj->mdl_course_id = $row->mdl_course_id;
-                $obj->lehreinheit_id = $row->lehreinheit_id;
-                $obj->lehrveranstaltung_id = $row->lehrveranstaltung_id;
-                $obj->studiensemester_kurzbz = $row->studiensemester_kurzbz;
-                $obj->insertamum = $row->insertamum;
-                $obj->insertvon = $row->insertvon;
-                $obj->gruppen = $this->db_parse_bool($row->gruppen);
+				$obj->moodle_id = $row->moodle_id;
+				$obj->mdl_course_id = $row->mdl_course_id;
+				$obj->lehreinheit_id = $row->lehreinheit_id;
+				$obj->lehrveranstaltung_id = $row->lehrveranstaltung_id;
+				$obj->studiensemester_kurzbz = $row->studiensemester_kurzbz;
+				$obj->insertamum = $row->insertamum;
+				$obj->insertvon = $row->insertvon;
+				$obj->gruppen = $this->db_parse_bool($row->gruppen);
 
-                $this->result[] = $obj;
-            }
-            return true;
-        }
-        else
-        {
-            $this->errormsg = 'Fehler bei Datenbankabfrage';
-            return false;
-        }
-    }
+				$this->result[] = $obj;
+			}
+			return true;
+		}
+		else
+		{
+			$this->errormsg = 'Fehler bei Datenbankabfrage';
+			return false;
+		}
+	}
 }
