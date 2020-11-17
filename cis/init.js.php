@@ -20,26 +20,81 @@
 /**
  * Initialisierung des Addons
  */
+require_once('../../../config/cis.config.inc.php');
+require_once('../config.inc.php');
 ?>
-if(typeof addon =='undefined')
-	var addon=Array();
+
+if (typeof addon == 'undefined')
+{
+	var addon = Array();
+}
 
 addon.push(
-{
-	init: function(page, params)
 	{
-		// Diese Funktion wird nach dem Laden der Seite im CIS aufgerufen
-
-		switch(page)
+		init: function (page, params)
 		{
-			case 'cis/private/lehre/benotungstool/lvgesamtnoteverwalten.php':
-				break;
+			// Diese Funktion wird nach dem Laden der Seite im CIS aufgerufen
+			switch (page)
+			{
+				case 'cis/private/lehre/benotungstool/lvgesamtnoteverwalten.php':
+					break;
+				case 'cis/private/lehre/lesson.php':
+					break;
+				case 'cis/private/lvplan/stpl_detail.php':
+					let courses = params.courses;
+					let stsem = params.stsem;
 
-			case 'cis/private/lehre/lesson.php':
-				break;
-
-			default:
-				break;
+					getCourseId(courses, stsem);
+					break;
+				default:
+					break;
+			}
 		}
-	}
-});
+	});
+
+function getCourseId(courses, stsem)
+{
+	$.ajax({
+		type: "GET",
+		url: '<?php echo APP_ROOT;?>addons/moodle/cis/course.php',
+		dataType: 'json',
+		data: {courses: courses, stsem: stsem},
+		success: function (result)
+		{
+			let moodle_courses = result.map(x => x[0]);
+			//checks if every element of moodle_courses is empty
+			//-> if yes then there are no Moodle Courses for any of the requested JSON params
+			if (!moodle_courses.every(x => isEmpty(x)))
+			{
+				let headerstag = '#stdplantablerow'
+				$(headerstag).append('<th>Moodle</th>')
+
+				//append moodle course in row of stpl_detail.php if there exists a moodle course for a spesific LV
+				for (i in moodle_courses)
+				{
+					if (!isEmpty(moodle_courses[i]))
+					{
+						let link = '<?php echo ADDON_MOODLE_PATH;?>' + '/course/view.php?id=' + moodle_courses[i].mdl_course_id
+						let tag = '#moodlelink' + (i)
+
+						$(tag).append('<a href=' + link + ' target="_blank">zum Moodlekurs</a>');
+					}
+					else
+					{
+						continue;
+					}
+				}
+			}
+
+		},
+		error: function ()
+		{
+			console.log("ERROR WHILE MAKING AJAX CALL");
+		}
+	});
+}
+
+function isEmpty(str)
+{
+	return (!str || 0 === str.length);
+}
