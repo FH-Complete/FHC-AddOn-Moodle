@@ -61,28 +61,23 @@ function getCourseId(courses, stsem)
 		data: {courses: courses, stsem: stsem},
 		success: function (result)
 		{
-			let moodle_courses = result.map(x => x[0]);
-			//checks if every element of moodle_courses is empty
-			//-> if yes then there are no Moodle Courses for any of the requested JSON params
-			if (!moodle_courses.every(x => isEmpty(x)))
+			//make a new array containing the <a>Tags to append to the table.
+			// If the element is empty (i.e. no moodle course was found for this LV)
+			// then append the empty string to the array
+			let moodle_courses_aTags = result.map(x => x[0]).map(x => isEmpty(x) ? '' : makeMoodleLink(x.mdl_course_id));
+			
+			//check if there exists at least one element of moodle_courses which is not empty
+			//-> if there is at least one course it appends the moodle column to the table of stpl_detail.php
+			//->then iterate through the moodle course array to fill the coulmn with the corresponding moodle course
+			if (!moodle_courses_aTags.every(x => isEmpty(x)))
 			{
-				let headerstag = '#stdplantablerow'
-				$(headerstag).append('<th>Moodle</th>')
+				let headerstag = '#stdplantablerow';
+				$(headerstag).append('<th>Moodle</th>');
 
-				//append moodle course in row of stpl_detail.php if there exists a moodle course for a spesific LV
-				for (i in moodle_courses)
+				for (i in moodle_courses_aTags)
 				{
-					if (!isEmpty(moodle_courses[i]))
-					{
-						let link = '<?php echo ADDON_MOODLE_PATH;?>' + '/course/view.php?id=' + moodle_courses[i].mdl_course_id
-						let tag = '#moodlelink' + (i)
-
-						$(tag).append('<a href=' + link + ' target="_blank">zum Moodlekurs</a>');
-					}
-					else
-					{
-						continue;
-					}
+					let tag = '#moodlelink' + (i);
+					$(tag).append(moodle_courses_aTags[i]);
 				}
 			}
 
@@ -97,4 +92,18 @@ function getCourseId(courses, stsem)
 function isEmpty(str)
 {
 	return (!str || 0 === str.length);
+}
+
+function makeMoodleLink(mdl_course_id)
+{
+	if (!isEmpty(mdl_course_id))
+	{
+		let aTag = '<a href=' + '<?php echo ADDON_MOODLE_PATH;?>' + '/course/view.php?id=' + mdl_course_id + ' target="_blank">zum Moodlekurs</a>'
+		return aTag;
+	}
+	else
+	{
+		return '';
+	}
+
 }
