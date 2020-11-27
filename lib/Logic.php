@@ -399,6 +399,18 @@ abstract class Logic
 	/**
 	 *
 	 */
+	public static function coursesMdlCourseIDForLehrveranstaltungStudiensemesterExists($lehrveranstaltung_id, $studiensemester_kurzbz)
+	{
+		return self::_dbCall(
+			'coursesMdlCourseIDForLehrveranstaltungStudiensemesterExists',
+			array($lehrveranstaltung_id, $studiensemester_kurzbz),
+			'An error occurred while counting number of courses by lehrveranstaltung and studiensemester'
+		);
+	}
+
+	/**
+	 *
+	 */
 	public static function coursesAllLehreinheitStudiensemesterExists($lehrveranstaltung_id, $studiensemester_kurzbz)
 	{
 		return self::_dbCall(
@@ -423,11 +435,32 @@ abstract class Logic
 	/**
 	 *
 	 */
+	public static function coursesMdlCourseIDExists($lehreinheit_id)
+	{
+		return self::_dbCall(
+			'coursesMdlCourseIDExists',
+			array($lehreinheit_id),
+			'An error occurred while counting number of courses by lehreinheit'
+		);
+	}
+
+	/**
+	 *
+	 */
 	public static function getTestCourses($lehrveranstaltung_id, $studiensemester_kurzbz, $prefix = 'TK')
 	{
 		return self::_dbCall(
 			'getTestCourses',
 			array($lehrveranstaltung_id, $studiensemester_kurzbz, $prefix),
+			'An error occurred while retrieving test courses'
+		);
+	}
+
+	public static function getCoursesByLehreinheit($lehreinheit_id)
+	{
+		return self::_dbCall(
+			'getCoursesByLehreinheit',
+			array($lehreinheit_id),
 			'An error occurred while retrieving test courses'
 		);
 	}

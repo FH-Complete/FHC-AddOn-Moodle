@@ -896,6 +896,22 @@ class Database extends basis_db
 	/**
 	 *
 	 */
+	public function coursesMdlCourseIDForLehrveranstaltungStudiensemesterExists($lehrveranstaltung_id, $studiensemester_kurzbz)
+	{
+		$query = 'SELECT
+					COUNT(mdl_course_id)
+				FROM
+					addon.tbl_moodle
+				WHERE
+					lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id, FHC_INTEGER).'
+					AND studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz);
+
+		return $this->_execQuery($query);
+	}
+
+	/**
+	 *
+	 */
 	public function coursesAllLehreinheitStudiensemesterExists($lehrveranstaltung_id, $studiensemester_kurzbz)
  	{
  		$query = 'SELECT
@@ -937,6 +953,27 @@ class Database extends basis_db
 
  		return $this->_execQuery($query);
  	}
+
+	/**
+	 *
+	 */
+	public function getCoursesByLehreinheit($lehreinheit_id)
+	{
+		$query = 'SELECT DISTINCT mdl_course_id FROM addon.tbl_moodle WHERE lehreinheit_id= '.$this->db_add_param($lehreinheit_id, FHC_INTEGER);
+
+		return $this->_execQuery($query);
+	}
+
+	/**
+	 *
+	 */
+	public function coursesMdlCourseIDExists($lehreinheit_id)
+	{
+		$query = 'SELECT COUNT(mdl_course_id) FROM addon.tbl_moodle WHERE lehreinheit_id= '.$this->db_add_param($lehreinheit_id, FHC_INTEGER);
+
+		return $this->_execQuery($query);
+	}
+
 
 	// --------------------------------------------------------------------------------------------
     // Public static methods

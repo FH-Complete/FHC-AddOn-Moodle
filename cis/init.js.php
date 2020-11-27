@@ -50,7 +50,7 @@ addon.push(
 					break;
 			}
 		}
-	});
+ 	});
 
 function getCourseId(courses, stsem)
 {
@@ -65,7 +65,7 @@ function getCourseId(courses, stsem)
 			// If the element is empty (i.e. no moodle course was found for this LV)
 			// then append the empty string to the array
 			let moodle_courses_aTags = result.map(x => x[0]).map(x => isEmpty(x) ? '' : makeMoodleLink(x.mdl_course_id));
-			
+
 			//check if there exists at least one element of moodle_courses which is not empty
 			//-> if there is at least one course it appends the moodle column to the table of stpl_detail.php
 			//->then iterate through the moodle course array to fill the coulmn with the corresponding moodle course

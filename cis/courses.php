@@ -1,6 +1,6 @@
 <?php
 
-require_once(dirname(__FILE__).'/../lib/LogicCourses.php'); // A lot happens here!
+	require_once(dirname(__FILE__).'/../lib/LogicCourses.php'); // A lot happens here!
 
 require_once('../../../include/functions.inc.php');
 require_once('../../../include/phrasen.class.php');

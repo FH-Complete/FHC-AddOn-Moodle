@@ -13,7 +13,7 @@ class LogicCourses extends Logic
 	/**
 	 * Generates the parameter shortname for the given course
 	 */
-	public static function getCourseShortname($course, $studiensemester_kurzbz)
+	public static function  getCourseShortname($course, $studiensemester_kurzbz)
 	{
 		$orgform = $course->lv_orgform_kurzbz != '' ? $course->lv_orgform_kurzbz : $course->sg_orgform_kurzbz;
 
