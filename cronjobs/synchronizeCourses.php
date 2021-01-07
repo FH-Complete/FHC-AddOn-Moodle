@@ -1,4 +1,5 @@
 <?php
+die('You should not start this script');
 
 /**
  * WARNING: JUST FOR TESTING DO NOT USE IN A PRODUCTION ENVIRONMENT

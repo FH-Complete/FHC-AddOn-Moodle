@@ -49,6 +49,8 @@ define('ADDON_MOODLE_GROUPS_COURSE_FULLNAME', 'TW - FIX');
 // otherwise generates recors in addon.tbl_moodle and then moodle
 define('ADDON_MOODLE_JUST_MOODLE', true);
 
+// Lector is able to Create Course
+define('ADDON_MOODLE_LECTOR_CREATE_COURSE',true);
 // ------------------------------------------------------------------------------------------------------------
 // Users synching options
 
