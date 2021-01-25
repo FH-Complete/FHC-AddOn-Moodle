@@ -211,6 +211,18 @@ abstract class Logic
 	}
 
 	/**
+	 * Retrieves all the courses from database
+	 */
+	public static function getCoursesFromFHC($studiensemester_kurzbz)
+	{
+		return self::_dbCall(
+			'getCoursesFromFHC',
+			array($studiensemester_kurzbz),
+			'An error occurred while retrieving courses from FHC'
+		);
+	}
+
+	/**
 	 * Retrieves all the courses from database to be synchronized with moodle using table addon.tbl_moodle
 	 */
 	public static function getCoursesFromTblMoodle($studiensemester_kurzbz)
@@ -585,7 +597,7 @@ abstract class Logic
 		else
 		{
 			// Retrieves the current studiensemester
-			$currentOrNextStudiensemester = LogicUsers::getCurrentOrNextStudiensemester();
+			$currentOrNextStudiensemester = self::getCurrentOrNextStudiensemester();
 		}
 
 		return $currentOrNextStudiensemester;

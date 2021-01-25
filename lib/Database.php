@@ -16,7 +16,7 @@ class Database extends basis_db
 	}
 
 	// --------------------------------------------------------------------------------------------
-    // Public methods
+	// Public methods
 
 	/**
 	 *
@@ -495,6 +495,48 @@ class Database extends basis_db
 					s.orgform_kurzbz
 				ORDER BY
 					lv.lehrveranstaltung_id';
+
+		return $this->_execQuery($query);
+	}
+
+	/**
+	 *
+	 */
+	public function getCoursesFromFHC($studiensemester_kurzbz)
+	{
+		$query = 'SELECT DISTINCT lv.lehrveranstaltung_id,
+				lv.bezeichnung,
+				lv.kurzbz,
+				lv.studiengang_kz,
+				lv.orgform_kurzbz AS lv_orgform_kurzbz,
+				lv.semester,
+				l.lehreinheit_id,
+				TRIM(STRING_AGG(p.vorname || \' \' || p.nachname, \'_\')) AS lektoren,
+				UPPER(s.typ || s.kurzbz) AS studiengang,
+				s.orgform_kurzbz AS sg_orgform_kurzbz
+			    FROM lehre.tbl_lehreinheit l
+			    JOIN lehre.tbl_lehrveranstaltung lv USING (lehrveranstaltung_id)
+			    JOIN lehre.tbl_lehreinheitmitarbeiter lm USING (lehreinheit_id)
+			    JOIN public.tbl_mitarbeiter m USING (mitarbeiter_uid)
+			    JOIN public.tbl_benutzer b ON (b.uid = m.mitarbeiter_uid)
+			    JOIN public.tbl_person p USING (person_id)
+			    JOIN public.tbl_studiengang s USING(studiengang_kz)
+			   WHERE l.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+			     AND lv.semester IS NOT NULL
+			     AND lv.semester != 0
+			     AND l.lehrform_kurzbz = lv.lehrform_kurzbz
+			     AND b.uid NOT LIKE \'_Dummy%\'
+			GROUP BY lv.lehrveranstaltung_id,
+				lv.bezeichnung,
+				lv.kurzbz,
+				lv.studiengang_kz,
+				lv.orgform_kurzbz,
+				lv.semester,
+				l.lehreinheit_id,
+				s.typ,
+				s.kurzbz,
+				s.orgform_kurzbz
+			ORDER BY lv.lehrveranstaltung_id';
 
 		return $this->_execQuery($query);
 	}

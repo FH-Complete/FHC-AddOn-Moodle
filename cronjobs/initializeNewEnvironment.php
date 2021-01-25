@@ -1,6 +1,9 @@
 <?php
+
 /**
- * The purpose of this script is to get the courses from FHComplete DB and then populates the table addon.tbl_moodle
+ * WARNING: JUST FOR TESTING DO NOT USE IN A PRODUCTION ENVIRONMENT
+ *
+ * The purpose of this script is merely to populate quickly the table addon.tbl_moodle
  * and moodle with categories and courses
  */
 
@@ -9,29 +12,51 @@ require_once('../lib/LogicCourses.php');
 // Checks if the user has the permissions to run this script
 LogicCourses::isExecutionAllowed();
 
+// Checks the parameters on the command line to check if the user really wants to execute this script
+if ($argc > 1 && $argv[1] == 'YesIWantToBrickMoodle')
+{
+	// Execute this script
+}
+else // print a message and then stop the execution
+{
+	Output::printLineSeparator();
+	Output::printWarning('This script have to be used only if you need to quickly populate a new environment for testing purpose.');
+	Output::printWarning('If you are really shure about what you are doing then run again this script in this way:');
+	Output::printWarning('php ./initializeNewEnvironment.php YesIWantToBrickMoodle');
+	Output::printLineSeparator();
+	exit;
+}
+
 Output::printLineSeparator();
 Output::printInfo('Starting synchronize courses script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 
-// Studiensemester can be passed as commandline option or automatically retrieved
-// ex: php <this script> --stsem WS2019
-$currentOrNextStudiensemester = LogicCourses::getCliOrCurrentOrNextStudiensemester();
+// Retrieves the current studiensemester
+$currentOrNextStudiensemester = LogicCourses::getNearestStudiensemester();
 
 Output::printInfo('Working studiensemester: '.$currentOrNextStudiensemester);
 
-// Retrieves the courses from database
-$fhcCourses = LogicCourses::getCoursesFromFHC($currentOrNextStudiensemester);
-
-$numberOfCourses = Database::rowsNumber($fhcCourses); // Contains the total number of courses to be synchronized
-
-Output::printInfo('Number of courses in the database: '.$numberOfCourses);
+$rootCategoryId = ADDON_MOODLE_ROOT_CATEGORY_ID; // used to create the groups course in moodle
 
 // To load useful infos about the studiensemester
 $studiensemester = new studiensemester();
 $studiensemester->load($currentOrNextStudiensemester);
 
+// Loads courses to be synch with moodle
+$courses = null;
+//
+if (ADDON_MOODLE_JUST_MOODLE != true)
+{
+	$courses = LogicCourses::getCoursesFromLehreinheit($currentOrNextStudiensemester);
+}
+else
+{
+	$courses = LogicCourses::getCoursesFromTblMoodle($currentOrNextStudiensemester);
+}
 $courseFormatOptions = LogicCourses::getCourseFormatOptions(); // Generates the parameter courseformatoptions for all courses
 $startDate = LogicCourses::getStartDate($studiensemester); // Generates the parameter startdate for all courses
 $endDate = LogicCourses::getEndDate($studiensemester); // Generates the parameter enddate for all courses
+
+$numberOfCourses = Database::rowsNumber($courses); // Contains the total number of courses to be synchronized
 
 Output::printInfo('Number of courses in the database to be synchronized: '.$numberOfCourses);
 Output::printDebug('----------------------------------------------------------------------');
@@ -44,27 +69,11 @@ $numCoursesAddedToMoodle = 0;
 $numCategoriesAddedToMoodle = 0;
 
 // Loops through courses
-while ($course = Database::fetchRow($fhcCourses))
+while ($course = Database::fetchRow($courses))
 {
 	// Generates the short and full name for the current course
 	$shortname = LogicCourses::getCourseShortname($course, $currentOrNextStudiensemester);
 	$fullname = LogicCourses::getCourseFullname($course, $currentOrNextStudiensemester);
-
-	// In this way the lehreinheit_id is added everytime, by LogicCourses::getCourseShortname or here
-	// In this way the lehreinheit_id is added everytime, by LogicCourses::getCourseFullname or here
-	if (ADDON_MOODLE_JUST_MOODLE === true)
-	{
-		$shortname .= '-'.$course->lehreinheit_id;
-		$fullname .= ' - '.$course->lehreinheit_id;
-	}
-
-	// Adds the lector's name and surname
-	$shortname .= '-'.str_replace(' ', '', $course->lektoren); // remove the blank between lector's name and surname
-	$fullname .= ' - '.$course->lektoren;
-
-	// To avoid errors on moodle side shorts them
-	$shortname = mb_substr($shortname, 0, 254);
-	$fullname = mb_substr($fullname, 0, 254);
 
 	Output::printDebug('Shortname: '.$shortname);
 	Output::printDebug('Fullname: '.$fullname);
@@ -76,37 +85,57 @@ while ($course = Database::fetchRow($fhcCourses))
 		$numCoursesAddedToMoodle, $numCategoriesAddedToMoodle
 	);
 
-	// Checks if the course already exists in addon.tbl_mooble
-	$courseExists = LogicCourses::getDBCoursesByIDs($moodleCourseId);
-	if (Database::rowsNumber($courseExists) == 0)
+	//
+	if (ADDON_MOODLE_JUST_MOODLE != true)
 	{
-		// If not then adds a new record in addon.tbl_moodle with the course infos
-		LogicCourses::addCourseToDatabase($moodleCourseId, $course, $currentOrNextStudiensemester, $numCoursesAddedToDB);
+		// Adds a new record in addon.tbl_moodle with the course infos
+		LogicCourses::addCourseToDatabase($moodleCourseId, $course, $currentOrNextStudiensemester, $numCoursesAddedToDB); //
+	}
+	else
+	{
+		LogicCourses::updateCourseToDatabase($moodleCourseId, $course, $numCoursesUpdatedDB); //
 	}
 
 	Output::printDebug('----------------------------------------------------------------------');
+}
+
+// >>> Addig groups <<<
+
+//
+if (ADDON_MOODLE_JUST_MOODLE != true)
+{
+	$numberOfCourses++; // +1 for groups course
+
+	// Adds a course in moodle for all the groups users
+	$moodleCourseId = LogicCourses::addGroupsCourseToMoodle(
+		$currentOrNextStudiensemester, $startDate, $courseFormatOptions, $endDate, $numCategoriesAddedToMoodle
+	);
+
+	// Adds new records in addon.tbl_moodle with the groups and course infos
+	LogicCourses::addGroupsToDatabase($moodleCourseId, $currentOrNextStudiensemester, $numGroupsAddedToDB); //
 }
 
 // Summary
 Output::printInfo('----------------------------------------------------------------------');
 if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 {
-	Output::printInfo('Total amount of courses added to moodle: '. $numCoursesAddedToMoodle);
+	Output::printInfo('Total amount of courses added to moodle (+1 for groups): '. $numCoursesAddedToMoodle);
 	Output::printInfo('Total amount of courses already present moodle: '. ($numberOfCourses - $numCoursesAddedToMoodle));
 	Output::printInfo('Total amount of categories added to moodle: '. $numCategoriesAddedToMoodle);
 	Output::printInfo('Total amount of courses added to database: '. $numCoursesAddedToDB);
 	Output::printInfo('Total amount of courses updated in database: '. $numCoursesUpdatedDB);
+	Output::printInfo('Total amount of groups added to database: '.$numGroupsAddedToDB);
 }
 else
 {
-	Output::printInfo('Total amount of courses that would be added to moodle: '. $numCoursesAddedToMoodle);
+	Output::printInfo('Total amount of courses that would be added to moodle (+1 for groups): '. $numCoursesAddedToMoodle);
 	Output::printInfo('Total amount of courses already present moodle: '. ($numberOfCourses - $numCoursesAddedToMoodle));
 	Output::printInfo('Total amount of categories that would be added to moodle: '. $numCategoriesAddedToMoodle);
 	Output::printInfo('Total amount of courses that would be added to database: '. $numCoursesAddedToDB);
 	Output::printInfo('Total amount of courses that would be updated in database: '. $numCoursesUpdatedDB);
+	Output::printInfo('Total amount of groups that would be added to database: '.$numGroupsAddedToDB);
 }
 Output::printInfo('----------------------------------------------------------------------');
 
 Output::printInfo('Ended synchronize courses script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 Output::printLineSeparator();
-
