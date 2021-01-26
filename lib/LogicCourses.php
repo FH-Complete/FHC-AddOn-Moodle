@@ -108,16 +108,38 @@ class LogicCourses extends Logic
 
 		if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 		{
-			//
+			// By default gruppen is false
+			$gruppen = false;
+
+			// If set inside the course object then use it
+			if (isset($course->gruppen)) $gruppen = $course->gruppen;
+
+			// Insert into database
 			if ($lehreinheitOrLehrveranstaltung == 0)
 			{
-				self::insertMoodleTable($moodleCourseId, $course->lehreinheit_id, null, $studiensemester_kurzbz);
+				self::insertMoodleTable(
+					$moodleCourseId,
+					$course->lehreinheit_id,
+					null,
+					$studiensemester_kurzbz,
+					'NOW()',
+					ADDON_MOODLE_INSERTVON,
+					$gruppen
+				);
 
 				Output::printDebug('Added into database >> lehreinheit_id: '.$course->lehreinheit_id);
 			}
 			else
 			{
-				self::insertMoodleTable($moodleCourseId, null, $course->lehrveranstaltung_id, $studiensemester_kurzbz);
+				self::insertMoodleTable(
+					$moodleCourseId,
+					null,
+					$course->lehrveranstaltung_id,
+					$studiensemester_kurzbz,
+					'NOW()',
+					ADDON_MOODLE_INSERTVON,
+					$gruppen
+				);
 
 				Output::printDebug('Added into database >> lehrveranstaltung_id: '.$course->lehrveranstaltung_id);
 			}

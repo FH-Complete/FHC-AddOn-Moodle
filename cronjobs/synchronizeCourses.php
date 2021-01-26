@@ -23,18 +23,17 @@ $fhcCourses = LogicCourses::getCoursesFromFHC($currentOrNextStudiensemester);
 
 $numberOfCourses = Database::rowsNumber($fhcCourses); // Contains the total number of courses to be synchronized
 
-Output::printInfo('Number of courses in the database: '.$numberOfCourses);
+Output::printInfo('Number of courses in the database to be synchronized: '.$numberOfCourses);
+Output::printDebug('----------------------------------------------------------------------');
 
 // To load useful infos about the studiensemester
 $studiensemester = new studiensemester();
 $studiensemester->load($currentOrNextStudiensemester);
-
-$courseFormatOptions = LogicCourses::getCourseFormatOptions(); // Generates the parameter courseformatoptions for all courses
 $startDate = LogicCourses::getStartDate($studiensemester); // Generates the parameter startdate for all courses
 $endDate = LogicCourses::getEndDate($studiensemester); // Generates the parameter enddate for all courses
 
-Output::printInfo('Number of courses in the database to be synchronized: '.$numberOfCourses);
-Output::printDebug('----------------------------------------------------------------------');
+// Generates the parameter courseformatoptions for all courses
+$courseFormatOptions = LogicCourses::getCourseFormatOptions();
 
 // Counters variables used by the summary
 $numGroupsAddedToDB = 0;
@@ -80,6 +79,9 @@ while ($course = Database::fetchRow($fhcCourses))
 	$courseExists = LogicCourses::getDBCoursesByIDs($moodleCourseId);
 	if (Database::rowsNumber($courseExists) == 0)
 	{
+		// By default set gruppen as true
+		$course->gruppen = true;
+
 		// If not then adds a new record in addon.tbl_moodle with the course infos
 		LogicCourses::addCourseToDatabase($moodleCourseId, $course, $currentOrNextStudiensemester, $numCoursesAddedToDB);
 	}
