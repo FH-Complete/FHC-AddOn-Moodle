@@ -39,11 +39,11 @@ class LogicCourses extends Logic
 	{
 		$orgform = ($course->lv_orgform_kurzbz != '' ? $course->lv_orgform_kurzbz : $course->sg_orgform_kurzbz);
 
-		$fullname = self::_getStudiengangKuerzel($course->studiengang_kz).' - '.
-			$orgform.' - '.
-			$course->semester.' - '.
+		$fullname = self::_getStudiengangKuerzel($course->studiengang_kz).'-'.
+			$orgform.'-'.
+			$course->semester.'-'.
 			$studiensemester_kurzbz.' - '.
-			$course->kurzbz;
+			$course->bezeichnung;
 
 		//
 		if (ADDON_MOODLE_JUST_MOODLE != true)
