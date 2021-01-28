@@ -468,7 +468,8 @@ else
 
 	echo '<input type="hidden" name="bezeichnung_default" id="bezeichnung_default" value="'.LogicCourses::convertHtmlChars($longbezeichnung).'">';
 	echo '<br>'.$p->t('moodle/kursbezeichnung').': <input type="text" name="bezeichnung" id="bezeichnung" maxlength="254" size="40" value="'.LogicCourses::convertHtmlChars($longbezeichnung).'">';
-	//echo '<br>'.$p->t('moodle/gruppenUebernehmen').': <input type="checkbox" name="gruppen">';
+	if(defined('ADDON_MOODLE_COURSE_GRUPPEN') && ADDON_MOODLE_COURSE_GRUPPEN==true)
+		echo '<br>'.$p->t('moodle/gruppenUebernehmen').': <input type="checkbox" name="gruppen">';
 	echo '<br><br><input type="submit" name="neu" value="'.$p->t('moodle/kursAnlegen').'" onClick="showLoader()">
 		</form>';
 }

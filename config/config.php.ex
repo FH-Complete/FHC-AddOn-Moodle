@@ -20,6 +20,9 @@ define('ADDON_MOODLE_COURSE_NAME', '%1$s-%2$s-%3$s-%4$s - %5$s');
 // Possible values: true | false
 define('ADDON_MOODLE_COURSE_NAME_LEKTOR', false);
 
+// Gibt an ob bei der Kurserstellung Gruppenuebernahme auswählbar ist
+define('ADDON_MOODLE_COURSE_GRUPPEN', false);
+
 // Defines the number of topics for new courses
 // Possible values: 0 (default), 1, 5, 10, ...
 define('ADDON_MOODLE_NUMSECTIONS_VALUE', 0);
