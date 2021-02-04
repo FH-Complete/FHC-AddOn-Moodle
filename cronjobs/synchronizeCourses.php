@@ -82,6 +82,9 @@ while ($course = Database::fetchRow($fhcCourses))
 		// By default set gruppen as true
 		$course->gruppen = true;
 
+		// Set the lehrveranstaltung_id to null to insert into database courses with only the lehreinheit_id
+		$course->lehrveranstaltung_id = null;
+
 		// If not then adds a new record in addon.tbl_moodle with the course infos
 		LogicCourses::addCourseToDatabase($moodleCourseId, $course, $currentOrNextStudiensemester, $numCoursesAddedToDB);
 	}

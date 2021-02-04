@@ -505,15 +505,15 @@ class Database extends basis_db
 	public function getCoursesFromFHC($studiensemester_kurzbz)
 	{
 		$query = 'SELECT DISTINCT lv.lehrveranstaltung_id,
+				l.lehreinheit_id,
+				UPPER(s.typ || s.kurzbz) AS studiengang,
+				s.orgform_kurzbz AS sg_orgform_kurzbz,
 				lv.bezeichnung,
 				lv.kurzbz,
 				lv.studiengang_kz,
 				lv.orgform_kurzbz AS lv_orgform_kurzbz,
 				lv.semester,
-				l.lehreinheit_id,
-				TRIM(STRING_AGG(p.vorname || \' \' || p.nachname, \'_\')) AS lektoren,
-				UPPER(s.typ || s.kurzbz) AS studiengang,
-				s.orgform_kurzbz AS sg_orgform_kurzbz
+				TRIM(STRING_AGG(p.vorname || \' \' || p.nachname, \'_\')) AS lektoren
 			    FROM lehre.tbl_lehreinheit l
 			    JOIN lehre.tbl_lehrveranstaltung lv USING (lehrveranstaltung_id)
 			    JOIN lehre.tbl_lehreinheitmitarbeiter lm USING (lehreinheit_id)
@@ -542,7 +542,7 @@ class Database extends basis_db
 				s.typ,
 				s.kurzbz,
 				s.orgform_kurzbz
-			ORDER BY lv.lehrveranstaltung_id';
+			ORDER BY lv.lehrveranstaltung_id, l.lehreinheit_id';
 
 		return $this->_execQuery($query);
 	}

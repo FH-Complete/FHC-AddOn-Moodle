@@ -53,7 +53,11 @@ define('ADDON_MOODLE_GROUPS_COURSE_FULLNAME', 'TW - FIX');
 define('ADDON_MOODLE_JUST_MOODLE', true);
 
 // Lector is able to Create Course
-define('ADDON_MOODLE_LECTOR_CREATE_COURSE',true);
+define('ADDON_MOODLE_LECTOR_CREATE_COURSE', true);
+
+// Enable/disable grades from moodle
+define('ADDON_MOODLE_ENABLE_GRADES', true);
+
 // ------------------------------------------------------------------------------------------------------------
 // Users synching options
 

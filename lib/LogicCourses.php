@@ -104,8 +104,6 @@ class LogicCourses extends Logic
 	 */
 	public static function addCourseToDatabase($moodleCourseId, $course, $studiensemester_kurzbz, &$numCoursesAddedToDB)
 	{
-		$lehreinheitOrLehrveranstaltung = rand(0, 1);
-
 		if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 		{
 			// By default gruppen is false
@@ -114,9 +112,10 @@ class LogicCourses extends Logic
 			// If set inside the course object then use it
 			if (isset($course->gruppen)) $gruppen = $course->gruppen;
 
-			// Insert into database
-			if ($lehreinheitOrLehrveranstaltung == 0)
+			// If the lehrveranstaltung_id is not set or is not valid
+			if (!isset($course->lehrveranstaltung_id) || (isset($course->lehrveranstaltung_id) && $course->lehrveranstaltung_id <= 0))
 			{
+				// Then add the course into the database using the lehreinheit_id
 				self::insertMoodleTable(
 					$moodleCourseId,
 					$course->lehreinheit_id,
@@ -129,8 +128,9 @@ class LogicCourses extends Logic
 
 				Output::printDebug('Added into database >> lehreinheit_id: '.$course->lehreinheit_id);
 			}
-			else
+			else // ...otherwise...
 			{
+				// ...add the course into the database using the lehrveranstaltung_id
 				self::insertMoodleTable(
 					$moodleCourseId,
 					null,
@@ -146,8 +146,8 @@ class LogicCourses extends Logic
 		}
 		else
 		{
-			//
-			if ($lehreinheitOrLehrveranstaltung == 0)
+			// If the lehrveranstaltung_id is not set or is not valid
+			if (!isset($course->lehrveranstaltung_id) || (isset($course->lehrveranstaltung_id) && $course->lehrveranstaltung_id <= 0))
 			{
 				Output::printDebug('Dry run >> should be added into database >> lehreinheit_id: '.$course->lehreinheit_id);
 			}

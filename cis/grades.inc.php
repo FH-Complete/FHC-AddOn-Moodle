@@ -22,72 +22,76 @@
  */
 require_once(dirname(__FILE__).'/../lib/Logic.php'); // A lot happens here!
 
-$courseGrades = Logic::loadCourseGrades($lvid, $stsem);
-$moodle_course_bezeichnung = array();
-$moodle_course_gewicht = array();
-
-foreach ($courseGrades as $courseGrade)
+// If only grades from moodle are enabled in the configs
+if (ADDON_MOODLE_ENABLE_GRADES === true)
 {
-	// Kursbezeichnung laden falls noch nicht bekannt
-	if (!isset($moodle_course_bezeichnung[$courseGrade->mdl_course_id]))
+	$courseGrades = Logic::loadCourseGrades($lvid, $stsem);
+	$moodle_course_bezeichnung = array();
+	$moodle_course_gewicht = array();
+	
+	foreach ($courseGrades as $courseGrade)
 	{
-		$courses = Logic::core_course_get_courses(array($courseGrade->mdl_course_id));
-		if (count($courses) > 0)
+		// Kursbezeichnung laden falls noch nicht bekannt
+		if (!isset($moodle_course_bezeichnung[$courseGrade->mdl_course_id]))
 		{
-			$moodle_course_bezeichnung[$courseGrade->mdl_course_id] = $courses[0]->shortname;
-		}
-	}
-
-	// Gewichtung des Kurses laden falls noch nicht bekannt
-	if (!isset($moodle_course_gewicht[$courseGrade->mdl_course_id]))
-	{
-		$les = Logic::getLeFromCourse($courseGrade->mdl_course_id);
-		while ($le = Database::fetchRow($les))
-		{
-			if ($le->lehreinheit_id != '')
+			$courses = Logic::core_course_get_courses(array($courseGrade->mdl_course_id));
+			if (count($courses) > 0)
 			{
-				$lehreinheit_gewicht_obj = new lehreinheit();
-				$lehreinheit_gewicht_obj->load($le->lehreinheit_id);
-
-				if ($lehreinheit_gewicht_obj->gewicht != '')
+				$moodle_course_bezeichnung[$courseGrade->mdl_course_id] = $courses[0]->shortname;
+			}
+		}
+	
+		// Gewichtung des Kurses laden falls noch nicht bekannt
+		if (!isset($moodle_course_gewicht[$courseGrade->mdl_course_id]))
+		{
+			$les = Logic::getLeFromCourse($courseGrade->mdl_course_id);
+			while ($le = Database::fetchRow($les))
+			{
+				if ($le->lehreinheit_id != '')
 				{
-					$moodle_course_gewicht[$courseGrade->mdl_course_id] = $lehreinheit_gewicht_obj->gewicht;
-					break;
+					$lehreinheit_gewicht_obj = new lehreinheit();
+					$lehreinheit_gewicht_obj->load($le->lehreinheit_id);
+	
+					if ($lehreinheit_gewicht_obj->gewicht != '')
+					{
+						$moodle_course_gewicht[$courseGrade->mdl_course_id] = $lehreinheit_gewicht_obj->gewicht;
+						break;
+					}
 				}
 			}
 		}
-	}
-
-	$gewichtung = 1;
-	if (isset($moodle_course_gewicht[$courseGrade->mdl_course_id]))
-		$gewichtung = $moodle_course_gewicht[$courseGrade->mdl_course_id];
-
-	if ($gewichtung == '')
+	
 		$gewichtung = 1;
-
-	if (defined('CIS_GESAMTNOTE_PUNKTE') && CIS_GESAMTNOTE_PUNKTE)
-	{
-		$points = $courseGrade->note;
-		$grade = null;
-	}
-	else
-	{
-		$points = null;
-		$grade = $courseGrade->note;
-	}
-
-	if (isset($noten_array[$courseGrade->note]))
-		$note_bezeichnung = $noten_array[$courseGrade->note]['anmerkung'];
-	else
-		$note_bezeichnung = $courseGrade->note;
-
-	if(isset($grades[$courseGrade->username]))
-	{
-		$grades[$courseGrade->username]['grades'][] = array(
-			'grade' => $grade,
-			'points' => $points,
-			'weight' => $gewichtung,
-			'text' => $note_bezeichnung.' ('.$moodle_course_bezeichnung[$courseGrade->mdl_course_id].')'
-		);
+		if (isset($moodle_course_gewicht[$courseGrade->mdl_course_id]))
+			$gewichtung = $moodle_course_gewicht[$courseGrade->mdl_course_id];
+	
+		if ($gewichtung == '')
+			$gewichtung = 1;
+	
+		if (defined('CIS_GESAMTNOTE_PUNKTE') && CIS_GESAMTNOTE_PUNKTE)
+		{
+			$points = $courseGrade->note;
+			$grade = null;
+		}
+		else
+		{
+			$points = null;
+			$grade = $courseGrade->note;
+		}
+	
+		if (isset($noten_array[$courseGrade->note]))
+			$note_bezeichnung = $noten_array[$courseGrade->note]['anmerkung'];
+		else
+			$note_bezeichnung = $courseGrade->note;
+	
+		if(isset($grades[$courseGrade->username]))
+		{
+			$grades[$courseGrade->username]['grades'][] = array(
+				'grade' => $grade,
+				'points' => $points,
+				'weight' => $gewichtung,
+				'text' => $note_bezeichnung.' ('.$moodle_course_bezeichnung[$courseGrade->mdl_course_id].')'
+			);
+		}
 	}
 }
