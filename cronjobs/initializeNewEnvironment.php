@@ -43,15 +43,17 @@ $studiensemester->load($currentOrNextStudiensemester);
 
 // Loads courses to be synch with moodle
 $courses = null;
-//
+
+// If it is required to update only moodle...
 if (ADDON_MOODLE_JUST_MOODLE != true)
 {
 	$courses = LogicCourses::getCoursesFromLehreinheit($currentOrNextStudiensemester);
 }
-else
+else // ...or to populate even the database
 {
 	$courses = LogicCourses::getCoursesFromTblMoodle($currentOrNextStudiensemester);
 }
+
 $courseFormatOptions = LogicCourses::getCourseFormatOptions(); // Generates the parameter courseformatoptions for all courses
 $startDate = LogicCourses::getStartDate($studiensemester); // Generates the parameter startdate for all courses
 $endDate = LogicCourses::getEndDate($studiensemester); // Generates the parameter enddate for all courses
@@ -117,6 +119,7 @@ if (ADDON_MOODLE_JUST_MOODLE != true)
 
 // Summary
 Output::printInfo('----------------------------------------------------------------------');
+
 if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 {
 	Output::printInfo('Total amount of courses added to moodle (+1 for groups): '. $numCoursesAddedToMoodle);
@@ -135,7 +138,9 @@ else
 	Output::printInfo('Total amount of courses that would be updated in database: '. $numCoursesUpdatedDB);
 	Output::printInfo('Total amount of groups that would be added to database: '.$numGroupsAddedToDB);
 }
+
 Output::printInfo('----------------------------------------------------------------------');
 
 Output::printInfo('Ended synchronize courses script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 Output::printLineSeparator();
+

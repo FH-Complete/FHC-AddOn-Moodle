@@ -94,6 +94,7 @@ while ($course = Database::fetchRow($fhcCourses))
 
 // Summary
 Output::printInfo('----------------------------------------------------------------------');
+
 if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 {
 	Output::printInfo('Total amount of courses added to moodle: '. $numCoursesAddedToMoodle);
@@ -110,6 +111,7 @@ else
 	Output::printInfo('Total amount of courses that would be added to database: '. $numCoursesAddedToDB);
 	Output::printInfo('Total amount of courses that would be updated in database: '. $numCoursesUpdatedDB);
 }
+
 Output::printInfo('----------------------------------------------------------------------');
 
 Output::printInfo('Ended synchronize courses script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));

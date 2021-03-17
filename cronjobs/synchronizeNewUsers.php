@@ -25,3 +25,4 @@ LogicUsers::synchronizeNewUsers($newUsers); // All the magic happens here!
 
 Output::printInfo('Ended synchronize new users script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 Output::printLineSeparator();
+

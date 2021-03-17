@@ -39,3 +39,4 @@ LogicUsers::synchronizeFachbereichsleitung($moodleCourses); // All the magic hap
 
 Output::printInfo('Ended synchronize management staff script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 Output::printLineSeparator();
+

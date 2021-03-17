@@ -39,3 +39,4 @@ LogicUsers::synchronizeCompetenceFieldDepartmentLeaders($moodleCourses); // All 
 
 Output::printInfo('Ended synchronize competence field and department leaders script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 Output::printLineSeparator();
+

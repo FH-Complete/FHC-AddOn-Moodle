@@ -39,3 +39,4 @@ LogicUsers::synchronizeGroupsMembers($moodleCourses); // All the magic happens h
 
 Output::printInfo('Ended synchronize groups script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 Output::printLineSeparator();
+

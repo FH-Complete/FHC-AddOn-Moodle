@@ -39,3 +39,4 @@ LogicUsers::synchronizeLektoren($moodleCourses); // All the magic happens here!
 
 Output::printInfo('Ended synchronize lectors script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 Output::printLineSeparator();
+
