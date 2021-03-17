@@ -1,6 +1,6 @@
 <?php
 
-require_once('Logic.php');
+require_once(dirname(__FILE__).'/Logic.php');
 
 /**
  *

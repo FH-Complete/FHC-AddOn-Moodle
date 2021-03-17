@@ -7,7 +7,7 @@
  * and moodle with categories and courses
  */
 
-require_once('../lib/LogicCourses.php');
+require_once(dirname(__FILE__).'/../lib/LogicCourses.php');
 
 // Checks if the user has the permissions to run this script
 LogicCourses::isExecutionAllowed();

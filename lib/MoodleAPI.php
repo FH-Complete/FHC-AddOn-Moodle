@@ -1,6 +1,6 @@
 <?php
 
-require_once('MoodleClient.php');
+require_once(dirname(__FILE__).'/MoodleClient.php');
 
 /**
  *

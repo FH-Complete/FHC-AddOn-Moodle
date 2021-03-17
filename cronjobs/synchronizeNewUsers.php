@@ -6,7 +6,7 @@
  * The database table used to link users to moodle courses is addon.tbl_moodle
  */
 
-require_once('../lib/LogicUsers.php');
+require_once(dirname(__FILE__).'/../lib/LogicUsers.php');
 
 // Checks if the user has the permissions to run this script
 LogicUsers::isExecutionAllowed();
