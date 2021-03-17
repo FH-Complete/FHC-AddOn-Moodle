@@ -72,7 +72,6 @@ class Database extends basis_db
 		return $this->_execQuery($query);
 	}
 
-
 	/**
 	 *
 	 */
@@ -237,9 +236,9 @@ class Database extends basis_db
 	public function getBenutzerByUID($uid)
 	{
 		$query = 'SELECT
-						uid,
-						vorname,
-						nachname
+					uid,
+					vorname,
+					nachname
 				FROM
 					campus.vw_benutzer
 				WHERE
@@ -434,7 +433,9 @@ class Database extends basis_db
 				FROM
 					addon.tbl_moodle m
 					JOIN lehre.tbl_lehreinheit l USING(lehreinheit_id, studiensemester_kurzbz)
-					JOIN lehre.tbl_zeugnisnote z ON(z.lehrveranstaltung_id = l.lehrveranstaltung_id AND z.studiensemester_kurzbz=l.studiensemester_kurzbz)
+					JOIN lehre.tbl_zeugnisnote z ON(
+						z.lehrveranstaltung_id = l.lehrveranstaltung_id AND z.studiensemester_kurzbz=l.studiensemester_kurzbz
+					)
 					JOIN lehre.tbl_note n USING(note)
 				WHERE
 					n.lkt_ueberschreibbar = FALSE
@@ -709,25 +710,25 @@ class Database extends basis_db
 	public function getCoursesByStudiengangStudiensemester($studiengang_kz, $studiensemester_kurzbz)
 	{
 		$query = 'SELECT
-						mdl_course_id, moodle.moodle_id, moodle.lehreinheit_id, moodle.lehrveranstaltung_id,
-						moodle.studiensemester_kurzbz, moodle.insertamum, moodle.insertvon, gruppen
-					FROM addon.tbl_moodle moodle
-						JOIN lehre.tbl_lehrveranstaltung lv USING(lehrveranstaltung_id)
-					WHERE
-						moodle.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
-						AND lv.studiengang_kz = '.$this->db_add_param($studiengang_kz).'
-						AND moodle.lehreinheit_id IS NULL
-					UNION
-					SELECT
-						mdl_course_id, moodle.moodle_id, moodle.lehreinheit_id, moodle.lehrveranstaltung_id,
-						moodle.studiensemester_kurzbz, moodle.insertamum, moodle.insertvon, gruppen
-					FROM addon.tbl_moodle moodle
-						JOIN lehre.tbl_lehreinheit le ON(moodle.lehreinheit_id = le.lehreinheit_id)
-						JOIN lehre.tbl_lehrveranstaltung lv ON(le.lehrveranstaltung_id = lv.lehrveranstaltung_id)
-					WHERE
-						moodle.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
-						AND lv.studiengang_kz = '.$this->db_add_param($studiengang_kz).'
-						AND moodle.lehrveranstaltung_id IS NULL';
+					mdl_course_id, moodle.moodle_id, moodle.lehreinheit_id, moodle.lehrveranstaltung_id,
+					moodle.studiensemester_kurzbz, moodle.insertamum, moodle.insertvon, gruppen
+				FROM addon.tbl_moodle moodle
+					JOIN lehre.tbl_lehrveranstaltung lv USING(lehrveranstaltung_id)
+				WHERE
+					moodle.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+					AND lv.studiengang_kz = '.$this->db_add_param($studiengang_kz).'
+					AND moodle.lehreinheit_id IS NULL
+				UNION
+				SELECT
+					mdl_course_id, moodle.moodle_id, moodle.lehreinheit_id, moodle.lehrveranstaltung_id,
+					moodle.studiensemester_kurzbz, moodle.insertamum, moodle.insertvon, gruppen
+				FROM addon.tbl_moodle moodle
+					JOIN lehre.tbl_lehreinheit le ON(moodle.lehreinheit_id = le.lehreinheit_id)
+					JOIN lehre.tbl_lehrveranstaltung lv ON(le.lehrveranstaltung_id = lv.lehrveranstaltung_id)
+				WHERE
+					moodle.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+					AND lv.studiengang_kz = '.$this->db_add_param($studiengang_kz).'
+					AND moodle.lehrveranstaltung_id IS NULL';
 
 		return $this->_execQuery($query);
 	}
@@ -785,22 +786,22 @@ class Database extends basis_db
 	public function getCoursesByLehrveranstaltungStudiensemester($lehrveranstaltung_id, $studiensemester_kurzbz)
  	{
  		$query = 'SELECT
-						DISTINCT m.mdl_course_id
-					FROM
-						addon.tbl_moodle m
-						JOIN lehre.tbl_lehreinheit l USING(lehrveranstaltung_id, studiensemester_kurzbz)
-					WHERE
-						m.lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id).'
-						AND m.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
-					UNION
-					SELECT
-						DISTINCT m.mdl_course_id
-					FROM
-						addon.tbl_moodle m
-						JOIN lehre.tbl_lehreinheit l USING(lehreinheit_id)
-					WHERE
-						l.lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id).'
-						AND m.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz);
+					DISTINCT m.mdl_course_id
+				FROM
+					addon.tbl_moodle m
+					JOIN lehre.tbl_lehreinheit l USING(lehrveranstaltung_id, studiensemester_kurzbz)
+				WHERE
+					m.lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id).'
+					AND m.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+				UNION
+				SELECT
+					DISTINCT m.mdl_course_id
+				FROM
+					addon.tbl_moodle m
+					JOIN lehre.tbl_lehreinheit l USING(lehreinheit_id)
+				WHERE
+					l.lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id).'
+					AND m.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz);
 
  		return $this->_execQuery($query);
  	}
@@ -826,21 +827,21 @@ class Database extends basis_db
 	public function getCoursesByLehrveranstaltungLehreinheit($lehrveranstaltung_id, $studiensemester_kurzbz)
  	{
  		$query = 'SELECT
-						DISTINCT ON(m.mdl_course_id) *
-					FROM
-						lehre.tbl_lehrveranstaltung lv, lehre.tbl_lehreinheit lh, addon.tbl_moodle m
-					WHERE
-						lv.lehrveranstaltung_id = lh.lehrveranstaltung_id
-						AND	lv.lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id, FHC_INTEGER).'
-						AND	lh.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
-						AND	(
-								(
-									lv.lehrveranstaltung_id = m.lehrveranstaltung_id
-									AND m.studiensemester_kurzbz = lh.studiensemester_kurzbz
-								)
-								OR lh.lehreinheit_id = m.lehreinheit_id
+					DISTINCT ON(m.mdl_course_id) *
+				FROM
+					lehre.tbl_lehrveranstaltung lv, lehre.tbl_lehreinheit lh, addon.tbl_moodle m
+				WHERE
+					lv.lehrveranstaltung_id = lh.lehrveranstaltung_id
+					AND	lv.lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id, FHC_INTEGER).'
+					AND	lh.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+					AND	(
+							(
+								lv.lehrveranstaltung_id = m.lehrveranstaltung_id
+								AND m.studiensemester_kurzbz = lh.studiensemester_kurzbz
 							)
-				ORDER BY m.mdl_course_id';
+							OR lh.lehreinheit_id = m.lehreinheit_id
+						)
+			ORDER BY m.mdl_course_id';
 
  		return $this->_execQuery($query);
  	}
@@ -851,21 +852,21 @@ class Database extends basis_db
 	public function getCoursesByLehrveranstaltungLehreinheitNoDistinct($lehrveranstaltung_id, $studiensemester_kurzbz)
  	{
  		$query = 'SELECT
-						*
-					FROM
-						lehre.tbl_lehrveranstaltung lv, lehre.tbl_lehreinheit lh, addon.tbl_moodle m
-					WHERE
-						lv.lehrveranstaltung_id = lh.lehrveranstaltung_id
-						AND	lv.lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id, FHC_INTEGER).'
-						AND	lh.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
-						AND	(
-								(
-									lv.lehrveranstaltung_id = m.lehrveranstaltung_id
-									AND m.studiensemester_kurzbz = lh.studiensemester_kurzbz
-								)
-								OR lh.lehreinheit_id = m.lehreinheit_id
+				*
+				FROM
+					lehre.tbl_lehrveranstaltung lv, lehre.tbl_lehreinheit lh, addon.tbl_moodle m
+				WHERE
+					lv.lehrveranstaltung_id = lh.lehrveranstaltung_id
+					AND	lv.lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id, FHC_INTEGER).'
+					AND	lh.studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz).'
+					AND	(
+							(
+								lv.lehrveranstaltung_id = m.lehrveranstaltung_id
+								AND m.studiensemester_kurzbz = lh.studiensemester_kurzbz
 							)
-				ORDER BY m.mdl_course_id';
+							OR lh.lehreinheit_id = m.lehreinheit_id
+						)
+			ORDER BY m.mdl_course_id';
 
  		return $this->_execQuery($query);
  	}
@@ -977,17 +978,18 @@ class Database extends basis_db
 	public function getTestCourses($lehrveranstaltung_id, $studiensemester_kurzbz, $prefix)
  	{
  		$query = 'SELECT
-					\''.$prefix.'-'.$studiensemester_kurzbz.'-\' || UPPER(tbl_studiengang.typ::varchar(1) || tbl_studiengang.kurzbz) || \'-\' || lh.semester || \'-\' || lh.kurzbz AS courseName
+				\''.
+					$prefix.'-'.
+					$studiensemester_kurzbz.
+					'-\' || UPPER(sg.typ::varchar(1) || sg.kurzbz) || \'-\' || lh.semester || \'-\' || lh.kurzbz AS courseName
 				FROM
-					lehre.tbl_lehrveranstaltung lh JOIN public.tbl_studiengang USING(studiengang_kz)
+					lehre.tbl_lehrveranstaltung lh
+					JOIN public.tbl_studiengang sg USING(studiengang_kz)
 				WHERE
 					lh.lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id, FHC_INTEGER, false);
 
  		return $this->_execQuery($query);
  	}
-
-	// --------------------------------------------------------------------------------------------
-    // Public static methods
 
 	/**
 	 *
@@ -1017,7 +1019,7 @@ class Database extends basis_db
 	}
 
 	// --------------------------------------------------------------------------------------------
-    // Private methods
+	// Private methods
 
 	/**
 	 *
@@ -1025,6 +1027,7 @@ class Database extends basis_db
 	private function _execQuery($query)
 	{
 		$result = $this->db_query($query);
+
 		if (!$result)
 		{
 			$result = null;
@@ -1033,3 +1036,4 @@ class Database extends basis_db
 		return $result;
 	}
 }
+

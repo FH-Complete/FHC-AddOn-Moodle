@@ -133,9 +133,10 @@ $activeConnection = 'DEFAULT'; // the used configuration set of the chosen conne
 $connection = array(
 	'DEFAULT' => array(
 		PROTOCOL => 'https', // ssl by default... better!
-	    HOST => 'hostname', // moodle server name
-	    PATH => 'webservice/rest/server.php', // usually this is the path for REST API
+		HOST => 'hostname', // moodle server name
+		PATH => 'webservice/rest/server.php', // usually this is the path for REST API
 		TOKEN => '123456', // activated token
 		WS_FORMAT => 'json' // default JSON
 	)
 );
+

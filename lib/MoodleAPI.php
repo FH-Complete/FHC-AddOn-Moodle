@@ -7,16 +7,16 @@ require_once('MoodleClient.php');
  */
 class MoodleAPI extends MoodleClient
 {
-    /**
-     * Object initialization
-     */
-    public function __construct()
-    {
-		parent::__construct();
-    }
-
-    // --------------------------------------------------------------------------------------------
-    // Public methods
+	/**
+	 * Object initialization
+	 */
+	public function __construct()
+	{
+	    	parent::__construct();
+	}
+	
+	// --------------------------------------------------------------------------------------------
+	// Public methods
 
 	/**
 	 *
@@ -362,3 +362,4 @@ class MoodleAPI extends MoodleClient
 		);
 	}
 }
+

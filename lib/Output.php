@@ -63,7 +63,7 @@ class Output
 	}
 
 	// --------------------------------------------------------------------------------------------
-    // Private methods
+	// Private methods
 
 	/**
 	 *
@@ -80,3 +80,4 @@ class Output
 		return $newLine;
 	}
 }
+

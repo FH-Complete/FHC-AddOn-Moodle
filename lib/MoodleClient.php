@@ -8,8 +8,8 @@ require_once('MoodleClientConstants.php');
  */
 class MoodleClient
 {
-    const HTTP_GET_METHOD = 'GET'; // http get method name
-    const HTTP_POST_METHOD = 'POST'; // http post method name
+	const HTTP_GET_METHOD = 'GET'; // http get method name
+	const HTTP_POST_METHOD = 'POST'; // http post method name
 	const URI_TEMPLATE = '%s://%s/%s?%s=%s&%s=%s&%s=%s'; // URI format
 	const BASE_URL_TEMPLATE = '%s://%s'; // Base URL format
 
@@ -28,56 +28,56 @@ class MoodleClient
 	private $_hasData;				// indicates if there are data in the response or not
 	private $_emptyResponse;		// indicates if the response is empty or not
 
-    /**
-     * Object initialization
-     */
-    public function __construct()
-    {
-		$this->_setPropertiesDefault(); // properties initialization
-
-        $this->_setConnection(); // loads the configurations
-    }
-
-    // --------------------------------------------------------------------------------------------
-    // Public methods
-
-    /**
-     * Performs a call to a remote web service
-     */
-    public function call($wsFunction, $httpMethod = MoodleClient::HTTP_GET_METHOD, $callParametersArray = array())
-    {
-		if ($wsFunction != null && trim($wsFunction) != '')
-		{
-			$this->_wsFunction = $wsFunction;
-		}
-		else
-		{
-			$this->_error(MISSING_REQUIRED_PARAMETERS);
-		}
-
-		if ($httpMethod != null
-			&& ($httpMethod == MoodleClient::HTTP_GET_METHOD || $httpMethod == MoodleClient::HTTP_POST_METHOD))
-		{
-			$this->_httpMethod = $httpMethod;
-		}
-		else
-		{
-			$this->_error(WRONG_WS_PARAMETERS);
-		}
-
-		if (is_array($callParametersArray))
-		{
-			$this->_callParametersArray = $callParametersArray;
-		}
-		else
-		{
-			$this->_error(WRONG_WS_PARAMETERS);
-		}
-
-		if ($this->isError()) return null; //
-
-        return $this->_callRemoteWS($this->_generateURI()); // perform a remote ws call with the given uri
-    }
+	/**
+	 * Object initialization
+	 */
+	public function __construct()
+	{
+	    	$this->_setPropertiesDefault(); // properties initialization
+	
+		$this->_setConnection(); // loads the configurations
+	}
+	
+	// --------------------------------------------------------------------------------------------
+	// Public methods
+	
+	/**
+	 * Performs a call to a remote web service
+	 */
+	public function call($wsFunction, $httpMethod = MoodleClient::HTTP_GET_METHOD, $callParametersArray = array())
+	{
+	    	if ($wsFunction != null && trim($wsFunction) != '')
+	    	{
+	    		$this->_wsFunction = $wsFunction;
+	    	}
+	    	else
+	    	{
+	    		$this->_error(MISSING_REQUIRED_PARAMETERS);
+	    	}
+	
+	    	if ($httpMethod != null
+	    		&& ($httpMethod == MoodleClient::HTTP_GET_METHOD || $httpMethod == MoodleClient::HTTP_POST_METHOD))
+	    	{
+	    		$this->_httpMethod = $httpMethod;
+	    	}
+	    	else
+	    	{
+	    		$this->_error(WRONG_WS_PARAMETERS);
+	    	}
+	
+	    	if (is_array($callParametersArray))
+	    	{
+	    		$this->_callParametersArray = $callParametersArray;
+	    	}
+	    	else
+	    	{
+	    		$this->_error(WRONG_WS_PARAMETERS);
+	    	}
+	
+	    	if ($this->isError()) return null; //
+	
+		return $this->_callRemoteWS($this->_generateURI()); // perform a remote ws call with the given uri
+	}
 
 	/**
 	 * Returns the error message stored in property _errorMessage
@@ -120,28 +120,28 @@ class MoodleClient
 	}
 
 	// --------------------------------------------------------------------------------------------
-    // Protected  methods
+	// Protected  methods
 
 	/**
-     *
-     */
-    protected function getBaseURL()
-    {
-        $baseURL = sprintf(
-            MoodleClient::BASE_URL_TEMPLATE,
-            $this->_connectionArray[PROTOCOL],
-            $this->_connectionArray[HOST]
-        );
-
-		return $baseURL;
-    }
-
-    // --------------------------------------------------------------------------------------------
-    // Private methods
+	 *
+	 */
+	protected function getBaseURL()
+	{
+		$baseURL = sprintf(
+			MoodleClient::BASE_URL_TEMPLATE,
+			$this->_connectionArray[PROTOCOL],
+			$this->_connectionArray[HOST]
+		);
+	
+	    	return $baseURL;
+	}
+	
+	// --------------------------------------------------------------------------------------------
+	// Private methods
 
 	/**
-     * Initialization of the properties of this object
-     */
+	 * Initialization of the properties of this object
+	 */
 	private function _setPropertiesDefault()
 	{
 		$this->_connectionArray = null;
@@ -163,55 +163,55 @@ class MoodleClient
 		$this->_emptyResponse = false;
 	}
 
-    /**
-     * Sets the connection
-     */
-    private function _setConnection()
-    {
-		global $connection, $activeConnection;
-
-		$this->_connectionArray = $connection[$activeConnection];
-    }
-
-    /**
-     * Returns true if the HTTP method used to call this server is GET
-     */
-    private function _isGET()
-    {
-        return $this->_httpMethod == MoodleClient::HTTP_GET_METHOD;
-    }
-
-    /**
-     * Returns true if the HTTP method used to call this server is POST
-     */
-    private function _isPOST()
-    {
-        return $this->_httpMethod == MoodleClient::HTTP_POST_METHOD;
-    }
-
-    /**
-     * Generate the URI to call the remote web service
-     */
-    private function _generateURI()
-    {
-        $uri = sprintf(
-            MoodleClient::URI_TEMPLATE,
-            $this->_connectionArray[PROTOCOL],
-            $this->_connectionArray[HOST],
-            $this->_connectionArray[PATH],
+	/**
+	 * Sets the connection
+	 */
+	private function _setConnection()
+	{
+	    	global $connection, $activeConnection;
+	
+	    	$this->_connectionArray = $connection[$activeConnection];
+	}
+	
+	/**
+	 * Returns true if the HTTP method used to call this server is GET
+	 */
+	private function _isGET()
+	{
+		return $this->_httpMethod == MoodleClient::HTTP_GET_METHOD;
+	}
+	
+	/**
+	 * Returns true if the HTTP method used to call this server is POST
+	 */
+	private function _isPOST()
+	{
+		return $this->_httpMethod == MoodleClient::HTTP_POST_METHOD;
+	}
+	
+	/**
+	 * Generate the URI to call the remote web service
+	 */
+	private function _generateURI()
+	{
+		$uri = sprintf(
+			MoodleClient::URI_TEMPLATE,
+			$this->_connectionArray[PROTOCOL],
+			$this->_connectionArray[HOST],
+			$this->_connectionArray[PATH],
 			WS_FORMAT,
 			$this->_connectionArray[WS_FORMAT],
 			TOKEN,
 			$this->_connectionArray[TOKEN],
 			WS_FUNCTION,
 			$this->_wsFunction
-        );
+		);
 
 		// If the call was performed using a HTTP GET then append the query string to the URI
-        if ($this->_isGET())
-        {
+		if ($this->_isGET())
+		{
 			$queryString = '';
-
+		
 			// Create the query string
 			foreach ($this->_callParametersArray as $name => $value)
 			{
@@ -227,12 +227,12 @@ class MoodleClient
 					$queryString .= '&'.$name.'='.$value;
 				}
 			}
+		
+			$uri .= $queryString;
+		}
 
-            $uri .= $queryString;
-        }
-
-        return $uri;
-    }
+		return $uri;
+	}
 
 	/**
 	 * Performs a remote web service call with the given uri and returns the result after having checked it
@@ -272,43 +272,43 @@ class MoodleClient
 		return $response;
 	}
 
-    /**
-     * Performs a remote call using the GET HTTP method
+	/**
+	 * Performs a remote call using the GET HTTP method
 	 * NOTE: parameters in a HTTP GET call are placed into the URI
-     */
-    private function _callGET($uri)
-    {
-        return \Httpful\Request::get($uri)
-            ->expectsJson() // parse from json
-            ->send();
-    }
-
-    /**
-     * Performs a remote call using the POST HTTP method
-     */
-    private function _callPOST($uri)
-    {
-        return \Httpful\Request::post($uri)
-            ->expectsJson() // parse response as json
-            ->body(http_build_query($this->_callParametersArray)) // post parameters
+	 */
+	private function _callGET($uri)
+	{
+		return \Httpful\Request::get($uri)
+			->expectsJson() // parse from json
+			->send();
+	}
+	
+	/**
+	 * Performs a remote call using the POST HTTP method
+	 */
+	private function _callPOST($uri)
+	{
+		return \Httpful\Request::post($uri)
+			->expectsJson() // parse response as json
+			->body(http_build_query($this->_callParametersArray)) // post parameters
 			->sendsType(\Httpful\Mime::FORM)
-            ->send();
-    }
-
-    /**
-     * Checks the response from the remote web service
-     */
-    private function _checkResponse($response)
-    {
+			->send();
+	}
+	
+	/**
+	 * Checks the response from the remote web service
+	 */
+	private function _checkResponse($response)
+	{
 		$checkResponse = null;
 
-        if (is_object($response)) // must be an object returned by the Httpful call
-        {
-            if (isset($response->body)) // the response must have a body
-            {
+		if (is_object($response)) // must be an object returned by the Httpful call
+		{
+			if (isset($response->body)) // the response must have a body
+			{
 				// If is present the property errorcode then it's an error
-                if (isset($response->body->errorcode))
-                {
+				if (isset($response->body->errorcode))
+				{
 					if ($response->body->errorcode == MOODLE_INVALID_TOKEN)
 					{
 						$this->_error(UNAUTHORIZED, $response->body->message);
@@ -325,33 +325,33 @@ class MoodleClient
 					{
 						$this->_error(MOODLE_ERROR, $response->body->message);
 					}
-                }
-                else // otherwise the remote web service has given a valid response
-                {
+				}
+				else // otherwise the remote web service has given a valid response
+				{
 					// If no data are present
-                    if ((is_string($response->body) && trim($response->body) == '')
+					if ((is_string($response->body) && trim($response->body) == '')
 						|| (is_array($response->body) && count($response->body) == 0)
-                        || (is_object($response->body) && count((array)$response->body) == 0))
-                    {
+				        	|| (is_object($response->body) && count((array)$response->body) == 0))
+					{
 						$this->_hasData = false; // set property _hasData to false
-                    }
-                    else
-                    {
+					}
+					else
+					{
 						$this->_hasData = true; // set property _hasData to true
-                    }
-
+					}
+				
 					$checkResponse = $response->body; // returns a success
-                }
-            }
-            else // if the response has no body
-            {
+				}
+			}
+			else // if the response has no body
+			{
 				// NOTE: moodle RestAPI could have an empty response even if the call was a success (so lame)
 				$this->_emptyResponse = true; // set property _hasData to false
-            }
-        }
+			}
+		}
 
 		return $checkResponse;
-    }
+	}
 
 	/**
 	 * Sets property _error to true and stores an error message in property _errorMessage
@@ -362,3 +362,4 @@ class MoodleClient
 		$this->_errorMessage = $code.': '.$message;
 	}
 }
+

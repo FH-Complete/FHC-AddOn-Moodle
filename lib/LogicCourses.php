@@ -8,7 +8,7 @@ require_once('Logic.php');
 class LogicCourses extends Logic
 {
 	// --------------------------------------------------------------------------------------------
-    // Public business logic methods
+	// Public business logic methods
 
 	/**
 	 * Generates the parameter shortname for the given course
@@ -199,7 +199,9 @@ class LogicCourses extends Logic
 		{
 			if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 			{
-				$rootCategoryId = self::getOrCreateCategory(mb_strtoupper($studiensemester_kurzbz), ADDON_MOODLE_ROOT_CATEGORY_ID, $numCategoriesAddedToMoodle);
+				$rootCategoryId = self::getOrCreateCategory(
+					mb_strtoupper($studiensemester_kurzbz), ADDON_MOODLE_ROOT_CATEGORY_ID, $numCategoriesAddedToMoodle
+				);
 
 				Output::printDebug('Root category '.$studiensemester_kurzbz.'->'.ADDON_MOODLE_ROOT_CATEGORY_ID.' ID: '.$rootCategoryId);
 
@@ -280,7 +282,9 @@ class LogicCourses extends Logic
 				{
 					if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 					{
-						self::insertMoodleTable($moodleCourseId, null, null, $studiensemester_kurzbz, 'NOW()', ADDON_MOODLE_INSERTVON, false, $group);
+						self::insertMoodleTable(
+							$moodleCourseId, null, null, $studiensemester_kurzbz, 'NOW()', ADDON_MOODLE_INSERTVON, false, $group
+						);
 
 						Output::printDebug('Added into database >> gruppe_kurzbz: '.$group);
 					}
@@ -306,7 +310,7 @@ class LogicCourses extends Logic
 	}
 
 	// --------------------------------------------------------------------------------------------
-    // Private business logic methods
+	// Private business logic methods
 
 	/**
 	 *
@@ -494,3 +498,4 @@ class LogicCourses extends Logic
 		return Database::rowsNumber($groups) == 0 ? false : true;
 	}
 }
+

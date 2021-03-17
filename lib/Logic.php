@@ -23,7 +23,7 @@ require_once(dirname(__FILE__).'/../config/config.php');
 abstract class Logic
 {
 	// --------------------------------------------------------------------------------------------
-    // Public methods
+	// Public methods
 
 	/**
 	 *
@@ -164,7 +164,7 @@ abstract class Logic
 	}
 
 	// --------------------------------------------------------------------------------------------
-    // Public Database wrappers methods
+	// Public Database wrappers methods
 
 	/**
 	 *
@@ -445,7 +445,7 @@ abstract class Logic
 	}
 
 	// --------------------------------------------------------------------------------------------
-    // Public MoodleAPI wrappers methods
+	// Public MoodleAPI wrappers methods
 
 	/**
 	 *
@@ -604,7 +604,7 @@ abstract class Logic
 	}
 
 	// --------------------------------------------------------------------------------------------
-    // Protected methods
+	// Protected methods
 
 	/**
 	 *
@@ -681,7 +681,7 @@ abstract class Logic
 	}
 
 	// --------------------------------------------------------------------------------------------
-    // Private methods
+	// Private methods
 
 	/**
 	 *
@@ -708,3 +708,4 @@ abstract class Logic
 		return $isAdmin;
 	}
 }
+

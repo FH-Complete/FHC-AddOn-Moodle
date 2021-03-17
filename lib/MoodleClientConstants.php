@@ -28,3 +28,4 @@ define('WS_FORMAT',			'moodlewsrestformat');
 
 // Moodle REST API parameter name
 define('WS_FUNCTION',		'wsfunction');
+

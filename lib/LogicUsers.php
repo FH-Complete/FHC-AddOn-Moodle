@@ -8,7 +8,7 @@ require_once('Logic.php');
 class LogicUsers extends Logic
 {
 	// --------------------------------------------------------------------------------------------
-    // Public business logic methods
+	// Public business logic methods
 
 	/**
 	 *
@@ -1226,7 +1226,7 @@ class LogicUsers extends Logic
 	}
 
 	// --------------------------------------------------------------------------------------------
-    // Private business logic methods
+	// Private business logic methods
 
 	/**
 	 *
@@ -1657,3 +1657,4 @@ class LogicUsers extends Logic
 		);
 	}
 }
+
