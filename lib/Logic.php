@@ -11,9 +11,9 @@ require_once(dirname(__FILE__).'/../../../include/student.class.php');
 require_once(dirname(__FILE__).'/../../../include/studiengang.class.php');
 require_once(dirname(__FILE__).'/../../../include/studiensemester.class.php');
 
-require_once('Output.php');
-require_once('MoodleAPI.php');
-require_once('Database.php');
+require_once(dirname(__FILE__).'/Output.php');
+require_once(dirname(__FILE__).'/MoodleAPI.php');
+require_once(dirname(__FILE__).'/Database.php');
 
 require_once(dirname(__FILE__).'/../config/config.php');
 
