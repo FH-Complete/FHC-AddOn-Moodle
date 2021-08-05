@@ -381,6 +381,7 @@ class Database extends basis_db
 	 */
 	public function getCourseGroups($moodleCourseId)
 	{
+/*	  
 		$query = 'SELECT DISTINCT
 					bg.gruppe_kurzbz
 				FROM
@@ -394,6 +395,19 @@ class Database extends basis_db
 					)
 				ORDER BY
 					bg.gruppe_kurzbz';
+*/		
+		$query = <<<EOSQL
+SELECT bg.gruppe_kurzbz,
+       bool_or(m.gruppen) AS gruppen
+FROM public.tbl_benutzergruppe bg
+JOIN addon.tbl_moodle m ON bg.gruppe_kurzbz = m.gruppe_kurzbz
+AND m.mdl_course_id = {$this->db_add_param($moodleCourseId, FHC_INTEGER)}
+AND (bg.studiensemester_kurzbz = m. studiensemester_kurzbz
+     OR bg.studiensemester_kurzbz IS NULL)
+GROUP BY bg.gruppe_kurzbz,
+         bg.studiensemester_kurzbz
+ORDER BY bg.gruppe_kurzbz		
+EOSQL;
 
 		return $this->_execQuery($query);
 	}

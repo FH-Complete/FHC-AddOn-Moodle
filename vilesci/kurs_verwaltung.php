@@ -279,7 +279,7 @@ if ($method == 'delete')
 					$('#semester').prop('disabled', true);
 					$('#lehrveranstaltung').prop('disabled', true);
 					$('#lehreinheit').prop('disabled', true);
-					$('#gruppen').prop('disabled', true);
+					//$('#gruppen').prop('disabled', true);
 
 					// If the selection is taken back, enable dropdowns again/checkboxes
 					$("#gruppe").keyup(function()
@@ -291,7 +291,7 @@ if ($method == 'delete')
 							$('#semester').prop('disabled', false);
 							$('#lehrveranstaltung').prop('disabled', false);
 							$('#lehreinheit').prop('disabled', false);
-							$('#gruppen').prop('disabled', false);
+							//$('#gruppen').prop('disabled', false);
 						}
 					});
 				}
@@ -568,7 +568,8 @@ if (($studiengang_kz != '' && $studiensemester_kurzbz != '') || !empty($moodle_m
 				<td align="center"> - </td>
 				<td align="center"> - </td>
 				<td align="center"> - </td>
-				<td align="center"> - </td>
+				<!--td align="center"> - </td-->
+				<td>'.($db->db_parse_bool($dbMoodleCourse->gruppen)?'Ja':'Nein').'</td>
 				<td>'. $dbMoodleCourse->gruppe_kurzbz. '</td>';
 		}
 		echo '

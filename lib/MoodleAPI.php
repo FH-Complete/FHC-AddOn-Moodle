@@ -164,6 +164,22 @@ class MoodleAPI extends MoodleClient
 	/**
 	 *
 	 */
+	public function core_group_delete_groups($groupId)
+	{
+		return $this->call(
+			'core_group_delete_groups',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'groupids' => array(
+				  $groupId
+				)
+			)
+		);
+	}
+	
+	/**
+	 *
+	 */
 	public function core_group_get_group_members($groupId)
 	{
 		return $this->call(
@@ -191,6 +207,20 @@ class MoodleAPI extends MoodleClient
 		);
 	}
 
+	/**
+	 *
+	 */
+	public function core_group_delete_group_members($members)
+	{
+		return $this->call(
+			'core_group_delete_group_members',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'members' => $members
+			)
+		);
+	}
+	
 	/**
 	 *
 	 */
