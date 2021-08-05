@@ -828,14 +828,27 @@ class LogicUsers extends Logic
 	
 	protected static function synchronizeGroupMembersToMoodleGroup($courseGroup, $moodleCourseId, $shouldbegroupmembers, $syncgroup) {
 	  $mdlgrpname = 'fhc-' . $courseGroup->gruppe_kurzbz . '-autosync';
+	  $mdlgroup   = self::_core_group_get_course_groups($moodleCourseId, $mdlgrpname);
 	  
-	  if( !self::_core_group_get_course_groups($moodleCourseId, $mdlgrpname) ) {
-	    if( !$syncgroup ) {
+	  if ( null === $mdlgroup && false === $syncgroup ) {
 	      return;
-	    }
+	  }
+	  
+	  if ( null !== $mdlgroup && false === $syncgroup ) {
+	      Output::printDebug('FHC-Group: ' . $mdlgrpname . ' exists but should not be synced. Trying to delete it.');
+	      if ( !ADDON_MOODLE_DRY_RUN ) {
+		self::_core_group_delete_groups($mdlgroup->id);
+	      } else {
+		Output::printInfo('FHC-Group: ' . $mdlgrpname . ' would be deleted.');
+	      }
+	      return;
+	  }
+	  
+	  if ( null === $mdlgroup && true === $syncgroup ) {
 	    Output::printDebug('FHC-Group: ' . $mdlgrpname . ' does not exist. Trying to create it.');
 	    if ( !ADDON_MOODLE_DRY_RUN ) {
-	      self::_core_group_create_groups($moodleCourseId, $mdlgrpname);
+	      $result = self::_core_group_create_groups($moodleCourseId, $mdlgrpname);
+	      $mdlgroup = isset($result[0]) ? $result[0] : null;
 	    } else {
 	      Output::printInfo('FHC-Group: ' . $mdlgrpname . ' would be created.');
 	      return;
@@ -843,12 +856,7 @@ class LogicUsers extends Logic
 	  }
 
 	  $mdlgroupmembers = array();
-	  if( null !==  ($mdlgroup = self::_core_group_get_course_groups($moodleCourseId, $mdlgrpname)) ) {
-	    if( !$syncgroup ) {
-	      Output::printDebug('FHC-Group: ' . $mdlgrpname . ' exists but should not be synced. Trying to delete it.');
-	      self::_core_group_delete_groups($mdlgroup->id);
-	      return;
-	    }
+	  if( null !==  $mdlgroup ) {
 	    $mdlgroupmembers = self::_core_group_get_group_members($mdlgroup->id);
 	  } else {
 	    if($syncgroup) {
@@ -860,7 +868,7 @@ class LogicUsers extends Logic
 	  $adduserids	      = array_diff($shouldbegroupmembers, $mdlgroupmembers[0]->userids);
 	  $deleteuserids      = array_diff($mdlgroupmembers[0]->userids, $shouldbegroupmembers);
 	  $addgroupmembers    = self::buildUserGroupInputForMoodleAPI($adduserids, $mdlgroup->id);
-	  $deletegroupmembers = self::buildUserGroupInputForMoodleAPI($deleteuserids, $mdlgroup->id);;
+	  $deletegroupmembers = self::buildUserGroupInputForMoodleAPI($deleteuserids, $mdlgroup->id);
 
 	  if ( count($addgroupmembers) > 0 ) {
 	    if ( !ADDON_MOODLE_DRY_RUN ) {
