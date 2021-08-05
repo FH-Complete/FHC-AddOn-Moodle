@@ -962,7 +962,7 @@ class LogicUsers extends Logic
 
 					//
 					foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
-					{					  
+					{
 						//
 						if ($groupMember->uid == $moodleEnrolledUser->username)
 						{
@@ -970,7 +970,7 @@ class LogicUsers extends Logic
 							$shouldbegroupmembers[] = $moodleEnrolledUser->id;
 							$userFound = true;	
 							break;
-						}												
+						}
 					}
 
 					//
