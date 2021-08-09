@@ -844,7 +844,8 @@ class LogicUsers extends Logic
 	      if ( !ADDON_MOODLE_DRY_RUN ) 
 	      {
 		  self::_core_group_delete_groups($mdlgroup->id);
-	      } else 
+	      } 
+	      else 
 	      {
 		  Output::printInfo('FHC-Group: ' . $mdlgrpname . ' would be deleted.');
 	      }
@@ -858,7 +859,8 @@ class LogicUsers extends Logic
 	      {
 		  $result = self::_core_group_create_groups($moodleCourseId, $mdlgrpname);
 		  $mdlgroup = isset($result[0]) ? $result[0] : null;
-	      } else 
+	      } 
+	      else 
 	      {
 		  Output::printInfo('FHC-Group: ' . $mdlgrpname . ' would be created.');
 		  return;
@@ -869,7 +871,9 @@ class LogicUsers extends Logic
 	  if( null !==  $mdlgroup ) 
 	  {
 	      $mdlgroupmembers = self::_core_group_get_group_members($mdlgroup->id);
-	  } else {
+	  } 
+	  else 
+	  {
 	      if($syncgroup) 
 	      {
 		Output::printDebug('FHC-Group: ' . $mdlgrpname . ' does not exist and could not be created. Skipping Moodle Group Sync.');
@@ -888,7 +892,9 @@ class LogicUsers extends Logic
 	      {
 		  self::_core_group_add_group_members($addgroupmembers);
 		  Output::printDebug('Number of group members added to group "' . $mdlgroup->name . '": '.count($addgroupmembers));
-	      } else {
+	      } 
+	      else 
+	      {
 		  Output::printInfo('Number of group members that would be added to group "' . $mdlgroup->name . '": '.count($addgroupmembers));
 	      }
 	  }
@@ -899,7 +905,9 @@ class LogicUsers extends Logic
 	      {
 		  self::_core_group_delete_group_members($deletegroupmembers);
 		  Output::printDebug('Number of group members deleted from group "' . $mdlgroup->name . '": '.count($deletegroupmembers));
-	      } else {
+	      } 
+	      else 
+	      {
 		  Output::printInfo('Number of group members that would be deleted from group "' . $mdlgroup->name . '": '.count($deletegroupmembers));
 	      }
 	  }
