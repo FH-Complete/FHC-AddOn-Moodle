@@ -698,7 +698,7 @@ class LogicUsers extends Logic
 				Output::printDebug('Number of students in database: '.Database::rowsNumber($studenten));
 
 				$usersToEnroll = array(); //
-				$groupsMembersToAdd = array(); //
+				$shouldbegroupmembers = array();
 
 				//
 				while ($student = Database::fetchRow($studenten))
@@ -713,6 +713,7 @@ class LogicUsers extends Logic
 						if ($student->student_uid == $moodleEnrolledUser->username)
 						{
 							$debugMessage .= ' >> already enrolled in moodle';
+							$shouldbegroupmembers[] = $moodleEnrolledUser->id;
 							$userFound = true;
 							break;
 						}
@@ -737,6 +738,8 @@ class LogicUsers extends Logic
 							);
 
 							$debugMessage .= ' >> will be enrolled in moodle in a later step';
+
+							$shouldbegroupmembers[] = $users[0]->id;
 						}
 						else
 						{
@@ -745,27 +748,6 @@ class LogicUsers extends Logic
 
 						$numEnrolledStudents++;
 
-					}
-
-					if ($synchronizeGroup)
-					{
-						if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
-						{
-							//
-							$group = self::_getOrCreateMoodleGroup($moodleCourseId, $groupName, $numCreatedGroups);
-
-							//
-							if (!self::_isMoodleUserMemberMoodleGroup($users[0]->id, $group->id))
-							{
-								$groupsMembersToAdd[] = array('groupid' => $group->id, 'userid' => $users[0]->id);
-
-								$debugMessage .= ' >> will be added to moodle group '.$groupName.' in a later step';
-							}
-						}
-						else
-						{
-							$debugMessage .= ' >> dry run >> should be added to moodle group '.$groupName.' in a later step';
-						}
 					}
 
 					Output::printDebug($debugMessage);
@@ -779,14 +761,7 @@ class LogicUsers extends Logic
 					Output::printDebug('Number of students enrolled in moodle: '.count($usersToEnroll));
 				}
 
-				//
-				if (count($groupsMembersToAdd) > 0)
-				{
-					self::_core_group_add_group_members($groupsMembersToAdd);
-
-					self::_printDebugEmptyline();
-					Output::printDebug('Number of students added to a moodle group: '.count($groupsMembersToAdd));
-				}
+				self::synchronizeGroupMembersToMoodleGroup($groupName, $moodleCourseId, $shouldbegroupmembers, $synchronizeGroup);
 
 				self::_printDebugEmptyline();
 			}
@@ -828,9 +803,8 @@ class LogicUsers extends Logic
 	    return $list;
 	}
 	
-	protected static function synchronizeGroupMembersToMoodleGroup($courseGroup, $moodleCourseId, $shouldbegroupmembers, $syncgroup) 
+	protected static function synchronizeGroupMembersToMoodleGroup($mdlgrpname, $moodleCourseId, $shouldbegroupmembers, $syncgroup) 
 	{
-	  $mdlgrpname = 'fhc-' . $courseGroup->gruppe_kurzbz . '-autosync';
 	  $mdlgroup   = self::_core_group_get_course_groups($moodleCourseId, $mdlgrpname);
 	  
 	  if ( null === $mdlgroup && false === $syncgroup ) 
@@ -1019,7 +993,8 @@ class LogicUsers extends Logic
 				}
 				
 				$syncgroup = $courseGroup->gruppen === 't';
-				self::synchronizeGroupMembersToMoodleGroup($courseGroup, $moodleCourseId, $shouldbegroupmembers, $syncgroup);
+				$mdlgrpname = 'fhc-' . $courseGroup->gruppe_kurzbz . '-autosync';
+				self::synchronizeGroupMembersToMoodleGroup($mdlgrpname, $moodleCourseId, $shouldbegroupmembers, $syncgroup);
 				
 				self::_printDebugEmptyline();
 			}
