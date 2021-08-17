@@ -1719,7 +1719,7 @@ class LogicUsers extends Logic
 			'An error occurred while creating a group in moodle'
 		);
 	}
-	
+
 	/**
 	 *
 	 */
@@ -1789,7 +1789,6 @@ class LogicUsers extends Logic
 		);
 	}
 	
-// bh begin	
 	/**
 	 *
 	 */
@@ -1801,5 +1800,4 @@ class LogicUsers extends Logic
 			'An error occurred while retrieving groupmembers from moodle'
 		);
 	}
-// bh end
 }
