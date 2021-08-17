@@ -817,7 +817,6 @@ class LogicUsers extends Logic
 	      Output::printDebug('FHC-Group: ' . $mdlgrpname . ' exists but should not be synced. Trying to delete all members from group.');
 	      if ( !ADDON_MOODLE_DRY_RUN ) 
 	      {
-		  //self::_core_group_delete_groups($mdlgroup->id);
 		  $groupmembers = self::_core_group_get_group_members($mdlgroup->id);
 		  $deletemembers = self::buildUserGroupInputForMoodleAPI($groupmembers[0]->userids, $mdlgroup->id);
 		  self::_core_group_delete_group_members($deletemembers);
@@ -906,7 +905,6 @@ class LogicUsers extends Logic
 		{
 		    if ( !ADDON_MOODLE_DRY_RUN )
 		    {
-			//self::_core_group_delete_groups($mdlgroup->id);
 			$groupmembers = self::_core_group_get_group_members($mdlgroup->id);
 			$deletemembers = self::buildUserGroupInputForMoodleAPI($groupmembers[0]->userids, $mdlgroup->id);
 			self::_core_group_delete_group_members($deletemembers);
@@ -1718,18 +1716,6 @@ class LogicUsers extends Logic
 		return parent::_moodleAPICall(
 			'core_group_create_groups',
 			array($moodleCourseId, $groupName, $groupName),
-			'An error occurred while creating a group in moodle'
-		);
-	}
-	
-	/**
-	 *
-	 */
-	private static function _core_group_delete_groups($groupId)
-	{
-		return parent::_moodleAPICall(
-			'core_group_delete_groups',
-			array($groupId),
 			'An error occurred while creating a group in moodle'
 		);
 	}
