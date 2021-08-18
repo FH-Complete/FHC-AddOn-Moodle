@@ -795,10 +795,10 @@ class LogicUsers extends Logic
 	    $list = array();
 	    foreach ($userids as $userid) 
 	    {
-		$tmpUserGroup = new stdClass();
-		$tmpUserGroup->groupid = $groupid;
-		$tmpUserGroup->userid = $userid;
-		$list[] = $tmpUserGroup;
+			$tmpUserGroup = new stdClass();
+			$tmpUserGroup->groupid = $groupid;
+			$tmpUserGroup->userid = $userid;
+			$list[] = $tmpUserGroup;
 	    }
 	    return $list;
 	}
@@ -809,52 +809,52 @@ class LogicUsers extends Logic
 
 	    if ( null === $mdlgroup && false === $syncgroup ) 
 	    {
-		return;
+			return;
 	    }
 
 	    if ( null !== $mdlgroup && false === $syncgroup ) 
 	    {
-		Output::printDebug('FHC-Group: ' . $mdlgrpname . ' exists but should not be synced. Trying to delete all members from group.');
-		if ( !ADDON_MOODLE_DRY_RUN ) 
-		{
-		    $groupmembers = self::_core_group_get_group_members($mdlgroup->id);
-		    $deletemembers = self::buildUserGroupInputForMoodleAPI($groupmembers[0]->userids, $mdlgroup->id);
-		    self::_core_group_delete_group_members($deletemembers);
-		} 
-		else 
-		{
-		    Output::printInfo('FHC-Group: ' . $mdlgrpname . ' all members would be deleted from group.');
-		}
-		return;
+			Output::printDebug('FHC-Group: ' . $mdlgrpname . ' exists but should not be synced. Trying to delete all members from group.');
+			if ( !ADDON_MOODLE_DRY_RUN ) 
+			{
+				$groupmembers = self::_core_group_get_group_members($mdlgroup->id);
+				$deletemembers = self::buildUserGroupInputForMoodleAPI($groupmembers[0]->userids, $mdlgroup->id);
+				self::_core_group_delete_group_members($deletemembers);
+			} 
+			else 
+			{
+				Output::printInfo('FHC-Group: ' . $mdlgrpname . ' all members would be deleted from group.');
+			}
+			return;
 	    }
 
 	    if ( null === $mdlgroup && true === $syncgroup ) 
 	    {
-		Output::printDebug('FHC-Group: ' . $mdlgrpname . ' does not exist. Trying to create it.');
-		if ( !ADDON_MOODLE_DRY_RUN ) 
-		{
-		    $result = self::_core_group_create_groups($moodleCourseId, $mdlgrpname);
-		    $mdlgroup = isset($result[0]) ? $result[0] : null;
-		} 
-		else 
-		{
-		    Output::printInfo('FHC-Group: ' . $mdlgrpname . ' would be created.');
-		    return;
-		}
+			Output::printDebug('FHC-Group: ' . $mdlgrpname . ' does not exist. Trying to create it.');
+			if ( !ADDON_MOODLE_DRY_RUN ) 
+			{
+				$result = self::_core_group_create_groups($moodleCourseId, $mdlgrpname);
+				$mdlgroup = isset($result[0]) ? $result[0] : null;
+			} 
+			else 
+			{
+				Output::printInfo('FHC-Group: ' . $mdlgrpname . ' would be created.');
+				return;
+			}
 	    }
 
 	    $mdlgroupmembers = array();
 	    if( null !==  $mdlgroup ) 
 	    {
-		$mdlgroupmembers = self::_core_group_get_group_members($mdlgroup->id);
+			$mdlgroupmembers = self::_core_group_get_group_members($mdlgroup->id);
 	    } 
 	    else 
 	    {
-		if($syncgroup) 
-		{
-		  Output::printDebug('FHC-Group: ' . $mdlgrpname . ' does not exist and could not be created. Skipping Moodle Group Sync.');
-		}
-		return;
+			if($syncgroup) 
+			{
+			  Output::printDebug('FHC-Group: ' . $mdlgrpname . ' does not exist and could not be created. Skipping Moodle Group Sync.');
+			}
+			return;
 	    }
 
 	    $adduserids	      = array_diff($shouldbegroupmembers, $mdlgroupmembers[0]->userids);
@@ -864,28 +864,28 @@ class LogicUsers extends Logic
 
 	    if ( count($addgroupmembers) > 0 ) 
 	    {
-		if ( !ADDON_MOODLE_DRY_RUN ) 
-		{
-		    self::_core_group_add_group_members($addgroupmembers);
-		    Output::printDebug('Number of group members added to group "' . $mdlgroup->name . '": '.count($addgroupmembers));
-		} 
-		else 
-		{
-		    Output::printInfo('Number of group members that would be added to group "' . $mdlgroup->name . '": '.count($addgroupmembers));
-		}
+			if ( !ADDON_MOODLE_DRY_RUN ) 
+			{
+				self::_core_group_add_group_members($addgroupmembers);
+				Output::printDebug('Number of group members added to group "' . $mdlgroup->name . '": '.count($addgroupmembers));
+			} 
+			else 
+			{
+				Output::printInfo('Number of group members that would be added to group "' . $mdlgroup->name . '": '.count($addgroupmembers));
+			}
 	    }
 
 	    if ( count($deletegroupmembers) > 0 ) 
 	    {
-		if ( !ADDON_MOODLE_DRY_RUN ) 
-		{
-		    self::_core_group_delete_group_members($deletegroupmembers);
-		    Output::printDebug('Number of group members deleted from group "' . $mdlgroup->name . '": '.count($deletegroupmembers));
-		} 
-		else 
-		{
-		    Output::printInfo('Number of group members that would be deleted from group "' . $mdlgroup->name . '": '.count($deletegroupmembers));
-		}
+			if ( !ADDON_MOODLE_DRY_RUN ) 
+			{
+				self::_core_group_delete_group_members($deletegroupmembers);
+				Output::printDebug('Number of group members deleted from group "' . $mdlgroup->name . '": '.count($deletegroupmembers));
+			} 
+			else 
+			{
+				Output::printInfo('Number of group members that would be deleted from group "' . $mdlgroup->name . '": '.count($deletegroupmembers));
+			}
 	    }
 	}
 
@@ -896,25 +896,25 @@ class LogicUsers extends Logic
 	{
 	    if ( count($assignedMdlGrps) < 1 || empty($grouppattern) )
 	    {
-		return;
+			return;
 	    }
 	    $mdlgroups = self::_core_group_get_course_groups($moodleCourseId, null, true);
 	    foreach ( $mdlgroups as $mdlgroup )
 	    {
-		if ( preg_match($grouppattern, $mdlgroup->name) && !(in_array($mdlgroup->name, $assignedMdlGrps)) )
-		{
-		    if ( !ADDON_MOODLE_DRY_RUN )
-		    {
-			$groupmembers = self::_core_group_get_group_members($mdlgroup->id);
-			$deletemembers = self::buildUserGroupInputForMoodleAPI($groupmembers[0]->userids, $mdlgroup->id);
-			self::_core_group_delete_group_members($deletemembers);
-			Output::printDebug('Delete all members from group "' . $mdlgroup->name . '".');
-		    }
-		    else
-		    {
-			Output::printInfo('All members would be deleted from group "' . $mdlgroup->name . '".');
-		    }
-		}
+			if ( preg_match($grouppattern, $mdlgroup->name) && !(in_array($mdlgroup->name, $assignedMdlGrps)) )
+			{
+				if ( !ADDON_MOODLE_DRY_RUN )
+				{
+				$groupmembers = self::_core_group_get_group_members($mdlgroup->id);
+				$deletemembers = self::buildUserGroupInputForMoodleAPI($groupmembers[0]->userids, $mdlgroup->id);
+				self::_core_group_delete_group_members($deletemembers);
+				Output::printDebug('Delete all members from group "' . $mdlgroup->name . '".');
+				}
+				else
+				{
+				Output::printInfo('All members would be deleted from group "' . $mdlgroup->name . '".');
+				}
+			}
 	    }
 	}
 
