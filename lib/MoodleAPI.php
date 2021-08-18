@@ -194,6 +194,20 @@ class MoodleAPI extends MoodleClient
 	/**
 	 *
 	 */
+	public function core_group_delete_group_members($members)
+	{
+		return $this->call(
+			'core_group_delete_group_members',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'members' => $members
+			)
+		);
+	}
+	
+	/**
+	 *
+	 */
 	public function enrol_manual_unenrol_users($users)
 	{
 		return $this->call(

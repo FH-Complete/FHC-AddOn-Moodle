@@ -698,7 +698,7 @@ class LogicUsers extends Logic
 				Output::printDebug('Number of students in database: '.Database::rowsNumber($studenten));
 
 				$usersToEnroll = array(); //
-				$groupsMembersToAdd = array(); //
+				$shouldbegroupmembers = array();
 
 				//
 				while ($student = Database::fetchRow($studenten))
@@ -713,6 +713,7 @@ class LogicUsers extends Logic
 						if ($student->student_uid == $moodleEnrolledUser->username)
 						{
 							$debugMessage .= ' >> already enrolled in moodle';
+							$shouldbegroupmembers[] = $moodleEnrolledUser->id;
 							$userFound = true;
 							break;
 						}
@@ -737,6 +738,8 @@ class LogicUsers extends Logic
 							);
 
 							$debugMessage .= ' >> will be enrolled in moodle in a later step';
+
+							$shouldbegroupmembers[] = $users[0]->id;
 						}
 						else
 						{
@@ -745,27 +748,6 @@ class LogicUsers extends Logic
 
 						$numEnrolledStudents++;
 
-					}
-
-					if ($synchronizeGroup)
-					{
-						if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
-						{
-							//
-							$group = self::_getOrCreateMoodleGroup($moodleCourseId, $groupName, $numCreatedGroups);
-
-							//
-							if (!self::_isMoodleUserMemberMoodleGroup($users[0]->id, $group->id))
-							{
-								$groupsMembersToAdd[] = array('groupid' => $group->id, 'userid' => $users[0]->id);
-
-								$debugMessage .= ' >> will be added to moodle group '.$groupName.' in a later step';
-							}
-						}
-						else
-						{
-							$debugMessage .= ' >> dry run >> should be added to moodle group '.$groupName.' in a later step';
-						}
 					}
 
 					Output::printDebug($debugMessage);
@@ -779,14 +761,7 @@ class LogicUsers extends Logic
 					Output::printDebug('Number of students enrolled in moodle: '.count($usersToEnroll));
 				}
 
-				//
-				if (count($groupsMembersToAdd) > 0)
-				{
-					self::_core_group_add_group_members($groupsMembersToAdd);
-
-					self::_printDebugEmptyline();
-					Output::printDebug('Number of students added to a moodle group: '.count($groupsMembersToAdd));
-				}
+				self::synchronizeGroupMembersToMoodleGroup($groupName, $moodleCourseId, $shouldbegroupmembers, $synchronizeGroup);
 
 				self::_printDebugEmptyline();
 			}
@@ -813,6 +788,134 @@ class LogicUsers extends Logic
 
 			Output::printInfo('----------------------------------------------------------------------');
 		}
+	}
+
+	protected static function buildUserGroupInputForMoodleAPI($userids, $groupid) 
+	{
+	    $list = array();
+	    foreach ($userids as $userid) 
+	    {
+			$tmpUserGroup = new stdClass();
+			$tmpUserGroup->groupid = $groupid;
+			$tmpUserGroup->userid = $userid;
+			$list[] = $tmpUserGroup;
+	    }
+	    return $list;
+	}
+	
+	protected static function synchronizeGroupMembersToMoodleGroup($mdlgrpname, $moodleCourseId, $shouldbegroupmembers, $syncgroup) 
+	{
+	    $mdlgroup   = self::_core_group_get_course_groups($moodleCourseId, $mdlgrpname);
+
+	    if ( null === $mdlgroup && false === $syncgroup ) 
+	    {
+			return;
+	    }
+
+	    if ( null !== $mdlgroup && false === $syncgroup ) 
+	    {
+			Output::printDebug('FHC-Group: ' . $mdlgrpname . ' exists but should not be synced. Trying to delete all members from group.');
+			if ( !ADDON_MOODLE_DRY_RUN ) 
+			{
+				$groupmembers = self::_core_group_get_group_members($mdlgroup->id);
+				$deletemembers = self::buildUserGroupInputForMoodleAPI($groupmembers[0]->userids, $mdlgroup->id);
+				self::_core_group_delete_group_members($deletemembers);
+			} 
+			else 
+			{
+				Output::printInfo('FHC-Group: ' . $mdlgrpname . ' all members would be deleted from group.');
+			}
+			return;
+	    }
+
+	    if ( null === $mdlgroup && true === $syncgroup ) 
+	    {
+			Output::printDebug('FHC-Group: ' . $mdlgrpname . ' does not exist. Trying to create it.');
+			if ( !ADDON_MOODLE_DRY_RUN ) 
+			{
+				$result = self::_core_group_create_groups($moodleCourseId, $mdlgrpname);
+				$mdlgroup = isset($result[0]) ? $result[0] : null;
+			} 
+			else 
+			{
+				Output::printInfo('FHC-Group: ' . $mdlgrpname . ' would be created.');
+				return;
+			}
+	    }
+
+	    $mdlgroupmembers = array();
+	    if( null !==  $mdlgroup ) 
+	    {
+			$mdlgroupmembers = self::_core_group_get_group_members($mdlgroup->id);
+	    } 
+	    else 
+	    {
+			if($syncgroup) 
+			{
+			  Output::printDebug('FHC-Group: ' . $mdlgrpname . ' does not exist and could not be created. Skipping Moodle Group Sync.');
+			}
+			return;
+	    }
+
+	    $adduserids	      = array_diff($shouldbegroupmembers, $mdlgroupmembers[0]->userids);
+	    $deleteuserids      = array_diff($mdlgroupmembers[0]->userids, $shouldbegroupmembers);
+	    $addgroupmembers    = self::buildUserGroupInputForMoodleAPI($adduserids, $mdlgroup->id);
+	    $deletegroupmembers = self::buildUserGroupInputForMoodleAPI($deleteuserids, $mdlgroup->id);
+
+	    if ( count($addgroupmembers) > 0 ) 
+	    {
+			if ( !ADDON_MOODLE_DRY_RUN ) 
+			{
+				self::_core_group_add_group_members($addgroupmembers);
+				Output::printDebug('Number of group members added to group "' . $mdlgroup->name . '": '.count($addgroupmembers));
+			} 
+			else 
+			{
+				Output::printInfo('Number of group members that would be added to group "' . $mdlgroup->name . '": '.count($addgroupmembers));
+			}
+	    }
+
+	    if ( count($deletegroupmembers) > 0 ) 
+	    {
+			if ( !ADDON_MOODLE_DRY_RUN ) 
+			{
+				self::_core_group_delete_group_members($deletegroupmembers);
+				Output::printDebug('Number of group members deleted from group "' . $mdlgroup->name . '": '.count($deletegroupmembers));
+			} 
+			else 
+			{
+				Output::printInfo('Number of group members that would be deleted from group "' . $mdlgroup->name . '": '.count($deletegroupmembers));
+			}
+	    }
+	}
+
+	/**
+	 *
+	 */
+	protected static function cleanUpMdlGroups($moodleCourseId, $assignedMdlGrps, $grouppattern='/^fhc-.*-autosync$/')
+	{
+	    if ( count($assignedMdlGrps) < 1 || empty($grouppattern) )
+	    {
+			return;
+	    }
+	    $mdlgroups = self::_core_group_get_course_groups($moodleCourseId, null, true);
+	    foreach ( $mdlgroups as $mdlgroup )
+	    {
+			if ( preg_match($grouppattern, $mdlgroup->name) && !(in_array($mdlgroup->name, $assignedMdlGrps)) )
+			{
+				if ( !ADDON_MOODLE_DRY_RUN )
+				{
+				$groupmembers = self::_core_group_get_group_members($mdlgroup->id);
+				$deletemembers = self::buildUserGroupInputForMoodleAPI($groupmembers[0]->userids, $mdlgroup->id);
+				self::_core_group_delete_group_members($deletemembers);
+				Output::printDebug('Delete all members from group "' . $mdlgroup->name . '".');
+				}
+				else
+				{
+				Output::printInfo('All members would be deleted from group "' . $mdlgroup->name . '".');
+				}
+			}
+	    }
 	}
 
 	/**
@@ -850,6 +953,8 @@ class LogicUsers extends Logic
 			Output::printDebug('Number of groups in database: '.Database::rowsNumber($courseGroups));
 			self::_printDebugEmptyline();
 
+			$assignedMdlGrps = array();
+
 			//
 			while ($courseGroup = Database::fetchRow($courseGroups))
 			{
@@ -860,7 +965,9 @@ class LogicUsers extends Logic
 				$groupMembers = self::_getGroupsMembers($courseGroup->gruppe_kurzbz, $moodleCourseId); //
 
 				Output::printDebug('Number of groups members in database: '.Database::rowsNumber($groupMembers));
-
+				
+				$shouldbegroupmembers = array(); // array of moodle userids that should be member of the group
+				
 				//
 				while ($groupMember = Database::fetchRow($groupMembers))
 				{
@@ -875,7 +982,8 @@ class LogicUsers extends Logic
 						if ($groupMember->uid == $moodleEnrolledUser->username)
 						{
 							$debugMessage .= ' >> already enrolled in moodle';
-							$userFound = true;
+							$shouldbegroupmembers[] = $moodleEnrolledUser->id;
+							$userFound = true;	
 							break;
 						}
 					}
@@ -895,6 +1003,8 @@ class LogicUsers extends Logic
 							);
 
 							$debugMessage .= ' >> will be enrolled in moodle in a later step';
+
+							$shouldbegroupmembers[] = $users[0]->id;
 						}
 						else
 						{
@@ -914,9 +1024,19 @@ class LogicUsers extends Logic
 
 					Output::printDebug('Number of group members enrolled in moodle: '.count($usersToEnroll));
 				}
-
+				
+				$syncgroup = $courseGroup->gruppen === 't';
+				$mdlgrpname = 'fhc-' . $courseGroup->gruppe_kurzbz . '-autosync';
+				if ( $syncgroup )
+				{
+				    $assignedMdlGrps[] = $mdlgrpname;
+				}
+				self::synchronizeGroupMembersToMoodleGroup($mdlgrpname, $moodleCourseId, $shouldbegroupmembers, $syncgroup);
+				
 				self::_printDebugEmptyline();
 			}
+
+			self::cleanUpMdlGroups($moodleCourseId, $assignedMdlGrps);
 
 			// Unenrol users only if groups are present
 			if ($groupsAssigned)
@@ -1565,13 +1685,17 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	private static function _core_group_get_course_groups($moodleCourseId, $groupName)
+	private static function _core_group_get_course_groups($moodleCourseId, $groupName, $returnAllGroups=false)
 	{
 		$groups = parent::_moodleAPICall(
 			'core_group_get_course_groups',
 			array($moodleCourseId),
 			'An error occurred while retrieving groups from moodle'
 		);
+
+		if ( $returnAllGroups )  {
+		    return $groups;
+		}
 
 		foreach ($groups as $group)
 		{
@@ -1640,6 +1764,14 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
+	private static function _core_group_delete_group_members($members)
+	{
+		self::_moodleAPICallChunks($members, 'core_group_delete_group_members', 'An error occurred while deleting members from a moodle group');
+	}
+	
+	/**
+	 *
+	 */
 	private static function _enrol_manual_unenrol_users($users)
 	{
 		self::_moodleAPICallChunks($users, 'enrol_manual_unenrol_users', 'An error occurred while removing enrolled users in moodle');
@@ -1654,6 +1786,18 @@ class LogicUsers extends Logic
 			'core_course_get_categories_by_id',
 			array($id),
 			'An error occurred while retrieving categories from moodle'
+		);
+	}
+	
+	/**
+	 *
+	 */
+	private static function _core_group_get_group_members($grpid)
+	{
+		return parent::_moodleAPICall(
+			'core_group_get_group_members',
+			array($grpid),
+			'An error occurred while retrieving groupmembers from moodle'
 		);
 	}
 }
