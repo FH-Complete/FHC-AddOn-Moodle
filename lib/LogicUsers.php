@@ -720,7 +720,7 @@ class LogicUsers extends Logic
 
 			//
 			$courseAngerechnet = self::_getCourseAngerechnet($moodleCourseId);
-			
+
 			Output::printDebug('Number of teaching units in database: '.Database::rowsNumber($lehreinheiten));
 			self::_printDebugEmptyline();
 
