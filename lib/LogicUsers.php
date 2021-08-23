@@ -720,12 +720,6 @@ class LogicUsers extends Logic
 
 			//
 			$courseAngerechnet = self::_getCourseAngerechnet($moodleCourseId);
-
-			if( count($courseAngerechnet) > 0 ) {
-				$courseAngerechnet[] = 'if20b053';
-				//$courseAngerechnet = array();
-			}
-			Output::printDebug('Angerechnet: '.print_r($courseAngerechnet, true));
 			
 			Output::printDebug('Number of teaching units in database: '.Database::rowsNumber($lehreinheiten));
 			self::_printDebugEmptyline();
