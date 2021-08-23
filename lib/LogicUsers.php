@@ -723,6 +723,7 @@ class LogicUsers extends Logic
 
 			if( count($courseAngerechnet) > 0 ) {
 				$courseAngerechnet[] = 'if20b053';
+				//$courseAngerechnet = array();
 			}
 			Output::printDebug('Angerechnet: '.print_r($courseAngerechnet, true));
 			
@@ -773,20 +774,21 @@ class LogicUsers extends Logic
 						{
 							foreach( $moodleEnrolledUser->roles AS $role ) {
 								if( ($role->roleid === ADDON_MOODLE_LV_ANGERECHNET_ROLEID) 
-									&& (!array_search($student->student_uid, $courseAngerechnet)) ) {
+									&& (false === array_search($student->student_uid, $courseAngerechnet)) ) {
 									self::changeMoodleRole(ADDON_MOODLE_LV_ANGERECHNET_ROLEID, 
 										ADDON_MOODLE_STUDENT_ROLEID, 										
 										$moodleEnrolledUser, 
-										$moodleCourseId);									
+										$moodleCourseId);
 								}
-							}
-							if (array_search($student->student_uid, $courseAngerechnet) !== false)
-							{
-								self::changeMoodleRole(ADDON_MOODLE_STUDENT_ROLEID, 
-									ADDON_MOODLE_LV_ANGERECHNET_ROLEID, 
-									$moodleEnrolledUser, 
-									$moodleCourseId);
-							}
+								elseif ( ($role->roleid === ADDON_MOODLE_STUDENT_ROLEID) 
+									&& (false !== array_search($student->student_uid, $courseAngerechnet)) )
+								{
+									self::changeMoodleRole(ADDON_MOODLE_STUDENT_ROLEID, 
+										ADDON_MOODLE_LV_ANGERECHNET_ROLEID, 
+										$moodleEnrolledUser, 
+										$moodleCourseId);
+								}
+							}							
 							$debugMessage .= ' >> already enrolled in moodle';
 							$shouldbegroupmembers[] = $moodleEnrolledUser->id;
 							$userFound = true;
