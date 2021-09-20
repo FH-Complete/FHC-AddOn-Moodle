@@ -641,6 +641,60 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
+	public static function changeMoodleRole($roleidtoremove, $roleidtoset, $moodleEnrolledUser, $moodleCourseId) 
+	{
+		if( ADDON_MOODLE_DRY_RUN ) 
+		{
+			Output::printInfo('Role with roleid: ' . $roleidtoremove 
+				. ' would be unassigned from User ' . $moodleEnrolledUser->username 
+				. ' and role with roleid: ' . $roleidtoset 
+				. ' would be assigned to User ' . $moodleEnrolledUser->username 
+				. ' in Moodle course with courseid: ' . $moodleCourseId);
+			return;
+		}
+		
+		$curRoleIds = array();
+		foreach( $moodleEnrolledUser->roles as $role )
+		{
+			$curRoleIds[] = $role->roleid;
+		}
+		
+		if( !in_array($roleidtoset, $curRoleIds) )
+		{
+			$usersToAssign = array(
+				array(
+					'roleid' => $roleidtoset,
+					'userid' => $moodleEnrolledUser->id,
+					'contextlevel' => 'course',
+					'instanceid' => $moodleCourseId
+				)
+			);
+			self::_core_role_assign_roles($usersToAssign);
+			Output::printInfo('Role with roleid: ' . $roleidtoset 
+				. ' was assigned to User ' . $moodleEnrolledUser->username
+				. ' in Moodle course with courseid: ' . $moodleCourseId);
+		}
+
+		if( in_array($roleidtoremove, $curRoleIds) )
+		{
+			$usersToUnassign = array(
+				array(
+					'roleid' => $roleidtoremove,
+					'userid' => $moodleEnrolledUser->id,
+					'contextlevel' => 'course',
+					'instanceid' => $moodleCourseId
+				)
+			);
+			self::_core_role_unassign_roles($usersToUnassign);
+			Output::printInfo('Role with roleid: ' . $roleidtoremove 
+				. ' was unassigned from User ' . $moodleEnrolledUser->username
+				. ' in Moodle course with courseid: ' . $moodleCourseId);
+		}		
+	}	
+	
+	/**
+	 *
+	 */
 	public static function synchronizeStudenten($moodleCourses, $showSummary = true)
 	{
 		//
@@ -712,6 +766,23 @@ class LogicUsers extends Logic
 						//
 						if ($student->student_uid == $moodleEnrolledUser->username)
 						{
+							foreach( $moodleEnrolledUser->roles AS $role ) {
+								if( ($role->roleid === ADDON_MOODLE_LV_ANGERECHNET_ROLEID) 
+									&& (false === array_search($student->student_uid, $courseAngerechnet)) ) {
+									self::changeMoodleRole(ADDON_MOODLE_LV_ANGERECHNET_ROLEID, 
+										ADDON_MOODLE_STUDENT_ROLEID, 										
+										$moodleEnrolledUser, 
+										$moodleCourseId);
+								}
+								elseif ( ($role->roleid === ADDON_MOODLE_STUDENT_ROLEID) 
+									&& (false !== array_search($student->student_uid, $courseAngerechnet)) )
+								{
+									self::changeMoodleRole(ADDON_MOODLE_STUDENT_ROLEID, 
+										ADDON_MOODLE_LV_ANGERECHNET_ROLEID, 
+										$moodleEnrolledUser, 
+										$moodleCourseId);
+								}
+							}							
 							$debugMessage .= ' >> already enrolled in moodle';
 							$shouldbegroupmembers[] = $moodleEnrolledUser->id;
 							$userFound = true;
@@ -1753,6 +1824,14 @@ class LogicUsers extends Logic
 		self::_moodleAPICallChunks($usersToAssign, 'core_role_assign_roles', 'An error occurred while assigning roles');
 	}
 
+	/**
+	 *
+	 */
+	private static function _core_role_unassign_roles($usersToUnassign)
+	{
+		self::_moodleAPICallChunks($usersToUnassign, 'core_role_unassign_roles', 'An error occurred while unassigning roles');
+	}
+	
 	/**
 	 *
 	 */

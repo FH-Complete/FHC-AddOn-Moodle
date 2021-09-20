@@ -350,6 +350,20 @@ class MoodleAPI extends MoodleClient
 	/**
 	 *
 	 */
+	public function core_role_unassign_roles($assignments)
+	{
+		return $this->call(
+			'core_role_unassign_roles',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'unassignments' => $assignments
+			)
+		);
+	}
+	
+	/**
+	 *
+	 */
 	public function core_course_delete_courses($moodleCoursesIDsArray)
 	{
 		return $this->call(
