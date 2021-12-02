@@ -832,7 +832,7 @@ class LogicUsers extends Logic
 					Output::printDebug('Number of students enrolled in moodle: '.count($usersToEnroll));
 				}
 
-				self::synchronizeGroupMembersToMoodleGroup($groupName, $moodleCourseId, $shouldbegroupmembers, $synchronizeGroup);
+				self::synchronizeGroupMembersToMoodleGroup($groupName, $moodleCourseId, $shouldbegroupmembers, $synchronizeGroup, true);
 
 				self::_printDebugEmptyline();
 			}
@@ -874,8 +874,13 @@ class LogicUsers extends Logic
 	    return $list;
 	}
 	
-	protected static function synchronizeGroupMembersToMoodleGroup($mdlgrpname, $moodleCourseId, $shouldbegroupmembers, $syncgroup) 
+	protected static function synchronizeGroupMembersToMoodleGroup($mdlgrpname, $moodleCourseId, $shouldbegroupmembers, $syncgroup, $onlyadd=false) 
 	{
+	    if ( false === $syncgroup ) 
+	    {
+			return;
+	    }
+
 	    $mdlgroup   = self::_core_group_get_course_groups($moodleCourseId, $mdlgrpname);
 
 	    if ( null === $mdlgroup && false === $syncgroup ) 
@@ -946,7 +951,7 @@ class LogicUsers extends Logic
 			}
 	    }
 
-	    if ( count($deletegroupmembers) > 0 ) 
+	    if ( count($deletegroupmembers) > 0 && $onlyadd === false ) 
 	    {
 			if ( !ADDON_MOODLE_DRY_RUN ) 
 			{
