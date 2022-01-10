@@ -721,6 +721,9 @@ class LogicUsers extends Logic
 			//
 			$courseAngerechnet = self::_getCourseAngerechnet($moodleCourseId);
 
+			//
+			$courseAbbrecher = self::_getCourseAbbrecher($moodleCourseId);
+			
 			Output::printDebug('Number of teaching units in database: '.Database::rowsNumber($lehreinheiten));
 			self::_printDebugEmptyline();
 
@@ -824,6 +827,17 @@ class LogicUsers extends Logic
 					Output::printDebug($debugMessage);
 				}
 
+				foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
+				{
+					if ( false !== array_search($moodleEnrolledUser->username, $courseAbbrecher) )
+					{
+						self::changeMoodleRole(ADDON_MOODLE_STUDENT_ROLEID, 
+									ADDON_MOODLE_LV_ANGERECHNET_ROLEID, 
+									$moodleEnrolledUser, 
+									$moodleCourseId);
+					}
+				}
+				
 				//
 				if (count($usersToEnroll) > 0)
 				{
@@ -1721,6 +1735,32 @@ class LogicUsers extends Logic
 		}
 
 		return $courseAngerechnet;
+	}
+
+	/**
+	 *
+	 */
+	private static function _getCourseAbbrecher($moodleCourseId)
+	{
+		$courseAbbrecher = array();
+
+		$courseAbbrecherDataset = parent::_dbCall(
+			'getCourseAbbrecher',
+			array($moodleCourseId),
+			'An error occurred while retrieving Abbrecher students'
+		);
+
+		if (Database::rowsNumber($courseAbbrecherDataset) > 0)
+		{
+			$courseAbbrecherAll = Database::fetchAll($courseAbbrecherDataset);
+
+			foreach ($courseAbbrecherAll as $ca)
+			{
+				$courseAbbrecher[] = $ca['student_uid'];
+			}
+		}
+
+		return $courseAbbrecher;
 	}
 
 	// --------------------------------------------------------------------------------------------
