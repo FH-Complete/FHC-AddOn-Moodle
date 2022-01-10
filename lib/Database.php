@@ -459,54 +459,18 @@ EOSQL;
 	/**
 	 *
 	 */
-	public function getCourseAbbrecher($moodleCourseId)
+	public function getSemesterAbbrecher($currentOrNextStudiensemester)
 	{
 		$query = <<<EOABRSQL
-			SELECT DISTINCT s.student_uid AS student_uid
-			FROM 
-			  (SELECT lg.studiengang_kz,
-					 lg.semester,
-					 lg.verband,
-					 lg.gruppe,
-					 lg.gruppe_kurzbz,
-					 m.studiensemester_kurzbz,
-					 m.gruppen,
-					 l.lehrveranstaltung_id,
-					 sl.studienplan_id
-			  FROM lehre.tbl_lehreinheitgruppe lg
-			  JOIN addon.tbl_moodle m
-				  ON lg.lehreinheit_id = m.lehreinheit_id
-					  AND m.mdl_course_id = {$this->db_add_param($moodleCourseId, FHC_INTEGER)}
-			  JOIN lehre.tbl_lehreinheit l
-				  ON lg.lehreinheit_id = l.lehreinheit_id
-			  JOIN lehre.tbl_studienplan_lehrveranstaltung sl ON sl.lehrveranstaltung_id = l.lehrveranstaltung_id
-			  UNION
-			  SELECT lg.studiengang_kz,
-					 lg.semester,
-					 lg.verband,
-					 lg.gruppe,
-					 lg.gruppe_kurzbz,
-					 m.studiensemester_kurzbz,
-					 m.gruppen,
-					 l.lehrveranstaltung_id,
-					 sl.studienplan_id
-			  FROM lehre.tbl_lehreinheitgruppe lg
-			  JOIN lehre.tbl_lehreinheit l USING(lehreinheit_id)
-			  JOIN addon.tbl_moodle m
-				  ON l.lehrveranstaltung_id = m.lehrveranstaltung_id
-					  AND l.studiensemester_kurzbz = m.studiensemester_kurzbz
-					  AND m.mdl_course_id = {$this->db_add_param($moodleCourseId, FHC_INTEGER)} 
-			  JOIN lehre.tbl_studienplan_lehrveranstaltung sl ON sl.lehrveranstaltung_id = l.lehrveranstaltung_id ) li
-			JOIN public.tbl_prestudentstatus ps
-					ON ps.status_kurzbz = 'Abbrecher'
-					AND ps.studiensemester_kurzbz = li.studiensemester_kurzbz
-					AND ps.ausbildungssemester = li.semester
-					AND ps.studienplan_id = li.studienplan_id
-			JOIN public.tbl_student s 
-					ON s.prestudent_id = ps.prestudent_id
-					AND s.studiengang_kz = li.studiengang_kz
-					AND s.verband = li.verband
-			ORDER BY student_uid
+			SELECT s.student_uid AS student_uid
+			  FROM 
+				public.tbl_prestudentstatus ps 
+			  JOIN 
+				public.tbl_student s 
+			      ON s.prestudent_id = ps.prestudent_id 
+			      AND studiensemester_kurzbz = {$this->db_add_param($currentOrNextStudiensemester, FHC_STRING)} 
+			      AND status_kurzbz = 'Abbrecher'
+			  ORDER BY student_uid
 EOABRSQL;
 
 		return $this->_execQuery($query);
