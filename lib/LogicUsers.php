@@ -720,7 +720,7 @@ class LogicUsers extends Logic
 
 			//
 			$courseAngerechnet = self::_getCourseAngerechnet($moodleCourseId);
-			
+
 			Output::printDebug('Number of teaching units in database: '.Database::rowsNumber($lehreinheiten));
 			self::_printDebugEmptyline();
 
@@ -1013,6 +1013,25 @@ class LogicUsers extends Logic
 	    }
 	}
 
+	protected static function filterUidsNotToUnenroll($moodleEnrolledUsers, $moodleCourseId, &$uidsToUnenrol) 
+	{
+	    $mdlgroup   = self::_core_group_get_course_groups($moodleCourseId, 'FHC-NoUnenrol');
+
+	    if ( null === $mdlgroup ) 
+	    {
+			return;
+	    }
+
+	    $groupmembers = self::_core_group_get_group_members($mdlgroup->id);
+		foreach ($moodleEnrolledUsers as $moodleEnrolledUser) 
+		{
+			if( in_array($moodleEnrolledUser->id, $groupmembers[0]->userids) ) 
+			{
+				unset($uidsToUnenrol[$moodleEnrolledUser->username]);
+			}
+		}
+	}
+
 	/**
 	 *
 	 */
@@ -1137,6 +1156,7 @@ class LogicUsers extends Logic
 			if ($groupsAssigned)
 			{
 				// Unenrol users for this group
+				self::filterUidsNotToUnenroll($moodleEnrolledUsers, $moodleCourseId, $uidsToUnenrol);
 				self::unenrolUsers($moodleCourseId, $uidsToUnenrol, $numUnenrolledGroupsMembers);
 			}
 
