@@ -403,6 +403,11 @@ else
 	echo '<div id="lehreinheitencheckboxen">';
 	foreach ($le->lehreinheiten as $row)
 	{
+		if ( in_array($row->lehrform_kurzbz, $fhc_moodle_wartung_ignore_le_typ) ) 
+		{
+			continue;
+		}
+		
 		//Gruppen laden
 		$gruppen = '';
 
