@@ -760,27 +760,47 @@ class LogicUsers extends Logic
 					$debugMessage = 'Syncing student '.$student->student_uid.':"'.$student->vorname.' '.$student->nachname.'"';
 					$userFound = false; //
 
+					if ( false !== array_search($student->student_uid, $semesterAbbrecher) )
+					{
+						continue;
+					}
+					
 					//
 					foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
 					{
 						//
 						if ($student->student_uid == $moodleEnrolledUser->username)
 						{
-							foreach( $moodleEnrolledUser->roles AS $role ) {
-								if( ($role->roleid === ADDON_MOODLE_LV_ANGERECHNET_ROLEID) 
-									&& (false === array_search($student->student_uid, $courseAngerechnet)) ) {
-									self::changeMoodleRole(ADDON_MOODLE_LV_ANGERECHNET_ROLEID, 
-										ADDON_MOODLE_STUDENT_ROLEID, 										
-										$moodleEnrolledUser, 
-										$moodleCourseId);
-								}
-								elseif ( ($role->roleid === ADDON_MOODLE_STUDENT_ROLEID) 
-									&& (false !== array_search($student->student_uid, $courseAngerechnet)) )
+							foreach( $moodleEnrolledUser->roles AS $role ) 
+							{
+								if ( ($role->roleid === ADDON_MOODLE_STUDENT_ROLEID) )
 								{
-									self::changeMoodleRole(ADDON_MOODLE_STUDENT_ROLEID, 
-										ADDON_MOODLE_LV_ANGERECHNET_ROLEID, 
-										$moodleEnrolledUser, 
-										$moodleCourseId);
+									if ( false !== array_search($student->student_uid, $courseAngerechnet) )
+									{
+										self::changeMoodleRole(ADDON_MOODLE_STUDENT_ROLEID, 
+											ADDON_MOODLE_LV_ANGERECHNET_ROLEID, 
+											$moodleEnrolledUser, 
+											$moodleCourseId);
+									}
+									elseif ( false !== array_search($student->student_uid, $semesterAbbrecher) )
+									{
+										self::changeMoodleRole(ADDON_MOODLE_STUDENT_ROLEID, 
+											ADDON_MOODLE_ABBRECHER_ROLEID, 
+											$moodleEnrolledUser, 
+											$moodleCourseId);									
+									}
+								}
+								elseif( ($role->roleid === ADDON_MOODLE_LV_ANGERECHNET_ROLEID) 
+									|| ($role->roleid === ADDON_MOODLE_ABBRECHER_ROLEID) ) 
+								{
+									if( (false === array_search($student->student_uid, $courseAngerechnet))
+										&& (false === array_search($student->student_uid, $semesterAbbrecher)) )
+									{
+										self::changeMoodleRole($role->roleid, 
+											ADDON_MOODLE_STUDENT_ROLEID, 
+											$moodleEnrolledUser, 
+											$moodleCourseId);										
+									}
 								}
 							}							
 							$debugMessage .= ' >> already enrolled in moodle';
@@ -833,7 +853,7 @@ class LogicUsers extends Logic
 							if ( false !== array_search($moodleEnrolledUser->username, $semesterAbbrecher) )
 							{
 								self::changeMoodleRole(ADDON_MOODLE_STUDENT_ROLEID, 
-											ADDON_MOODLE_LV_ANGERECHNET_ROLEID, 
+											ADDON_MOODLE_ABBRECHER_ROLEID, 
 											$moodleEnrolledUser, 
 											$moodleCourseId);
 								$numAbbrecher++;
