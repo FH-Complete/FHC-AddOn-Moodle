@@ -459,6 +459,26 @@ EOSQL;
 	/**
 	 *
 	 */
+	public function getSemesterAbbrecher($currentOrNextStudiensemester)
+	{
+		$query = <<<EOABRSQL
+			SELECT s.student_uid AS student_uid
+			  FROM 
+				public.tbl_prestudentstatus ps 
+			  JOIN 
+				public.tbl_student s 
+			      ON s.prestudent_id = ps.prestudent_id 
+			      AND studiensemester_kurzbz = {$this->db_add_param($currentOrNextStudiensemester, FHC_STRING)} 
+			      AND status_kurzbz = 'Abbrecher'
+			  ORDER BY student_uid
+EOABRSQL;
+
+		return $this->_execQuery($query);
+	}
+	
+	/**
+	 *
+	 */
 	public function getCoursesFromLehreinheit($studiensemester_kurzbz)
 	{
 		$query = 'SELECT DISTINCT

@@ -35,7 +35,10 @@ if (count($dbMoodleCoursesIDsArray) != count($moodleCourses))
 	Output::printWarning('The number of courses in the database and those present in moodle does not match!');
 }
 
-LogicUsers::synchronizeStudenten($moodleCourses); // All the magic happens here!
+// Retrieves the student_uids where status is 'Abbrecher' for the selected Studiensemester
+$semesterAbbrecher = LogicUsers::getSemesterAbbrecher($currentOrNextStudiensemester);
+
+LogicUsers::synchronizeStudenten($moodleCourses, true, $semesterAbbrecher); // All the magic happens here!
 
 Output::printInfo('Ended synchronize students script on '.date(ADDON_MOODLE_START_END_DATE_FORMAT));
 Output::printLineSeparator();

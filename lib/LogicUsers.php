@@ -695,7 +695,7 @@ class LogicUsers extends Logic
 	/**
 	 *
 	 */
-	public static function synchronizeStudenten($moodleCourses, $showSummary = true)
+	public static function synchronizeStudenten($moodleCourses, $showSummary = true, $semesterAbbrecher = array())
 	{
 		//
 		$numCreatedUsers = 0;
@@ -760,27 +760,47 @@ class LogicUsers extends Logic
 					$debugMessage = 'Syncing student '.$student->student_uid.':"'.$student->vorname.' '.$student->nachname.'"';
 					$userFound = false; //
 
+					if ( false !== array_search($student->student_uid, $semesterAbbrecher) )
+					{
+						continue;
+					}
+					
 					//
 					foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
 					{
 						//
 						if ($student->student_uid == $moodleEnrolledUser->username)
 						{
-							foreach( $moodleEnrolledUser->roles AS $role ) {
-								if( ($role->roleid === ADDON_MOODLE_LV_ANGERECHNET_ROLEID) 
-									&& (false === array_search($student->student_uid, $courseAngerechnet)) ) {
-									self::changeMoodleRole(ADDON_MOODLE_LV_ANGERECHNET_ROLEID, 
-										ADDON_MOODLE_STUDENT_ROLEID, 										
-										$moodleEnrolledUser, 
-										$moodleCourseId);
-								}
-								elseif ( ($role->roleid === ADDON_MOODLE_STUDENT_ROLEID) 
-									&& (false !== array_search($student->student_uid, $courseAngerechnet)) )
+							foreach( $moodleEnrolledUser->roles AS $role ) 
+							{
+								if ( ($role->roleid === ADDON_MOODLE_STUDENT_ROLEID) )
 								{
-									self::changeMoodleRole(ADDON_MOODLE_STUDENT_ROLEID, 
-										ADDON_MOODLE_LV_ANGERECHNET_ROLEID, 
-										$moodleEnrolledUser, 
-										$moodleCourseId);
+									if ( false !== array_search($student->student_uid, $courseAngerechnet) )
+									{
+										self::changeMoodleRole(ADDON_MOODLE_STUDENT_ROLEID, 
+											ADDON_MOODLE_LV_ANGERECHNET_ROLEID, 
+											$moodleEnrolledUser, 
+											$moodleCourseId);
+									}
+									elseif ( false !== array_search($student->student_uid, $semesterAbbrecher) )
+									{
+										self::changeMoodleRole(ADDON_MOODLE_STUDENT_ROLEID, 
+											ADDON_MOODLE_ABBRECHER_ROLEID, 
+											$moodleEnrolledUser, 
+											$moodleCourseId);									
+									}
+								}
+								elseif( ($role->roleid === ADDON_MOODLE_LV_ANGERECHNET_ROLEID) 
+									|| ($role->roleid === ADDON_MOODLE_ABBRECHER_ROLEID) ) 
+								{
+									if( (false === array_search($student->student_uid, $courseAngerechnet))
+										&& (false === array_search($student->student_uid, $semesterAbbrecher)) )
+									{
+										self::changeMoodleRole($role->roleid, 
+											ADDON_MOODLE_STUDENT_ROLEID, 
+											$moodleEnrolledUser, 
+											$moodleCourseId);										
+									}
 								}
 							}							
 							$debugMessage .= ' >> already enrolled in moodle';
@@ -824,6 +844,25 @@ class LogicUsers extends Logic
 					Output::printDebug($debugMessage);
 				}
 
+				if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
+				{
+					if (count($semesterAbbrecher) > 0) {
+						$numAbbrecher = 0;
+						foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
+						{
+							if ( false !== array_search($moodleEnrolledUser->username, $semesterAbbrecher) )
+							{
+								self::changeMoodleRole(ADDON_MOODLE_STUDENT_ROLEID, 
+											ADDON_MOODLE_ABBRECHER_ROLEID, 
+											$moodleEnrolledUser, 
+											$moodleCourseId);
+								$numAbbrecher++;
+							}
+						}
+						Output::printDebug('Number of Abbrecher role changed in moodle: '.$numAbbrecher);
+					}
+				}
+				
 				//
 				if (count($usersToEnroll) > 0)
 				{
@@ -994,6 +1033,25 @@ class LogicUsers extends Logic
 	    }
 	}
 
+	protected static function filterUidsNotToUnenroll($moodleEnrolledUsers, $moodleCourseId, &$uidsToUnenrol) 
+	{
+	    $mdlgroup   = self::_core_group_get_course_groups($moodleCourseId, 'FHC-NoUnenrol');
+
+	    if ( null === $mdlgroup ) 
+	    {
+			return;
+	    }
+
+	    $groupmembers = self::_core_group_get_group_members($mdlgroup->id);
+		foreach ($moodleEnrolledUsers as $moodleEnrolledUser) 
+		{
+			if( in_array($moodleEnrolledUser->id, $groupmembers[0]->userids) ) 
+			{
+				unset($uidsToUnenrol[$moodleEnrolledUser->username]);
+			}
+		}
+	}
+
 	/**
 	 *
 	 */
@@ -1118,6 +1176,7 @@ class LogicUsers extends Logic
 			if ($groupsAssigned)
 			{
 				// Unenrol users for this group
+				self::filterUidsNotToUnenroll($moodleEnrolledUsers, $moodleCourseId, $uidsToUnenrol);
 				self::unenrolUsers($moodleCourseId, $uidsToUnenrol, $numUnenrolledGroupsMembers);
 			}
 
@@ -1419,6 +1478,32 @@ class LogicUsers extends Logic
 			array($days),
 			'An error occurred while retrieving new users'
 		);
+	}
+
+	/**
+	 *
+	 */
+	public static function getSemesterAbbrecher($currentOrNextStudiensemester)
+	{
+		$semesterAbbrecher = array();
+
+		$semesterAbbrecherDataset = parent::_dbCall(
+			'getSemesterAbbrecher',
+			array($currentOrNextStudiensemester),
+			'An error occurred while retrieving Abbrecher students'
+		);
+
+		if (Database::rowsNumber($semesterAbbrecherDataset) > 0)
+		{
+			$semesterAbbrecherAll = Database::fetchAll($semesterAbbrecherDataset);
+
+			foreach ($semesterAbbrecherAll as $ca)
+			{
+				$semesterAbbrecher[] = $ca['student_uid'];
+			}
+		}
+
+		return $semesterAbbrecher;
 	}
 
 	// --------------------------------------------------------------------------------------------
