@@ -125,6 +125,9 @@ define('ADDON_MOODLE_DRY_RUN', false);
 
 define('ADDON_MOODLE_START_END_DATE_FORMAT', 'Y-m-d H:i:s');
 
+// do not list this LE Types on the page to create moodle courses (moodle_wartung.php)
+$fhc_moodle_wartung_ignore_le_typ = array();
+
 // ------------------------------------------------------------------------------------------------------------
 // Connection configuration
 
