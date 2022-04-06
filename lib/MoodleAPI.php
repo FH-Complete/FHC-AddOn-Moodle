@@ -45,6 +45,26 @@ class MoodleAPI extends MoodleClient
 	/**
 	 *
 	 */
+	public function core_course_search_courses($criterianame, $criteriavalue, $page = 0, $perpage = 0, $requiredcapabilities = [], $limittoenrolled = 0, $onlywithcompletion = 0)
+	{
+		return $this->call(
+			'core_course_search_courses',
+			MoodleClient::HTTP_POST_METHOD,
+			[
+				'criterianame' => $criterianame,
+				'criteriavalue' => $criteriavalue,
+				'page' => $page,
+				'perpage' => $perpage,
+				'requiredcapabilities' => $requiredcapabilities,
+				'limittoenrolled' => $limittoenrolled,
+				'onlywithcompletion' => $onlywithcompletion
+			]
+		);
+	}
+
+	/**
+	 *
+	 */
 	public function core_enrol_get_enrolled_users($moodleCourseId)
 	{
 		return $this->call(

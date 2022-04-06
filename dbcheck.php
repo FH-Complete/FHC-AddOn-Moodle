@@ -112,6 +112,43 @@ if(!$result = @$db->db_query("SELECT 1 FROM addon.tbl_moodle"))
 	else
 		echo ' addon.tbl_moodle: Tabelle addon.tbl_moodle hinzugefuegt!<br>';
 }
+if(!$result = @$db->db_query("SELECT 1 FROM addon.tbl_moodle_quellkurs"))
+{
+	$qry = 'CREATE TABLE addon.tbl_moodle_quellkurs
+			(
+				moodle_quellkurs_id bigint NOT NULL,
+				lehrveranstaltung_id bigint NOT NULL,
+				sprache varchar(16) NOT NULL,
+				mdl_course_id bigint NOT NULL,
+				insertamum timestamp,
+				insertvon varchar(32),
+				updateamum timestamp,
+				updatevon varchar(32)
+			);
+
+	CREATE SEQUENCE addon.seq_moodle_quellkurs_moodle_quellkurs_id
+	 INCREMENT BY 1
+	 NO MAXVALUE
+	 NO MINVALUE
+	 CACHE 1;
+
+	ALTER TABLE addon.tbl_moodle_quellkurs ADD CONSTRAINT pk_moodle_quellkurs PRIMARY KEY (moodle_quellkurs_id);
+	ALTER TABLE addon.tbl_moodle_quellkurs ALTER COLUMN moodle_quellkurs_id SET DEFAULT nextval(\'addon.seq_moodle_quellkurs_moodle_quellkurs_id\');
+
+	ALTER TABLE addon.tbl_moodle_quellkurs ADD CONSTRAINT fk_moodle_quellkurs_lehrveranstaltung FOREIGN KEY (lehrveranstaltung_id) REFERENCES lehre.tbl_lehrveranstaltung (lehrveranstaltung_id) ON DELETE RESTRICT ON UPDATE CASCADE;
+	ALTER TABLE addon.tbl_moodle_quellkurs ADD CONSTRAINT fk_moodle_quellkurs_sprache FOREIGN KEY (sprache) REFERENCES public.tbl_sprache (sprache) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+	GRANT SELECT, UPDATE, INSERT, DELETE ON addon.tbl_moodle_quellkurs TO web;
+	GRANT SELECT, UPDATE, INSERT, DELETE ON addon.tbl_moodle_quellkurs TO vilesci;
+	GRANT SELECT, UPDATE ON addon.seq_moodle_quellkurs_moodle_quellkurs_id TO web;
+	GRANT SELECT, UPDATE ON addon.seq_moodle_quellkurs_moodle_quellkurs_id TO vilesci;
+	';
+
+	if(!$db->db_query($qry))
+		echo '<strong>addon.tbl_moodle_quellkurs: '.$db->db_last_error().'</strong><br>';
+	else
+		echo ' addon.tbl_moodle_quellkurs: Tabelle addon.tbl_moodle_quellkurs hinzugefuegt!<br>';
+}
 
 // Cronjob Installieren
 if($result = $db->db_query("SELECT 1 FROM system.tbl_cronjob WHERE titel='AddOn Moodle User Sync'"))

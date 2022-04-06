@@ -31,4 +31,11 @@ $this->phrasen['moodle/kursfuerganzeLV']='einen Moodle Kurs für die gesamte LV 
 $this->phrasen['moodle/kursfuerLE']='einen Moodle Kurs für einzelne Lehreinheiten anlegen';
 $this->phrasen['moodle/zusatztextWartung']='';
 $this->phrasen['moodle/subTextIcon']='<a href="'.APP_ROOT.'addons/moodle/cis/moodle_wartung.php?lvid=%s&stsem=%s" class="Item">Kurse anlegen</a>';
+$this->phrasen['moodle/template.update.success']='Template erfolgreich gespeichert';
+$this->phrasen['moodle/error.moodle.wrong']='Moodle Id existiert nicht';
+$this->phrasen['moodle/error.template.wrong']='Template Id existiert nicht';
+$this->phrasen['moodle/error.update.empty']='Nothing to update';
+$this->phrasen['moodle/error.moodle.overwrite']='The template is already mapped to a moodle course. Use the overwrite checkbox to overwrite the moodle course';
+$this->phrasen['moodle/error.sql']='DB Error: %s';
+$this->phrasen['moodle/error.sql:']='Unknown DB Error';
 ?>
