@@ -26,6 +26,7 @@ $menu_addon=array
 		'name'=>'Moodle', 'permissions'=>array('basis/moodle'),
 		'Account'=>array('name'=>'Account Moodle', 'link'=>'../addons/moodle/vilesci/account_verwaltung.php', 'target'=>'main'),
 		'Kursentfernen'=>array('name'=>'Kurszuteilung', 'link'=>'../addons/moodle/vilesci/kurs_verwaltung.php', 'target'=>'main'),
+        'quellkursverwaltung'=>array('name'=>'Quellkurszuteilung', 'link'=>'../addons/moodle/vilesci/quellkurs_verwaltung.php', 'target'=>'main'),
 		'Rollenzuteilung'=>array('name'=>'Rollenzuteilung', 'link'=>'../addons/moodle/vilesci/rollenzuteilung.php', 'target'=>'main'),
 		'UserSync'=>array('name'=>'User Sync', 'link'=>'../addons/moodle/vilesci/usersSynchronization.php', 'target'=>'main'),
 		'UserMassCreate'=>array('name'=>'User Massenanlage', 'link'=>'../addons/moodle/vilesci/account_masscreate.php', 'target'=>'main'),
