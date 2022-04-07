@@ -20,7 +20,7 @@
  */
 
 /*
- * TODO(chris): Description
+ * Administrate assignments for LV Templates and Moodle Source Courses
  */
 
 require_once('../lib/Logic.php'); // A lot happens here!
@@ -42,11 +42,14 @@ $templates = new LogicTemplates();
 if(!$rechte->isBerechtigt('addon/moodle'))
 	die('Sie haben keine Berechtigung für diese Seite');
 
+$curr_lang = getSprache();
+$p = new phrasen($curr_lang);
+
 // Messages to be displayed like saving success/error
 $msgBox = '';
 function add_error($msg) {
 	global $msgBox;
-	$p = new phrasen(getSprache());
+	global $p;
 	$values = [];
 	if (isset($msg[5]) && substr($msg, 0, 4) == 'sql:') {
 		$values = [substr($msg, 4)];
@@ -77,7 +80,7 @@ if (isset($_GET['template_id'])) {
 		if ($error = $templates->updateMoodleQuellkurse($template, $_POST['mdl_courses'])) {
 			add_error($error);
 		} else {
-			add_success('template.update.success');
+			add_success('success.template.update');
 			$template = $templates->getTemplate($_GET['template_id']);
 		}
 	}
@@ -93,7 +96,7 @@ if (isset($_GET['mdl_course_id'])) {
 		if ($error = $templates->updateMoodleQuellkurs($mdl_course, $_POST['template'], $_POST['sprache'], isset($_POST['overwrite']))) {
 			add_error($error);
 		} else {
-			add_success('template.update.success');
+			add_success('success.template.update');
 			$mdl_course = $templates->getSourceCourse($_GET['mdl_course_id']);
 		}
 	}
@@ -106,13 +109,13 @@ if (isset($_GET['mdl_course_id'])) {
 <html>
 	<head>
 		<meta charset="UTF-8">
-		<title>Moodle - Quellkursverwaltung</title>
+		<title><?= $p->t('moodle/quellkurs.title'); ?></title>
 		<link rel="stylesheet" href="../../../skin/fhcomplete.css" type="text/css">
 		<link rel="stylesheet" href="../../../skin/vilesci.css" type="text/css">
 		<link href="../../../skin/jquery-ui-1.9.2.custom.min.css" rel="stylesheet" type="text/css">
 		<script type="text/javascript" src="../../../vendor/components/jquery/jquery.min.js"></script>
 		<script type="text/javascript" src="../../../vendor/components/jqueryui/jquery-ui.min.js"></script>
-		<?php require_once '../../../include/meta/jquery-tablesorter.php';?>
+		<?php require_once '../../../include/meta/jquery-tablesorter.php'; ?>
 		<script type="text/javascript">
 			$(function(e) {
 				$('.action-delete').click(function(e) {
@@ -260,39 +263,20 @@ if (isset($_GET['mdl_course_id'])) {
 			td, th {
 				padding: .1em .2em;
 			}
-			/*.ui-button,
-			.ui-button:visited,
-			.ui-button:link {
-				cursor: pointer;
-				color: #000;
-				text-decoration: none;
-				border-radius: 4px;
-				-webkit-border-radius: 4px;
-				-moz-border-radius: 4px;
-				background-color: #E9E9ED;
-				padding: 3px 8px;
-				border: 1px solid #8F8F9D;
-				display: inline-block;
-				vertical-align: middle;
-			}
-			.ui-button:hover {
-				background-color: #D0D0D7;
-				border-color: #676774;
-			}*/
 		</style>
 	</head>
 
 <?php
 echo '
 <body>
-	<h1>Moodle - Quellkursverwaltung</h1>
-	<span id="msgBox">'. $msgBox. '</span>';// TODO(chris): l10n
+	<h1>' . $p->t('moodle/quellkurs.title') . '</h1>
+	<span id="msgBox">'. $msgBox. '</span>';
 
 if ($_action == 'moodle') {
 	$value = '';
 	$label = '';
 	if ($mdl_course->template_id) {
-		$value = ' disabled value="' . $mdl_course->template_id . '"><button class="action-delete"><img src="../skin/images/tree-diagramm-delete.png" title="Zuordnung zu Kurs löschen" height="12"></button';
+		$value = ' disabled value="' . $mdl_course->template_id . '"><button class="action-delete"><img src="../skin/images/tree-diagramm-delete.png" title="' . $p->t('moodle/quellkurs.form.btn.delete') . '" height="12"></button';
 		$label = $templates->getTemplate($mdl_course->template_id);
 		$label = $label ? $label->bezeichnung : '';
 	}
@@ -301,21 +285,21 @@ if ($_action == 'moodle') {
 		$label = '';
 	}
 	echo '
-	<h2>' . ($mdl_course->template_id ? 'Zuteilungen bearbeiten' : 'Neue Zuteilung erstellen') . ' (' . $mdl_course->id . ') - <a href="?" class="ui-button ui-button-secondary">back</a></h2>
+	<h2>' . ($mdl_course->template_id ? $p->t('moodle/quellkurs.title.assignment.change') : $p->t('moodle/quellkurs.title.assignment.new')) . ' (' . $mdl_course->id . ') - <a href="?" class="ui-button ui-button-secondary">' . $p->t('moodle/form.btn.back') . '</a></h2>
 	<form method="POST">
 		<fieldset>
 			<legend>' . $mdl_course->fullname . '</legend>
 			<table>
 				<tbody>
 					<tr>
-						<th align="left">Template Kurs</th>
+						<th align="left">' . $p->t('moodle/quellkurs.form.label.template') . '</th>
 						<td>
 							<input type="text" class="ac-template" name="template"' . $value . '>
 							<span class="text-template_name">' . $label . '</span>
 						</td>
 					</tr>
 					<tr>
-						<th align="left">Sprache</th>
+						<th align="left">' . $p->t('moodle/quellkurs.form.label.language') . '</th>
 						<td>
 							<select name="sprache">';
 	foreach ($sprachen->result as $sprache) {
@@ -323,14 +307,14 @@ if ($_action == 'moodle') {
 		if (isset($_POST['sprache']))
 			$selected = ($_POST['sprache'] == $sprache->sprache) ? ' selected' : '';
 		echo '
-								<option' . $selected . '>' . $sprache->sprache . '</option>';
+								<option value="' . $sprache->sprache . '"' . $selected . '>' . $sprache->bezeichnung_arr[$curr_lang] . '</option>';
 	}
 	echo '
 							</select>
 						</td>
 					</tr>
 					<tr class="input-overwrite">
-						<th align="left">Overwrite</th>
+						<th align="left">' . $p->t('moodle/quellkurs.form.label.overwrite') . '</th>
 						<td>
 							<input type="checkbox" name="overwrite" value="1">
 						</td>
@@ -339,7 +323,7 @@ if ($_action == 'moodle') {
 				<tfoot>
 					<tr>
 						<td>&nbsp;</td>
-						<td><button type="submit">speichern</button></td>
+						<td><button type="submit">' . $p->t('moodle/form.btn.save') . '</button></td>
 					</tr>
 				</tfoot>
 			</table>
@@ -347,15 +331,15 @@ if ($_action == 'moodle') {
 	</form>';
 } elseif ($_action == 'template') {
 	echo '
-	<h2>' . (count($template->mdl_courses) ? 'Zuteilungen bearbeiten' : 'Neue Zuteilung erstellen') . ' - <a href="?" class="ui-button ui-button-secondary">back</a></h2>
+	<h2>' . (count($template->mdl_courses) ? $p->t('moodle/quellkurs.title.assignment.change') : $p->t('moodle/quellkurs.title.assignment.new')) . ' - <a href="?" class="ui-button ui-button-secondary">' . $p->t('moodle/form.btn.back') . '</a></h2>
 	<form method="POST">
 		<fieldset>
 			<legend>' . $template->bezeichnung . '</legend>
 			<table>
 				<thead>
 					<tr>
-						<th align="left">Sprache</th>
-						<th align="left">Moodle Kurs</th>
+						<th align="left">' . $p->t('moodle/quellkurs.form.label.language') . '</th>
+						<th align="left">' . $p->t('moodle/quellkurs.form.label.moodle_course') . '</th>
 					</tr>
 				</thead>
 				<tbody>';
@@ -366,13 +350,13 @@ if ($_action == 'moodle') {
 		$value = '';
 		$label = '';
 		if (isset($template->mdl_courses[$sprache->sprache])) {
-			$value = ' disabled value="' . $template->mdl_courses[$sprache->sprache] . '"><button class="action-delete"><img src="../skin/images/tree-diagramm-delete.png" title="Zuordnung zu Kurs löschen" height="12"></button';
+			$value = ' disabled value="' . $template->mdl_courses[$sprache->sprache] . '"><button class="action-delete"><img src="../skin/images/tree-diagramm-delete.png" title="' . $p->t('moodle/quellkurs.form.btn.delete') . '" height="12"></button';
 			$label = $templates->getSourceCourse($template->mdl_courses[$sprache->sprache]);
 			$label = $label ? $label->fullname : '';
 		}
 		$tr = '
 					<tr>
-						<' . $tc . ' align="left">' . $sprache->sprache . '</' . $tc . '>
+						<' . $tc . ' align="left">' . $sprache->bezeichnung_arr[$curr_lang] . '</' . $tc . '>
 						<td>
 							<input type="text" class="ac-moodle" name="mdl_courses[' . $sprache->sprache . ']"' . $value . '>
 							<span class="text-mdl_course_name">' . $label . '</span>
@@ -390,7 +374,7 @@ if ($_action == 'moodle') {
 				<tfoot>
 					<tr>
 						<td>&nbsp;</td>
-						<td><button type="submit">speichern</button></td>
+						<td><button type="submit">' . $p->t('moodle/form.btn.save') . '</button></td>
 					</tr>
 				</tfoot>
 			</table>
@@ -398,12 +382,12 @@ if ($_action == 'moodle') {
 	</form>';
 } else {
 	echo '
-	<h2>Zuteilungen verwalten</h2>
+	<h2>' . $p->t('moodle/quellkurs.title.assignment') . '</h2>
 	<fieldset>
-		<legend>Neue Zuteilung erstellen</legend>
+		<legend>' . $p->t('moodle/quellkurs.title.assignment.new') . '</legend>
 		<table>
 			<tr>
-				<td><b>Moodle Kurs</b></td>
+				<td><b>' . $p->t('moodle/quellkurs.form.label.moodle_course') . '</b></td>
 				<td>
 					<form method="GET" action="quellkurs_verwaltung.php">
 						<input type="text" class="ac-moodle" name="mdl_course_id" value="">
@@ -416,7 +400,7 @@ if ($_action == 'moodle') {
 				<td colspan="2">-oder-</td>
 			</tr>
 			<tr>
-				<td><b>Template Kurs</b></td>
+				<td><b>' . $p->t('moodle/quellkurs.form.label.template') . '</b></td>
 				<td>
 					<form method="GET" action="quellkurs_verwaltung.php">
 						<input type="text" class="ac-template" name="template_id" value="">
@@ -429,12 +413,12 @@ if ($_action == 'moodle') {
 	</fieldset>
 	&nbsp;
 	<fieldset>
-		<legend>Templates ohne Quellkurs</legend>';
+		<legend>' . $p->t('moodle/quellkurs.title.unassigned') . '</legend>';
 
 	if (isset($_GET['missing_templates'])) {
 		echo '
 		<table>
-			<tr class="liste"><th>Id</th><th>Bezeichnung</th></tr>';
+			<tr class="liste"><th>' . $p->t('moodle/model.lv.id') . '</th><th>' . $p->t('moodle/model.lv.bezeichnung') . '</th></tr>';
 
 		$db = new basis_db();
 		$qry = "SELECT lv.lehrveranstaltung_id, lv.bezeichnung 
@@ -456,7 +440,7 @@ if ($_action == 'moodle') {
 	} else {
 		echo '
 		<form method="GET" action="quellkurs_verwaltung.php">
-			<button type="submit" name="missing_templates">anzeigen</button>
+			<button type="submit" name="missing_templates">' . $p->t('moodle/form.btn.show') . '</button>
 		</form>';
 	}
 
