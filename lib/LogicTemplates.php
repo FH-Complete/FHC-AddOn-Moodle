@@ -1,6 +1,6 @@
 <?php
-
 require_once('Logic.php');
+
 
 /**
  *
@@ -104,7 +104,7 @@ class LogicTemplates extends Database
 			$num_rows = $this->db_num_rows($result);
 			if ($num_rows) {
 				if ($num_rows > 1)
-					throw new Exception('too many db entries for moodle source course id: ' . $mdl_course_id); // TODO(chris): error handling
+					throw new Exception('Too many DB entries for Moodle Source Course id: ' . $mdl_course_id); // TODO(chris): error handling
 				$row = self::fetchRow($result);
 
 				$res[0]->template_id = $row->lehrveranstaltung_id;
@@ -121,8 +121,22 @@ class LogicTemplates extends Database
 	 */
 	public function isSourceCourse($mdl_course)
 	{
-		// TODO(chris): implement
-		return !!$mdl_course;
+		if (!$mdl_course)
+			return false;
+
+		if (ADDON_MOODLE_SOURCE_COURSE_ID) {
+			$moodle = new MoodleAPI();
+			$cat = $moodle->call('core_course_get_categories', MoodleClient::HTTP_POST_METHOD, ['criteria' => [['key'=>'id','value'=>$mdl_course->categoryid]], 'addsubcategories' => 0]);
+			if (!$cat)
+				return false;
+			
+			if (strpos($cat[0]->path . '/', '/' . ADDON_MOODLE_SOURCE_COURSE_ID . '/') === FALSE)
+				return false;
+		}
+
+		// TODO(chris): implement?
+
+		return true;
 	}
 
 	/**
