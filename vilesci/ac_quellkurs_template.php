@@ -17,6 +17,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  * Authors: Manfred Kindl <kindlm@technikum-wien.at>
  *			Cristina Hainberger	<hainberg@technikum-wien.at>
+ *          Christopher Gerbrich <christopher.gerbrich@technikum-wien.at>
  */
 require_once(dirname(__FILE__).'/../../../config/cis.config.inc.php');
 require_once(dirname(__FILE__).'/../../../include/basis_db.class.php');

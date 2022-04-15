@@ -17,6 +17,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  * Authors: Manfred Kindl <kindlm@technikum-wien.at>
  *			Cristina Hainberger	<hainberg@technikum-wien.at>
+ *          Christopher Gerbrich <christopher.gerbrich@technikum-wien.at>
  */
 require_once(dirname(__FILE__).'/../../../config/cis.config.inc.php');
 require_once(dirname(__FILE__).'/../../../include/basis_db.class.php');
@@ -54,10 +55,14 @@ $data = [];
 $result = [];
 $moodle = new MoodleAPI();
 $templates = new LogicTemplates();
-if ($res = $moodle->core_course_get_courses($searchItems)) {
-	foreach ($res as $course) {
-		if ($templates->isSourceCourse($course))
-			$result[$course->id] = ['value' => $course->id, 'label' => $course->fullname];
+foreach ($searchItems as $searchItem) {
+	if (is_numeric($searchItem)) {
+		if ($res = $moodle->core_course_get_courses([$searchItem])) {
+			foreach ($res as $course) {
+				if ($templates->isSourceCourse($course))
+					$result[$course->id] = ['value' => $course->id, 'label' => $course->fullname];
+			}
+		}
 	}
 }
 foreach ($searchItems as $searchItem) {

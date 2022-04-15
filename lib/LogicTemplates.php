@@ -134,8 +134,6 @@ class LogicTemplates extends Database
 				return false;
 		}
 
-		// TODO(chris): implement?
-
 		return true;
 	}
 
@@ -149,8 +147,12 @@ class LogicTemplates extends Database
 		$qrys = [];
 		foreach ($mdl_courses as $sprache => $mdl_course_id) {
 			if ($mdl_course_id) {
-				if (!$this->isSourceCourse($this->getSourceCourse($mdl_course_id)))
+				$mdl_course = $this->getSourceCourse($mdl_course_id);
+				if (!$this->isSourceCourse($mdl_course))
 					return 'moodle.wrong';
+
+				if ($mdl_course->template_id || $mdl_course->template_sprache)
+					return 'moodle.duplicate';
 
 				if (isset($template->mdl_courses[$sprache])) {
 					$qrys[] = "UPDATE addon.tbl_moodle_quellkurs 

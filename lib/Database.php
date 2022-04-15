@@ -947,6 +947,22 @@ EOABRSQL;
 	/**
 	 *
 	 */
+	public function getCoursesLehrveranstaltungStudiensemester($lehrveranstaltung_id, $studiensemester_kurzbz)
+ 	{
+ 		$query = 'SELECT
+					*
+				FROM
+					addon.tbl_moodle
+				WHERE
+					lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id, FHC_INTEGER).'
+					AND studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz);
+
+		return $this->_execQuery($query);
+	}
+
+	/**
+	 *
+	 */
 	public function coursesLehrveranstaltungStudiensemesterExists($lehrveranstaltung_id, $studiensemester_kurzbz)
  	{
  		$query = 'SELECT

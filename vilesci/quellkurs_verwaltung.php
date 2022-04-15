@@ -138,7 +138,7 @@ if (isset($_GET['mdl_course_id'])) {
 						return false;
 					}
 				}).focus(function(e) {
-					$(this).parent().removeClass('input_ok input_error');
+					$(this).removeClass('input_ok input_error');
 				}).blur(function(e) {
 					$(this).trigger('check.ac-moodle');
 				}).on('check.ac-moodle', function(e) {

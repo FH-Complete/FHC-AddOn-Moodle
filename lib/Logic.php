@@ -399,6 +399,18 @@ abstract class Logic
 	/**
 	 *
 	 */
+	public static function getCoursesLehrveranstaltungStudiensemester($lehrveranstaltung_id, $studiensemester_kurzbz)
+	{
+		return self::_dbCall(
+			'getCoursesLehrveranstaltungStudiensemester',
+			array($lehrveranstaltung_id, $studiensemester_kurzbz),
+			'An error occurred while retrieving courses by lehrveranstaltung and studiensemester'
+		);
+	}
+
+	/**
+	 *
+	 */
 	public static function coursesLehrveranstaltungStudiensemesterExists($lehrveranstaltung_id, $studiensemester_kurzbz)
 	{
 		return self::_dbCall(

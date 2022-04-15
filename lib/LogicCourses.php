@@ -1,6 +1,7 @@
 <?php
 
 require_once('Logic.php');
+require_once('LogicTemplates.php');
 
 /**
  *
@@ -9,6 +10,201 @@ class LogicCourses extends Logic
 {
 	// --------------------------------------------------------------------------------------------
     // Public business logic methods
+
+	/**
+	 * 
+	 */
+	public static function getTestCourses($lehrveranstaltung, $stsem, $prefix = 'TK')
+	{
+		$testCourse = parent::getTestCourses($lehrveranstaltung->lehrveranstaltung_id, $stsem, $prefix);
+		if (!Database::rowsNumber($testCourse))
+			return ['existing' => [], 'missing' => []];
+		$testCourse = Database::fetchRow($testCourse)->coursename;
+		$testCourses = [''];
+
+		if (self::isStandardized($lehrveranstaltung)) {
+			$languages = self::getSprachenFromLv($lehrveranstaltung);
+			foreach ($languages as $lang) {
+				if ($lang != $lehrveranstaltung->sprache) {
+					$testCourses[] = '-' . $lang;
+				}
+			}
+		}
+
+		$result = ['existing' => [], 'missing' => [], 'name' => $testCourse];
+		foreach ($testCourses as $lang) {
+			$moodleCourse = self::getCourseByShortname($testCourse . strtoupper($lang));
+			if ($moodleCourse) {
+				$result['existing'][] = $moodleCourse;
+			} else {
+				$result['missing'][] = $lang;
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * 
+	 */
+	public static function isValidSourceCourse($mdl_source_course_id)
+	{
+		$result = self::_moodleAPICall(
+			'local_fhtw_std_latest_template',
+			[
+				$mdl_source_course_id
+			],
+			'An error occurred while checking the latest template of Source Course: ' . $mdl_source_course_id
+		);
+		if (!$result || !property_exists($result, 'latest_template'))
+			return false;
+		return !!($result->latest_template);
+	}
+
+	/**
+	 * 
+	 */
+	public static function getSourceCourseId($template_id, $sprache)
+	{
+		$template = new LogicTemplates();
+		$template = $template->getTemplate($template_id);
+		if (!$template || !isset($template->mdl_courses[$sprache]))
+			return null;
+
+		return $template->mdl_courses[$sprache];
+	}
+
+	/**
+	 * 
+	 */
+	public static function startSourceCourseCopy($source_mdl_course_id, $target_mdl_course_id)
+	{
+		$result = self::_moodleAPICall(
+			'local_fhtw_std_restore_qk',
+			[
+				$source_mdl_course_id,
+				$target_mdl_course_id
+			],
+			'An error occurred while starting the source course recovery from moodle'
+		);
+		return $result;
+	}
+
+	/**
+	 * 
+	 */
+	public static function getSourceCourseCopyState($mdl_course_id)
+	{
+		$result = self::_moodleAPICall(
+			'local_fhtw_std_current_restore',
+			[
+				$mdl_course_id
+			],
+			'An error occurred while getting the source course recovery state from moodle'
+		);
+		return $result;
+	}
+
+	/**
+	 * 
+	 */
+	public static function isStandardized($lv)
+	{
+		return $lv->lehrveranstaltung_template_id;
+	}
+
+	/**
+	 * 
+	 */
+	public static function getSprachenFromLv($lv)
+	{
+		$logic = new LogicTemplates();
+		$template = $logic->getTemplate($lv->lehrveranstaltung_template_id);
+		if (!$template)
+			return [];
+		return array_keys($template->mdl_courses);
+	}
+
+	/**
+	 * 
+	 */
+	public static function getLesFromArrayBySprache($les)
+	{
+		$le = new lehreinheit();
+		
+		$result = [];
+		foreach ($les as $le_id) {
+			$le->load($le_id);
+			if (!isset($result[$le->sprache]))
+				$result[$le->sprache] = [];
+			$result[$le->sprache][] = $le->lehreinheit_id;
+		}
+		return $result;	
+	}
+
+	/**
+	 * 
+	 */
+	public static function getLesFromLvBySprache($lvid, $stsem, $fhc_moodle_wartung_ignore_le_typ)
+	{
+		$les = new lehreinheit();
+		$les->load_lehreinheiten($lvid, $stsem);
+		
+		$result = [];
+		foreach ($les->lehreinheiten as $row) {
+			if (in_array($row->lehrform_kurzbz, $fhc_moodle_wartung_ignore_le_typ))
+				continue;
+			if (!isset($result[$row->sprache]))
+				$result[$row->sprache] = [];
+			$result[$row->sprache][] = $row->lehreinheit_id;
+		}
+		return $result;	
+	}
+
+	/**
+	 * 
+	 */
+	public static function createMoodleCourseAndLinkIt($shortname, $lv, $les, $course, $stsem, $user, $startDate, $courseFormatOptions, $endDate, &$numCoursesAddedToMoodle, &$numCategoriesAddedToMoodle)
+	{
+		if (!$lv && !$les)
+			return null;
+		
+		if ($les)
+			$shortname .= '/' . implode('/', $les);
+
+		// Checks if the course is already present in moodle
+		if (LogicCourses::getCourseByShortname($shortname) != null)
+		{
+			die('Dieser Kurs ist bereits in Moodle vorhanden - This course is already present in moodle');
+		}
+
+		$moodleCourseId = LogicCourses::getOrCreateMoodleCourse(
+			$course, $stsem, $_POST['bezeichnung'], $shortname, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle
+		);
+
+		if ($les) {
+			foreach ($les as $le) {
+				LogicCourses::insertMoodleTable(
+					$moodleCourseId, $le, null, $stsem, date('Y-m-d H:i:s'), $user, isset($_POST['gruppen'])
+				);
+			}
+		} elseif($lv) {
+			LogicCourses::insertMoodleTable(
+				$moodleCourseId, null, $lv, $stsem, date('Y-m-d H:i:s'), $user, isset($_POST['gruppen'])
+			);
+		}
+
+		// Retrieves the courses from moodle using the course ids given as POST parameters
+		$moodleCourses = LogicUsers::getMoodleCourses([$moodleCourseId]);
+
+		LogicUsers::synchronizeLektoren($moodleCourses, false);
+
+		LogicUsers::synchronizeStudenten($moodleCourses, false);
+
+		LogicUsers::synchronizeCompetenceFieldDepartmentLeaders($moodleCourses, false);
+
+		return $moodleCourseId;
+	}
 
 	/**
 	 * Generates the parameter shortname for the given course
