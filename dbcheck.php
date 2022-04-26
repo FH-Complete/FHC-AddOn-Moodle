@@ -70,6 +70,7 @@ if(!$result = @$db->db_query("SELECT 1 FROM addon.tbl_moodle"))
 			(
 				moodle_id bigint NOT NULL,
 				mdl_course_id bigint,
+				mdl_source_course_id bigint,
 				lehreinheit_id bigint,
 				lehrveranstaltung_id bigint,
 				studiensemester_kurzbz varchar(16),
@@ -111,6 +112,14 @@ if(!$result = @$db->db_query("SELECT 1 FROM addon.tbl_moodle"))
 		echo '<strong>addon.tbl_moodle: '.$db->db_last_error().'</strong><br>';
 	else
 		echo ' addon.tbl_moodle: Tabelle addon.tbl_moodle hinzugefuegt!<br>';
+}
+elseif(!$result = @$db->db_query("SELECT mdl_source_course_id FROM addon.tbl_moodle"))
+{
+	$qry = 'ALTER TABLE addon.tbl_moodle ADD mdl_source_course_id bigint;';
+	if(!$db->db_query($qry))
+		echo '<strong>addon.tbl_moodle: '.$db->db_last_error().'</strong><br>';
+	else
+		echo ' addon.tbl_moodle: Tabelle addon.tbl_moodle um Feld mdl_source_course erweitert!<br>';
 }
 if(!$result = @$db->db_query("SELECT 1 FROM addon.tbl_moodle_quellkurs"))
 {

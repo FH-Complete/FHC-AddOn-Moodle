@@ -275,14 +275,14 @@ abstract class Logic
 	 */
 	public static function insertMoodleTable(
 		$moodleCourseId, $lehreinheit_id, $lehrveranstaltung_id, $studiensemester_kurzbz,
-		$insertamum = 'NOW()', $insertvon = ADDON_MOODLE_INSERTVON, $gruppen = false, $gruppe_kurzbz = null
+		$insertamum = 'NOW()', $insertvon = ADDON_MOODLE_INSERTVON, $gruppen = false, $gruppe_kurzbz = null, $moodleSourceCourseId = null
 	)
 	{
 		return self::_dbCall(
 			'insertMoodleTable',
 			array(
 				$moodleCourseId, $lehreinheit_id, $lehrveranstaltung_id, $studiensemester_kurzbz,
-				$insertamum, $insertvon, $gruppen, $gruppe_kurzbz
+				$insertamum, $insertvon, $gruppen, $gruppe_kurzbz, $moodleSourceCourseId
 			),
 			'An error occurred while inserting into table addon.tbl_moodle'
 		);

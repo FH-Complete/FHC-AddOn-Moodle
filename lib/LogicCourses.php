@@ -14,39 +14,6 @@ class LogicCourses extends Logic
 	/**
 	 * 
 	 */
-	public static function getTestCourses($lehrveranstaltung, $stsem, $prefix = 'TK')
-	{
-		$testCourse = parent::getTestCourses($lehrveranstaltung->lehrveranstaltung_id, $stsem, $prefix);
-		if (!Database::rowsNumber($testCourse))
-			return ['existing' => [], 'missing' => []];
-		$testCourse = Database::fetchRow($testCourse)->coursename;
-		$testCourses = [''];
-
-		if (self::isStandardized($lehrveranstaltung)) {
-			$languages = self::getSprachenFromLv($lehrveranstaltung);
-			foreach ($languages as $lang) {
-				if ($lang != $lehrveranstaltung->sprache) {
-					$testCourses[] = '-' . $lang;
-				}
-			}
-		}
-
-		$result = ['existing' => [], 'missing' => [], 'name' => $testCourse];
-		foreach ($testCourses as $lang) {
-			$moodleCourse = self::getCourseByShortname($testCourse . strtoupper($lang));
-			if ($moodleCourse) {
-				$result['existing'][] = $moodleCourse;
-			} else {
-				$result['missing'][] = $lang;
-			}
-		}
-
-		return $result;
-	}
-
-	/**
-	 * 
-	 */
 	public static function isValidSourceCourse($mdl_source_course_id)
 	{
 		$result = self::_moodleAPICall(
@@ -128,43 +95,7 @@ class LogicCourses extends Logic
 	/**
 	 * 
 	 */
-	public static function getLesFromArrayBySprache($les)
-	{
-		$le = new lehreinheit();
-		
-		$result = [];
-		foreach ($les as $le_id) {
-			$le->load($le_id);
-			if (!isset($result[$le->sprache]))
-				$result[$le->sprache] = [];
-			$result[$le->sprache][] = $le->lehreinheit_id;
-		}
-		return $result;	
-	}
-
-	/**
-	 * 
-	 */
-	public static function getLesFromLvBySprache($lvid, $stsem, $fhc_moodle_wartung_ignore_le_typ)
-	{
-		$les = new lehreinheit();
-		$les->load_lehreinheiten($lvid, $stsem);
-		
-		$result = [];
-		foreach ($les->lehreinheiten as $row) {
-			if (in_array($row->lehrform_kurzbz, $fhc_moodle_wartung_ignore_le_typ))
-				continue;
-			if (!isset($result[$row->sprache]))
-				$result[$row->sprache] = [];
-			$result[$row->sprache][] = $row->lehreinheit_id;
-		}
-		return $result;	
-	}
-
-	/**
-	 * 
-	 */
-	public static function createMoodleCourseAndLinkIt($shortname, $lv, $les, $course, $stsem, $user, $startDate, $courseFormatOptions, $endDate, &$numCoursesAddedToMoodle, &$numCategoriesAddedToMoodle)
+	public static function createMoodleCourseAndLinkIt($shortname, $lv, $les, $course, $stsem, $user, $startDate, $courseFormatOptions, $endDate, &$numCoursesAddedToMoodle, &$numCategoriesAddedToMoodle, $moodleSourceCourseId = null)
 	{
 		if (!$lv && !$les)
 			return null;
@@ -185,12 +116,12 @@ class LogicCourses extends Logic
 		if ($les) {
 			foreach ($les as $le) {
 				LogicCourses::insertMoodleTable(
-					$moodleCourseId, $le, null, $stsem, date('Y-m-d H:i:s'), $user, isset($_POST['gruppen'])
+					$moodleCourseId, $le, null, $stsem, date('Y-m-d H:i:s'), $user, isset($_POST['gruppen'], $moodleSourceCourseId)
 				);
 			}
 		} elseif($lv) {
 			LogicCourses::insertMoodleTable(
-				$moodleCourseId, null, $lv, $stsem, date('Y-m-d H:i:s'), $user, isset($_POST['gruppen'])
+				$moodleCourseId, null, $lv, $stsem, date('Y-m-d H:i:s'), $user, isset($_POST['gruppen'], $moodleSourceCourseId)
 			);
 		}
 

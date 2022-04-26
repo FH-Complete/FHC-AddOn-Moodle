@@ -32,17 +32,16 @@ $this->phrasen['moodle/kursfuerLE']='einen Moodle Kurs für einzelne Lehreinheit
 $this->phrasen['moodle/zusatztextWartung']='';
 $this->phrasen['moodle/subTextIcon']='<a href="'.APP_ROOT.'addons/moodle/cis/moodle_wartung.php?lvid=%s&stsem=%s" class="Item">Kurse anlegen</a>';
 $this->phrasen['moodle/success.template.update']='Template erfolgreich gespeichert';
-$this->phrasen['moodle/warn.add.multiple']='Es wurden %d Kurse erstellt, da die LV Teile unterschiedliche Sprachen aufweisen';
-$this->phrasen['moodle/warn.add.skip']='Es wurde kein Kurs für die LV Teile (%s) erstellt, da das Template für die Sprache "%s" noch keinen Quellkurs zugewiesen bekommen hat';
-$this->phrasen['moodle/warn.moodle.lang.diff']='<b>Achtung:</b> Es ist nur ein Moodle Kurs vorhanden, die Lehreinheiten haben aber unterschiedliche Sprachen!';
+$this->phrasen['moodle/warn.lang.multiple']='<b>Achtung:</b> Die LV Teile haben unterschiedliche Sprachen!';
+$this->phrasen['moodle/error.sourcecourse.invalid']='Der Moodle Quellkurs ist ungültig. Möglicherweise wurde noch kein Quellkurs Template erstellt.';
 $this->phrasen['moodle/error.moodle.wrong']='Ein Moodle Quellkurs mit dieser Id existiert nicht';
 $this->phrasen['moodle/error.moodle.duplicate']='Der Moodle Quellkurs ist bereits einem anderen Template zugeordnet';
 $this->phrasen['moodle/error.template.wrong']='Ein Lv Template mit dieser Id existiert nicht';
 $this->phrasen['moodle/error.update.empty']='Nichts zu tun';
 $this->phrasen['moodle/error.moodle.overwrite']='Das Template ist bereits einem Moodle Quellkurs zugewiesen. Markieren Sie die "Überschreiben" Checkbox um die Zuweisung zu überschreiben';
-$this->phrasen['moodle/error.testcourse.invalid']='Fatal: Test Kurs kann nicht angelegt werden. Es liegt ein Fehler bei der Generierung des Namens vor';
 $this->phrasen['moodle/error.sql']='Datenbank Fehler: %s';
 $this->phrasen['moodle/error.sql:']='Unbekannter Datenbank Fehler';
+$this->phrasen['moodle/quellkurs']='Quellkurs';
 $this->phrasen['moodle/quellkurs.title']='Moodle - Quellkursverwaltung';
 $this->phrasen['moodle/quellkurs.title.assignment']='Zuteilungen verwalten';
 $this->phrasen['moodle/quellkurs.title.assignment.new']='Neue Zuteilung erstellen';
@@ -59,5 +58,4 @@ $this->phrasen['moodle/form.text.or']='-oder-';
 $this->phrasen['moodle/form.btn.show']='anzeigen';
 $this->phrasen['moodle/form.btn.save']='speichern';
 $this->phrasen['moodle/form.btn.back']='zurück';
-$this->phrasen['moodle/form.btn.repair']='reparieren';
 ?>
