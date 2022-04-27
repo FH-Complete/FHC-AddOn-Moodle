@@ -116,12 +116,12 @@ class LogicCourses extends Logic
 		if ($les) {
 			foreach ($les as $le) {
 				LogicCourses::insertMoodleTable(
-					$moodleCourseId, $le, null, $stsem, date('Y-m-d H:i:s'), $user, isset($_POST['gruppen'], $moodleSourceCourseId)
+					$moodleCourseId, $le, null, $stsem, date('Y-m-d H:i:s'), $user, isset($_POST['gruppen']), null, $moodleSourceCourseId
 				);
 			}
 		} elseif($lv) {
 			LogicCourses::insertMoodleTable(
-				$moodleCourseId, null, $lv, $stsem, date('Y-m-d H:i:s'), $user, isset($_POST['gruppen'], $moodleSourceCourseId)
+				$moodleCourseId, null, $lv, $stsem, date('Y-m-d H:i:s'), $user, isset($_POST['gruppen']), null, $moodleSourceCourseId
 			);
 		}
 

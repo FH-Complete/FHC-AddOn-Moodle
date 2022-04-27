@@ -255,7 +255,7 @@ if (isset($_POST['neu']))
 				if (LogicCourses::isStandardized($lehrveranstaltung)) {
 					$mdl_source_course_id = $_POST['qk'];
 					if (LogicCourses::isValidSourceCourse($mdl_source_course_id)) {
-						$mdl_course_id = LogicCourses::createMoodleCourseAndLinkIt($shortname, null, $les, $course, $stsem, $user, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle, $mdl_source_course_id);
+						$mdl_course_id = LogicCourses::createMoodleCourseAndLinkIt($shortname, null, $lehreinheiten, $course, $stsem, $user, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle, $mdl_source_course_id);
 						$mdl_source_course_copy_state[$mdl_course_id] = LogicCourses::startSourceCourseCopy($mdl_source_course_id, $mdl_course_id);
 					} else {
 						echo '<span class="error">' . $p->t('moodle/error.sourcecourse.invalid', [$mdl_source_course_id]) . '</span><br>';
@@ -477,7 +477,7 @@ else
 			foreach ($template->mdl_courses as $lang => $qk) {
 				$moodleCourses = LogicCourses::core_course_get_courses([$qk]);
 				$bez = $moodleCourses[0]->fullname;
-				echo '<option value="' . $qk . '" data-language="' . $lang . '">' . $bez . '</option>';
+				echo '<option value="' . $qk . '" data-language="' . $lang . '">' . $bez . ' (' . $lang . ')</option>';
 			}
 		}
 		echo '</select>';
@@ -599,7 +599,7 @@ if (!$testCourseFound)
 			foreach ($template->mdl_courses as $lang => $qk) {
 				$moodleCourses = LogicCourses::core_course_get_courses([$qk]);
 				$bez = $moodleCourses[0]->fullname;
-				echo '<option value="' . $qk . '"' . ($lang == $lehrveranstaltung->sprache ? ' selected' : '') . '>' . $bez . '</option>';
+				echo '<option value="' . $qk . '"' . ($lang == $lehrveranstaltung->sprache ? ' selected' : '') . '>' . $bez . ' (' . $lang . ')</option>';
 			}
 			echo '</select>';
 		}
