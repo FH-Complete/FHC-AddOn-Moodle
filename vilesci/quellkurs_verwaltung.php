@@ -285,10 +285,10 @@ if ($_action == 'moodle') {
 		$label = '';
 	}
 	echo '
-	<h2>' . ($mdl_course->template_id ? $p->t('moodle/quellkurs.title.assignment.change') : $p->t('moodle/quellkurs.title.assignment.new')) . ' (' . $mdl_course->id . ') - <a href="?" class="ui-button ui-button-secondary">' . $p->t('moodle/form.btn.back') . '</a></h2>
+	<h2>' . ($mdl_course->template_id ? $p->t('moodle/quellkurs.title.assignment.change') : $p->t('moodle/quellkurs.title.assignment.new')) . ' - <a href="?" class="ui-button ui-button-secondary">' . $p->t('moodle/form.btn.back') . '</a></h2>
 	<form method="POST">
 		<fieldset>
-			<legend>' . $mdl_course->fullname . '</legend>
+			<legend>' . $mdl_course->fullname . ' (' . $mdl_course->id . ')</legend>
 			<table>
 				<tbody>
 					<tr>
@@ -334,7 +334,7 @@ if ($_action == 'moodle') {
 	<h2>' . (count($template->mdl_courses) ? $p->t('moodle/quellkurs.title.assignment.change') : $p->t('moodle/quellkurs.title.assignment.new')) . ' - <a href="?" class="ui-button ui-button-secondary">' . $p->t('moodle/form.btn.back') . '</a></h2>
 	<form method="POST">
 		<fieldset>
-			<legend>' . $template->bezeichnung . '</legend>
+			<legend>' . $template->bezeichnung . ' (' . $template->lehrveranstaltung_id . ')</legend>
 			<table>
 				<thead>
 					<tr>
