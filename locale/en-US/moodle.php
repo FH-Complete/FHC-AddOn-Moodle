@@ -34,6 +34,8 @@ $this->phrasen['moodle/subTextIcon']='<a href="'.APP_ROOT.'addons/moodle/cis/moo
 $this->phrasen['moodle/success.template.update']='Template successfully saved';
 $this->phrasen['moodle/warn.lang.multiple']='<b>Attention:</b> The LV Parts have different languages!';
 $this->phrasen['moodle/error.sourcecourse.invalid']='The Moodle Source Course is invalid. Maybe a Source Course Template is missing.';
+$this->phrasen['moodle/error.sourcecourse.missing']='The Template has no Source Courses linked to it.';
+$this->phrasen['moodle/error.sourcecourse.empty']='None';
 $this->phrasen['moodle/error.moodle.wrong']='A Moodle Source Course with this id does not exist';
 $this->phrasen['moodle/error.moodle.duplicate']='This Moodle Source Course is already assigned to another Template';
 $this->phrasen['moodle/error.template.wrong']='A LV Template with this id does not exist';

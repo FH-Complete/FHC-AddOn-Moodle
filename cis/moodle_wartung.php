@@ -226,12 +226,16 @@ if (isset($_POST['neu']))
 		if ($art == 'lv')
 		{
 			if (LogicCourses::isStandardized($lehrveranstaltung)) {
-				$mdl_source_course_id = $_POST['qk'];
-				if (LogicCourses::isValidSourceCourse($mdl_source_course_id)) {
-					$mdl_course_id = LogicCourses::createMoodleCourseAndLinkIt($shortname, $lvid, [], $course, $stsem, $user, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle, $mdl_source_course_id);
-					$mdl_source_course_copy_state[$mdl_course_id] = LogicCourses::startSourceCourseCopy($mdl_source_course_id, $mdl_course_id);
+				if (!isset($_POST['qk'])) {
+					echo '<span class="error">' . $p->t('moodle/error.sourcecourse.missing') . '</span><br>';
 				} else {
-					echo '<span class="error">' . $p->t('moodle/error.sourcecourse.invalid', [$mdl_source_course_id]) . '</span><br>';
+					$mdl_source_course_id = $_POST['qk'];
+					if (LogicCourses::isValidSourceCourse($mdl_source_course_id)) {
+						$mdl_course_id = LogicCourses::createMoodleCourseAndLinkIt($shortname, $lvid, [], $course, $stsem, $user, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle, $mdl_source_course_id);
+						$mdl_source_course_copy_state[$mdl_course_id] = LogicCourses::startSourceCourseCopy($mdl_source_course_id, $mdl_course_id);
+					} else {
+						echo '<span class="error">' . $p->t('moodle/error.sourcecourse.invalid', [$mdl_source_course_id]) . '</span><br>';
+					}
 				}
 			} else {
 				LogicCourses::createMoodleCourseAndLinkIt($shortname, $lvid, [], $course, $stsem, $user, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle);
@@ -253,12 +257,16 @@ if (isset($_POST['neu']))
 				echo '<span class="error">'.$p->t('moodle/esMussMindestensEineLehreinheitMarkiertSein').'</span><br>';
 			} else {
 				if (LogicCourses::isStandardized($lehrveranstaltung)) {
-					$mdl_source_course_id = $_POST['qk'];
-					if (LogicCourses::isValidSourceCourse($mdl_source_course_id)) {
-						$mdl_course_id = LogicCourses::createMoodleCourseAndLinkIt($shortname, null, $lehreinheiten, $course, $stsem, $user, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle, $mdl_source_course_id);
-						$mdl_source_course_copy_state[$mdl_course_id] = LogicCourses::startSourceCourseCopy($mdl_source_course_id, $mdl_course_id);
+					if (!isset($_POST['qk'])) {
+						echo '<span class="error">' . $p->t('moodle/error.sourcecourse.missing') . '</span><br>';
 					} else {
-						echo '<span class="error">' . $p->t('moodle/error.sourcecourse.invalid', [$mdl_source_course_id]) . '</span><br>';
+						$mdl_source_course_id = $_POST['qk'];
+						if (LogicCourses::isValidSourceCourse($mdl_source_course_id)) {
+							$mdl_course_id = LogicCourses::createMoodleCourseAndLinkIt($shortname, null, $lehreinheiten, $course, $stsem, $user, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle, $mdl_source_course_id);
+							$mdl_source_course_copy_state[$mdl_course_id] = LogicCourses::startSourceCourseCopy($mdl_source_course_id, $mdl_course_id);
+						} else {
+							echo '<span class="error">' . $p->t('moodle/error.sourcecourse.invalid', [$mdl_source_course_id]) . '</span><br>';
+						}
 					}
 				} else {
 					LogicCourses::createMoodleCourseAndLinkIt($shortname, null, $lehreinheiten, $course, $stsem, $user, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle);
@@ -317,10 +325,15 @@ if (isset($_GET['action']) && $_GET['action'] == 'createtestkurs')
 			$template = new lehrveranstaltung();
 			$template->load($lehrveranstaltung->lehrveranstaltung_template_id);
 
-			$mdl_source_course_id = $_GET['qk']; // TODO(chris): get param?
-			if (!isset($_GET['qk']) || !LogicCourses::isValidSourceCourse($mdl_source_course_id)) {
-				echo '<span class="error">' . $p->t('moodle/error.sourcecourse.invalid', [$mdl_source_course_id]) . '</span><br>';
+			if (!isset($_GET['qk'])) {
+				echo '<span class="error">' . $p->t('moodle/error.sourcecourse.missing') . '</span><br>';
 				$stop = true;
+			} else {
+				$mdl_source_course_id = $_GET['qk'];
+				if (!LogicCourses::isValidSourceCourse($mdl_source_course_id)) {
+					echo '<span class="error">' . $p->t('moodle/error.sourcecourse.invalid', [$mdl_source_course_id]) . '</span><br>';
+					$stop = true;
+				}
 			}
 		}
 
@@ -472,15 +485,20 @@ else
 		$logicTemplates = new LogicTemplates();
 		$template = $logicTemplates->getTemplate($lehrveranstaltung->lehrveranstaltung_template_id);
 
-		echo '<br>'.$p->t('moodle/quellkurs').': <select name="qk" id="qk" >';
+		echo '<br>'.$p->t('moodle/quellkurs').': ';
 		if ($template && isset($template->mdl_courses)) {
-			foreach ($template->mdl_courses as $lang => $qk) {
-				$moodleCourses = LogicCourses::core_course_get_courses([$qk]);
-				$bez = $moodleCourses[0]->fullname;
-				echo '<option value="' . $qk . '" data-language="' . $lang . '">' . $bez . ' (' . $lang . ')</option>';
+			if ($template->mdl_courses) {
+				echo '<select name="qk" id="qk">';
+				foreach ($template->mdl_courses as $lang => $qk) {
+					$moodleCourses = LogicCourses::core_course_get_courses([$qk]);
+					$bez = $moodleCourses[0]->fullname;
+					echo '<option value="' . $qk . '" data-language="' . $lang . '">' . $bez . ' (' . $lang . ')</option>';
+				}
+				echo '</select>';
+			} else {
+				echo '<span class="error">' . $p->t('moodle/error.sourcecourse.empty') . '</span>';
 			}
 		}
-		echo '</select>';
 		echo '<div id="lang-warning-multiple" class="error" style="display:none">' . $p->t('moodle/warn.lang.multiple') . '</div>';
 		echo '<script type="text/javascript">
 			function refreshQk() {
@@ -488,7 +506,7 @@ else
 					defaultLang = all.data("lang");
 				$("#lang-warning-multiple").hide();
 				if (all.is(":checked")) {
-					if ($("#lehreinheitencheckboxen input:not([data-lang!=\"" + defaultLang + "\"])").length) {
+					if ($("#lehreinheitencheckboxen input[data-lang!=\"" + defaultLang + "\"]").length) {
 						$("#lang-warning-multiple").show();
 					}
 					$("#qk").val($("#qk [data-language=\"" + defaultLang + "\"]").val());
