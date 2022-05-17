@@ -491,7 +491,7 @@ else
 				echo '<select name="qk" id="qk">';
 				foreach ($template->mdl_courses as $lang => $qk) {
 					$moodleCourses = LogicCourses::core_course_get_courses([$qk]);
-					$bez = $moodleCourses[0]->fullname;
+					$bez = isset($moodleCourses[0]) ? $moodleCourses[0]->fullname : '';
 					echo '<option value="' . $qk . '" data-language="' . $lang . '">' . $bez . ' (' . $lang . ')</option>';
 				}
 				echo '</select>';
@@ -503,13 +503,14 @@ else
 		echo '<script type="text/javascript">
 			function refreshQk() {
 				var all = $("input[name=\"art\"][value=\"lv\"]"),
-					defaultLang = all.data("lang");
+					defaultLang = all.data("lang"),
+					newVal = null;
 				$("#lang-warning-multiple").hide();
 				if (all.is(":checked")) {
 					if ($("#lehreinheitencheckboxen input[data-lang!=\"" + defaultLang + "\"]").length) {
 						$("#lang-warning-multiple").show();
 					}
-					$("#qk").val($("#qk [data-language=\"" + defaultLang + "\"]").val());
+					newVal = $("#qk [data-language=\"" + defaultLang + "\"]").val();
 				} else {
 					var langs = [];
 					$("#lehreinheitencheckboxen input:checked").each(function() {
@@ -519,8 +520,13 @@ else
 					if (langs.length > 1) {
 						$("#lang-warning-multiple").show();
 					}
-					$("#qk").val($("#qk [data-language=\"" + langs.pop() + "\"]").val());
+					newVal = $("#qk [data-language=\"" + langs.pop() + "\"]").val();
 				}
+				if (!newVal && $("#qk").children().length == 1 && $("#lehreinheitencheckboxen input").length == $("#lehreinheitencheckboxen input[data-lang=\"" + defaultLang + "\"]").length) {
+					// NOTE(chris): The select would be empty, there is only 1 sourcecourse and all languages are the same (except the sourcecourse one) => select the only option
+					newVal = $("#qk").children().first().val();
+				}
+				$("#qk").val(newVal);
 			}
 			$("input[name=\"art\"],#lehreinheitencheckboxen input").change(refreshQk);
 		</script>';
