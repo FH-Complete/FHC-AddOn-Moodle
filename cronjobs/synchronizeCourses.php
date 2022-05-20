@@ -45,6 +45,14 @@ $numCategoriesAddedToMoodle = 0;
 // Loops through courses
 while ($course = Database::fetchRow($fhcCourses))
 {
+        // Skip Course from Studiengang listed in config file
+        if( in_array($course->studiengang_kz, $fhc_synchronize_course_ignore_stg) )
+        {
+          Output::printDebug('Ignoring Lehreinheit ' . $course->lehreinheit_id 
+                . ' from Studiengang ' . $course->studiengang_kz);
+          continue;
+        }
+
 	// Generates the short and full name for the current course
 	$shortname = LogicCourses::getCourseShortname($course, $currentOrNextStudiensemester);
 	$fullname = LogicCourses::getCourseFullname($course, $currentOrNextStudiensemester);

@@ -128,6 +128,9 @@ define('ADDON_MOODLE_START_END_DATE_FORMAT', 'Y-m-d H:i:s');
 // do not list this LE Types on the page to create moodle courses (moodle_wartung.php)
 $fhc_moodle_wartung_ignore_le_typ = array();
 
+// do not create Moodle Courses for Studiengaenge with studiengang_kz listed in this array (cronjobs/synchronizeCourses.php)
+$fhc_synchronize_course_ignore_stg = array();
+
 // ------------------------------------------------------------------------------------------------------------
 // Connection configuration
 
