@@ -33,6 +33,7 @@ $this->phrasen['moodle/zusatztextWartung']='';
 $this->phrasen['moodle/subTextIcon']='<a href="'.APP_ROOT.'addons/moodle/cis/moodle_wartung.php?lvid=%s&stsem=%s" class="Item">Kurse anlegen</a>';
 $this->phrasen['moodle/success.template.update']='Template erfolgreich gespeichert';
 $this->phrasen['moodle/warn.lang.multiple']='<b>Achtung:</b> Die LV Teile haben unterschiedliche Sprachen!';
+$this->phrasen['moodle/warn.sourcecourse.missing']='Dem Template sind keine Quellkurse zugewiesen. Ein leerer Moodle Kurs wurde erstellt.';
 $this->phrasen['moodle/error.sourcecourse.invalid']='Der Moodle Quellkurs ist ungültig. Möglicherweise wurde noch kein Quellkurs Template erstellt.';
 $this->phrasen['moodle/error.sourcecourse.missing']='Dem Template sind keine Quellkurse zugewiesen.';
 $this->phrasen['moodle/error.sourcecourse.empty']='Keiner';

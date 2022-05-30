@@ -227,7 +227,12 @@ if (isset($_POST['neu']))
 		{
 			if (LogicCourses::isStandardized($lehrveranstaltung)) {
 				if (!isset($_POST['qk'])) {
-					echo '<span class="error">' . $p->t('moodle/error.sourcecourse.missing') . '</span><br>';
+					if (MOODLE_ADDON_CREATE_COURSE_FOR_LVTEMPLATE_WITHOUT_QUELLKURS) {
+						echo '<span class="warning">' . $p->t('moodle/warn.sourcecourse.missing') . '</span><br>';
+						LogicCourses::createMoodleCourseAndLinkIt($shortname, $lvid, [], $course, $stsem, $user, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle);
+					} else {
+						echo '<span class="error">' . $p->t('moodle/error.sourcecourse.missing') . '</span><br>';
+					}
 				} else {
 					$mdl_source_course_id = $_POST['qk'];
 					if (LogicCourses::isValidSourceCourse($mdl_source_course_id)) {
@@ -258,7 +263,12 @@ if (isset($_POST['neu']))
 			} else {
 				if (LogicCourses::isStandardized($lehrveranstaltung)) {
 					if (!isset($_POST['qk'])) {
-						echo '<span class="error">' . $p->t('moodle/error.sourcecourse.missing') . '</span><br>';
+						if (MOODLE_ADDON_CREATE_COURSE_FOR_LVTEMPLATE_WITHOUT_QUELLKURS) {
+							echo '<span class="warning">' . $p->t('moodle/warn.sourcecourse.missing') . '</span><br>';
+							LogicCourses::createMoodleCourseAndLinkIt($shortname, null, $lehreinheiten, $course, $stsem, $user, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle);
+						} else {
+							echo '<span class="error">' . $p->t('moodle/error.sourcecourse.missing') . '</span><br>';
+						}
 					} else {
 						$mdl_source_course_id = $_POST['qk'];
 						if (LogicCourses::isValidSourceCourse($mdl_source_course_id)) {
@@ -326,8 +336,13 @@ if (isset($_GET['action']) && $_GET['action'] == 'createtestkurs')
 			$template->load($lehrveranstaltung->lehrveranstaltung_template_id);
 
 			if (!isset($_GET['qk'])) {
-				echo '<span class="error">' . $p->t('moodle/error.sourcecourse.missing') . '</span><br>';
-				$stop = true;
+				if (MOODLE_ADDON_CREATE_COURSE_FOR_LVTEMPLATE_WITHOUT_QUELLKURS) {
+					echo '<span class="warning">' . $p->t('moodle/warn.sourcecourse.missing') . '</span><br>';
+					$template = null;
+				} else {
+					echo '<span class="error">' . $p->t('moodle/error.sourcecourse.missing') . '</span><br>';
+					$stop = true;
+				}
 			} else {
 				$mdl_source_course_id = $_GET['qk'];
 				if (!LogicCourses::isValidSourceCourse($mdl_source_course_id)) {

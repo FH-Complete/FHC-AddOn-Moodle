@@ -8,6 +8,9 @@
 // Id of the Source Course Root
 define('ADDON_MOODLE_SOURCE_COURSE_ID', 0);
 
+// Create empty Moodle Courses if no Source Courses are specified
+define('MOODLE_ADDON_CREATE_COURSE_FOR_LVTEMPLATE_WITHOUT_QUELLKURS', true);
+
 // ------------------------------------------------------------------------------------------------------------
 // Courses synching options
 
