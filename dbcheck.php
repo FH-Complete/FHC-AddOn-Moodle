@@ -218,8 +218,19 @@ $tabellen = array(
 		'updateamum',
 		'updatevon',
 		'ext_id',
-		'gruppe_kurzbz'
-	)
+                'gruppe_kurzbz',
+                'mdl_source_course_id'
+	),
+        'addon.tbl_moodle_quellkurs' => array(
+                'moodle_quellkurs_id',
+	        'lehrveranstaltung_id',
+                'sprache',
+	        'mdl_course_id',
+	        'insertamum',
+	        'insertvon',
+	        'updateamum',
+	        'updatevon'
+        )
 );
 
 $tabs=array_keys($tabellen);
