@@ -275,14 +275,14 @@ abstract class Logic
 	 */
 	public static function insertMoodleTable(
 		$moodleCourseId, $lehreinheit_id, $lehrveranstaltung_id, $studiensemester_kurzbz,
-		$insertamum = 'NOW()', $insertvon = ADDON_MOODLE_INSERTVON, $gruppen = false, $gruppe_kurzbz = null
+		$insertamum = 'NOW()', $insertvon = ADDON_MOODLE_INSERTVON, $gruppen = false, $gruppe_kurzbz = null, $moodleSourceCourseId = null
 	)
 	{
 		return self::_dbCall(
 			'insertMoodleTable',
 			array(
 				$moodleCourseId, $lehreinheit_id, $lehrveranstaltung_id, $studiensemester_kurzbz,
-				$insertamum, $insertvon, $gruppen, $gruppe_kurzbz
+				$insertamum, $insertvon, $gruppen, $gruppe_kurzbz, $moodleSourceCourseId
 			),
 			'An error occurred while inserting into table addon.tbl_moodle'
 		);
@@ -393,6 +393,18 @@ abstract class Logic
 			'updateGruppen',
 			array($moodle_id, $gruppen),
 			'An error occurred while updating the field gruppen'
+		);
+	}
+
+	/**
+	 *
+	 */
+	public static function getCoursesLehrveranstaltungStudiensemester($lehrveranstaltung_id, $studiensemester_kurzbz)
+	{
+		return self::_dbCall(
+			'getCoursesLehrveranstaltungStudiensemester',
+			array($lehrveranstaltung_id, $studiensemester_kurzbz),
+			'An error occurred while retrieving courses by lehrveranstaltung and studiensemester'
 		);
 	}
 

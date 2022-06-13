@@ -43,6 +43,98 @@ class MoodleAPI extends MoodleClient
 	}
 
 	/**
+	 * 
+	 */
+	public function local_fhtw_std_latest_template($qkCourseId)
+	{
+		return $this->call(
+			'local_fhtw_std_latest_template',
+			MoodleClient::HTTP_GET_METHOD,
+			[
+				'qkcourseid' => (int)$qkCourseId
+			]
+		);
+	}
+
+	/**
+	 * 
+	 */
+	public function local_fhtw_std_restore_qk($source, $target)
+	{
+		return $this->call(
+			'local_fhtw_std_restore_qk',
+			MoodleClient::HTTP_GET_METHOD,
+			[
+				'courseid' => (int)$target,
+				'qkid' => (int)$source
+			]
+		);
+	}
+
+	/**
+	 * 
+	 */
+	public function local_fhtw_std_current_restore($target)
+	{
+		return $this->call(
+			'local_fhtw_std_current_restore',
+			MoodleClient::HTTP_POST_METHOD,
+			[
+				'tgtcourseid' => $target
+			]
+		);
+	}
+
+	/**
+	 * 
+	 */
+	public function local_fhtw_std_async_unzip_progress($unzipid)
+	{
+		return $this->call(
+			'local_fhtw_std_async_unzip_progress',
+			MoodleClient::HTTP_POST_METHOD,
+			[
+				'unzipid' => $unzipid
+			]
+		);
+	}
+
+	/**
+	 * 
+	 */
+	public function core_backup_get_async_backup_progress($contextid, $backupids)
+	{
+		return $this->call(
+			'core_backup_get_async_backup_progress',
+			MoodleClient::HTTP_POST_METHOD,
+			[
+				'contextid' => $contextid,
+				'backupids' => $backupids
+			]
+		);
+	}
+
+	/**
+	 *
+	 */
+	public function core_course_search_courses($criterianame, $criteriavalue, $page = 0, $perpage = 0, $requiredcapabilities = [], $limittoenrolled = 0, $onlywithcompletion = 0)
+	{
+		return $this->call(
+			'core_course_search_courses',
+			MoodleClient::HTTP_POST_METHOD,
+			[
+				'criterianame' => $criterianame,
+				'criteriavalue' => $criteriavalue,
+				'page' => $page,
+				'perpage' => $perpage,
+				'requiredcapabilities' => $requiredcapabilities,
+				'limittoenrolled' => $limittoenrolled,
+				'onlywithcompletion' => $onlywithcompletion
+			]
+		);
+	}
+
+	/**
 	 *
 	 */
 	public function core_enrol_get_enrolled_users($moodleCourseId)

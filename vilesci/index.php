@@ -51,6 +51,7 @@ echo '
 <h2>Kurse</h2>
 <ul>
 	<li><a href="kurs_verwaltung.php">Kursverwaltung</a></li>
+    <li><a href="quellkurs_verwaltung.php">Quellkursverwaltung</a></li>
 </ul>
 ';
 ?>

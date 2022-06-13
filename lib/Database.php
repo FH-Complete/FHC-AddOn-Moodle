@@ -651,15 +651,16 @@ EOABRSQL;
 	 */
 	public function insertMoodleTable(
 		$moodleCourseId, $lehreinheit_id, $lehrveranstaltung_id, $studiensemester_kurzbz,
-		$insertamum, $insertvon, $gruppen, $gruppe_kurzbz
+		$insertamum, $insertvon, $gruppen, $gruppe_kurzbz, $moodleSourceCourseId = null
 	)
 	{
 		$query = 'INSERT INTO addon.tbl_moodle(
-					mdl_course_id, lehreinheit_id, lehrveranstaltung_id, studiensemester_kurzbz,
+					mdl_course_id, mdl_source_course_id, lehreinheit_id, lehrveranstaltung_id, studiensemester_kurzbz,
 					insertamum, insertvon, gruppen, gruppe_kurzbz
 				)
 				VALUES('.
 					$this->db_add_param($moodleCourseId, FHC_INTEGER).', '.
+					($moodleSourceCourseId ? $this->db_add_param($moodleSourceCourseId, FHC_INTEGER) : 'NULL').', '.
 					$this->db_add_param($lehreinheit_id, FHC_INTEGER).', '.
 					$this->db_add_param($lehrveranstaltung_id, FHC_INTEGER).', '.
 					$this->db_add_param($studiensemester_kurzbz).', '.
@@ -943,6 +944,22 @@ EOABRSQL;
 
  		return $this->_execQuery($query);
  	}
+
+	/**
+	 *
+	 */
+	public function getCoursesLehrveranstaltungStudiensemester($lehrveranstaltung_id, $studiensemester_kurzbz)
+ 	{
+ 		$query = 'SELECT
+					*
+				FROM
+					addon.tbl_moodle
+				WHERE
+					lehrveranstaltung_id = '.$this->db_add_param($lehrveranstaltung_id, FHC_INTEGER).'
+					AND studiensemester_kurzbz = '.$this->db_add_param($studiensemester_kurzbz);
+
+		return $this->_execQuery($query);
+	}
 
 	/**
 	 *

@@ -90,7 +90,11 @@ echo '<!DOCTYPE HTML>
 <html>
 <head>
 	<meta charset="utf-8">
+	<link href="../skin/cis.css" rel="stylesheet" type="text/css">
 	<link href="../../../skin/style.css.php" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" type="text/css" href="../../../skin/jquery-ui-1.9.2.custom.min.css">
+	<script type="text/javascript" src="../../../vendor/jquery/jqueryV1/jquery-1.12.4.min.js"></script>
+	<script type="text/javascript" src="../../../vendor/components/jqueryui/jquery-ui.min.js"></script>
 </head>
 
 <script>
@@ -189,11 +193,14 @@ else
 echo '
 </script>
 
+
 <body>
 <h1>'.LogicCourses::convertHtmlChars($lehrveranstaltung->bezeichnung).'&nbsp;('.LogicCourses::convertHtmlChars($stsem).')</h1>
 <table width="100%">
 <tr>
 <td valign="top">';
+
+$mdl_source_course_copy_state = [];
 
 if (isset($_POST['neu']))
 {
@@ -218,29 +225,26 @@ if (isset($_POST['neu']))
 		//Gesamte LV zu einem Moodle Kurs zusammenlegen
 		if ($art == 'lv')
 		{
-			// Checks if the course is already present in moodle
-			$checkCourse = LogicCourses::getCourseByShortname($shortname);
-			if ($checkCourse != null)
-			{
-				die('Dieser Kurs ist bereits in Moodle vorhanden - This course is already present in moodle');
+			if (LogicCourses::isStandardized($lehrveranstaltung)) {
+				if (!isset($_POST['qk'])) {
+					if (MOODLE_ADDON_CREATE_COURSE_FOR_LVTEMPLATE_WITHOUT_QUELLKURS) {
+						echo '<span class="warning">' . $p->t('moodle/warn.sourcecourse.missing') . '</span><br>';
+						LogicCourses::createMoodleCourseAndLinkIt($shortname, $lvid, [], $course, $stsem, $user, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle);
+					} else {
+						echo '<span class="error">' . $p->t('moodle/error.sourcecourse.missing') . '</span><br>';
+					}
+				} else {
+					$mdl_source_course_id = $_POST['qk'];
+					if (LogicCourses::isValidSourceCourse($mdl_source_course_id)) {
+						$mdl_course_id = LogicCourses::createMoodleCourseAndLinkIt($shortname, $lvid, [], $course, $stsem, $user, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle, $mdl_source_course_id);
+						$mdl_source_course_copy_state[$mdl_course_id] = LogicCourses::startSourceCourseCopy($mdl_source_course_id, $mdl_course_id);
+					} else {
+						echo '<span class="error">' . $p->t('moodle/error.sourcecourse.invalid', [$mdl_source_course_id]) . '</span><br>';
+					}
+				}
+			} else {
+				LogicCourses::createMoodleCourseAndLinkIt($shortname, $lvid, [], $course, $stsem, $user, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle);
 			}
-
-			$moodleCourseId = LogicCourses::getOrCreateMoodleCourse(
-				$course, $stsem, $_POST['bezeichnung'], $shortname, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle
-			);
-
-			LogicCourses::insertMoodleTable(
-				$moodleCourseId, null, $lvid, $stsem, date('Y-m-d H:i:s'), $user, isset($_POST['gruppen'])
-			);
-
-			// Retrieves the courses from moodle using the course ids given as POST parameters
-			$moodleCourses = LogicUsers::getMoodleCourses(array($moodleCourseId));
-
-			LogicUsers::synchronizeLektoren($moodleCourses, false);
-
-			LogicUsers::synchronizeStudenten($moodleCourses, false);
-
-			LogicUsers::synchronizeCompetenceFieldDepartmentLeaders($moodleCourses, false);
 		}
 		elseif ($art == 'le') //Getrennte Kurse fuer die Lehreinheiten
 		{
@@ -250,44 +254,33 @@ if (isset($_POST['neu']))
 			{
 				if (mb_strstr($key, 'lehreinheit_'))
 				{
-					$shortname .= '/'.$value;
 					$lehreinheiten[] = $value;
 				}
 			}
 
-			// Checks if the course is already present in moodle
-			$checkCourse = LogicCourses::getCourseByShortname($shortname);
-			if ($checkCourse != null)
-			{
-				die('Dieser Kurs ist bereits in Moodle vorhanden - This course is already present in moodle');
-			}
-
-			if (count($lehreinheiten) > 0)
-			{
-				$moodleCourseId = LogicCourses::getOrCreateMoodleCourse(
-					$course, $stsem, $_POST['bezeichnung'], $shortname, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle
-				);
-
-				// Fuer jede Lehreinheit einen Eintrag in VilesciDB anlegen
-				foreach ($lehreinheiten as $lehreinheit_id)
-				{
-					LogicCourses::insertMoodleTable(
-						$moodleCourseId, $lehreinheit_id, null, $stsem, date('Y-m-d H:i:s'), $user, isset($_POST['gruppen'])
-					);
-				}
-
-				// Retrieves the courses from moodle using the course ids given as POST parameters
-				$moodleCourses = LogicUsers::getMoodleCourses(array($moodleCourseId));
-
-				LogicUsers::synchronizeLektoren($moodleCourses, false);
-
-				LogicUsers::synchronizeStudenten($moodleCourses, false);
-
-				LogicUsers::synchronizeCompetenceFieldDepartmentLeaders($moodleCourses, false);
-			}
-			else
-			{
+			if (!count($lehreinheiten)) {
 				echo '<span class="error">'.$p->t('moodle/esMussMindestensEineLehreinheitMarkiertSein').'</span><br>';
+			} else {
+				if (LogicCourses::isStandardized($lehrveranstaltung)) {
+					if (!isset($_POST['qk'])) {
+						if (MOODLE_ADDON_CREATE_COURSE_FOR_LVTEMPLATE_WITHOUT_QUELLKURS) {
+							echo '<span class="warning">' . $p->t('moodle/warn.sourcecourse.missing') . '</span><br>';
+							LogicCourses::createMoodleCourseAndLinkIt($shortname, null, $lehreinheiten, $course, $stsem, $user, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle);
+						} else {
+							echo '<span class="error">' . $p->t('moodle/error.sourcecourse.missing') . '</span><br>';
+						}
+					} else {
+						$mdl_source_course_id = $_POST['qk'];
+						if (LogicCourses::isValidSourceCourse($mdl_source_course_id)) {
+							$mdl_course_id = LogicCourses::createMoodleCourseAndLinkIt($shortname, null, $lehreinheiten, $course, $stsem, $user, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle, $mdl_source_course_id);
+							$mdl_source_course_copy_state[$mdl_course_id] = LogicCourses::startSourceCourseCopy($mdl_source_course_id, $mdl_course_id);
+						} else {
+							echo '<span class="error">' . $p->t('moodle/error.sourcecourse.invalid', [$mdl_source_course_id]) . '</span><br>';
+						}
+					}
+				} else {
+					LogicCourses::createMoodleCourseAndLinkIt($shortname, null, $lehreinheiten, $course, $stsem, $user, $startDate, $courseFormatOptions, $endDate, $numCoursesAddedToMoodle, $numCategoriesAddedToMoodle);
+				}
 			}
 		}
 		else
@@ -336,15 +329,44 @@ if (isset($_GET['action']) && $_GET['action'] == 'createtestkurs')
 		$categoryId = LogicCourses::getOrCreateCategory('Testkurse', ADDON_MOODLE_ROOT_CATEGORY_ID, $numCategoriesAddedToMoodle);
 		$TKcategoryId = LogicCourses::getOrCreateCategory('Testkurse zu LVs', $categoryId, $numCategoriesAddedToMoodle);
 
-		$moodleCourseId = LogicCourses::core_course_create_courses(
-			'Testkurs - '.$lehrveranstaltung->bezeichnung, $testCourse->coursename, $TKcategoryId, $startDate, ADDON_MOODLE_COURSE_FORMAT, $courseFormatOptions, $endDate
-		);
+		$template = null;
+		$stop = false;
+		if (LogicCourses::isStandardized($lehrveranstaltung)) {
+			$template = new lehrveranstaltung();
+			$template->load($lehrveranstaltung->lehrveranstaltung_template_id);
 
-		$moodleEnrolledUsers = LogicUsers::core_enrol_get_enrolled_users($moodleCourseId);
+			if (!isset($_GET['qk'])) {
+				if (MOODLE_ADDON_CREATE_COURSE_FOR_LVTEMPLATE_WITHOUT_QUELLKURS) {
+					echo '<span class="warning">' . $p->t('moodle/warn.sourcecourse.missing') . '</span><br>';
+					$template = null;
+				} else {
+					echo '<span class="error">' . $p->t('moodle/error.sourcecourse.missing') . '</span><br>';
+					$stop = true;
+				}
+			} else {
+				$mdl_source_course_id = $_GET['qk'];
+				if (!LogicCourses::isValidSourceCourse($mdl_source_course_id)) {
+					echo '<span class="error">' . $p->t('moodle/error.sourcecourse.invalid', [$mdl_source_course_id]) . '</span><br>';
+					$stop = true;
+				}
+			}
+		}
 
-		LogicUsers::synchronizeTestLektoren($moodleCourseId, $lvid, $stsem, $moodleEnrolledUsers, $numCreatedUsers, $numEnrolledLectors);
+		if (!$stop) {
+			$moodleCourseId = LogicCourses::core_course_create_courses(
+				'Testkurs - '.$lehrveranstaltung->bezeichnung, $testCourse->coursename, $TKcategoryId, $startDate, ADDON_MOODLE_COURSE_FORMAT, $courseFormatOptions, $endDate
+			);
 
-		LogicUsers::synchronizeTestStudenten($moodleCourseId, $moodleEnrolledUsers, array('student1', 'student2', 'student3'));
+			$moodleEnrolledUsers = LogicUsers::core_enrol_get_enrolled_users($moodleCourseId);
+
+			LogicUsers::synchronizeTestLektoren($moodleCourseId, $lvid, $stsem, $moodleEnrolledUsers, $numCreatedUsers, $numEnrolledLectors);
+
+			LogicUsers::synchronizeTestStudenten($moodleCourseId, $moodleEnrolledUsers, array('student1', 'student2', 'student3'));
+
+			if ($template) {
+				$mdl_source_course_copy_state[$moodleCourseId] = LogicCourses::startSourceCourseCopy($mdl_source_course_id, $moodleCourseId);
+			}
+		}
 	}
 	else
 	{
@@ -396,7 +418,7 @@ else
 
 	echo '<b>'.$p->t('moodle/moodleKursAnlegen').': </b><br><br>
 			<form action="'.htmlentities($_SERVER['PHP_SELF']).'?lvid='.$lvid.'&stsem='.$stsem.'" method="POST">
-			<input type="radio" '.$disable_lv.' name="art" value="lv" '.($art=='lv'?'checked':'').' '.$lvChecked.' onClick="toggleRadio()">'.$p->t('moodle/kursfuerganzeLV').'<br>
+			<input type="radio" '.$disable_lv.' name="art" value="lv" '.($art=='lv'?'checked':'').' '.$lvChecked.' onClick="toggleRadio()" data-lang="'.$lehrveranstaltung->sprache.'">'.$p->t('moodle/kursfuerganzeLV').'<br>
 			<input type="radio" id="radiole" name="art" value="le" '.($art=='le'?'checked':'').' '.$leChecked.' onClick="toggleRadio()">'.$p->t('moodle/kursfuerLE').'
 		  ';
 
@@ -449,6 +471,7 @@ else
 
 		echo '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				<input type="checkbox" onclick="ChangeLE()"
+					data-lang="'.$row->sprache.'"
 					data-lektor="'.trim($lektoren).'"
 					data-lehreinheit="'.$row->lehreinheit_id.'"
 					id="lehreinheit_'.$row->lehreinheit_id.'"
@@ -473,6 +496,56 @@ else
 
 	echo '<input type="hidden" name="bezeichnung_default" id="bezeichnung_default" value="'.LogicCourses::convertHtmlChars($longbezeichnung).'">';
 	echo '<br>'.$p->t('moodle/kursbezeichnung').': <input type="text" name="bezeichnung" id="bezeichnung" maxlength="254" size="40" value="'.LogicCourses::convertHtmlChars($longbezeichnung).'">';
+	if (LogicCourses::isStandardized($lehrveranstaltung)) {
+		$logicTemplates = new LogicTemplates();
+		$template = $logicTemplates->getTemplate($lehrveranstaltung->lehrveranstaltung_template_id);
+
+		echo '<br>'.$p->t('moodle/quellkurs').': ';
+		if ($template && isset($template->mdl_courses)) {
+			if ($template->mdl_courses) {
+				echo '<select name="qk" id="qk">';
+				foreach ($template->mdl_courses as $lang => $qk) {
+					$moodleCourses = LogicCourses::core_course_get_courses([$qk]);
+					$bez = isset($moodleCourses[0]) ? $moodleCourses[0]->fullname : '';
+					echo '<option value="' . $qk . '" data-language="' . $lang . '">' . $bez . ' (' . $lang . ')</option>';
+				}
+				echo '</select>';
+			} else {
+				echo '<span class="error">' . $p->t('moodle/error.sourcecourse.empty') . '</span>';
+			}
+		}
+		echo '<div id="lang-warning-multiple" class="error" style="display:none">' . $p->t('moodle/warn.lang.multiple') . '</div>';
+		echo '<script type="text/javascript">
+			function refreshQk() {
+				var all = $("input[name=\"art\"][value=\"lv\"]"),
+					defaultLang = all.data("lang"),
+					newVal = null;
+				$("#lang-warning-multiple").hide();
+				if (all.is(":checked")) {
+					if ($("#lehreinheitencheckboxen input[data-lang!=\"" + defaultLang + "\"]").length) {
+						$("#lang-warning-multiple").show();
+					}
+					newVal = $("#qk [data-language=\"" + defaultLang + "\"]").val();
+				} else {
+					var langs = [];
+					$("#lehreinheitencheckboxen input:checked").each(function() {
+						langs.push($(this).data("lang"));
+					});
+					langs = Array.from(new Set(langs));
+					if (langs.length > 1) {
+						$("#lang-warning-multiple").show();
+					}
+					newVal = $("#qk [data-language=\"" + langs.pop() + "\"]").val();
+				}
+				if (!newVal && $("#qk").children().length == 1 && $("#lehreinheitencheckboxen input").length == $("#lehreinheitencheckboxen input[data-lang=\"" + defaultLang + "\"]").length) {
+					// NOTE(chris): The select would be empty, there is only 1 sourcecourse and all languages are the same (except the sourcecourse one) => select the only option
+					newVal = $("#qk").children().first().val();
+				}
+				$("#qk").val(newVal);
+			}
+			$("input[name=\"art\"],#lehreinheitencheckboxen input").change(refreshQk);
+		</script>';
+	}
 	if(defined('ADDON_MOODLE_COURSE_GRUPPEN') && ADDON_MOODLE_COURSE_GRUPPEN==true)
 		echo '<br>'.$p->t('moodle/gruppenUebernehmen').': <input type="checkbox" name="gruppen">';
 	echo '<br><br><input type="submit" name="neu" value="'.$p->t('moodle/kursAnlegen').'" onClick="showLoader()">
@@ -494,11 +567,22 @@ while ($course = Database::fetchRow($coursesByLehrveranstaltungLehreinheit))
 	$courseName = '';
 	if (count($moodleCourses) > 0) $courseName = $moodleCourses[0]->fullname;
 
+	$copyState = false;
+	if (isset($mdl_source_course_copy_state[$course->mdl_course_id]) && $mdl_source_course_copy_state[$course->mdl_course_id]) {
+		$copyState = $mdl_source_course_copy_state[$course->mdl_course_id];
+	} elseif (LogicCourses::isStandardized($lehrveranstaltung)) {
+		$copyState = LogicCourses::getSourceCourseCopyState($course->mdl_course_id);
+	}
+
 	echo '<tr>';
 
 	if ($courseName != '')
 	{
-		echo '<td><a href="'.LogicCourses::getBaseURL().'/course/view.php?id='.$course->mdl_course_id.'" class="Item" target="_blank">'.$courseName.'</a></td>';
+		if ($copyState) {
+			echo '<td><a data-state-unzipid="' . $copyState->unzipid . '" data-state-contextid="' . $copyState->contextid . '" data-state-restoreid="' . (property_exists($copyState, 'restoreid') ? $copyState->restoreid : '') . '" href="'.LogicCourses::getBaseURL().'/course/view.php?id='.$course->mdl_course_id.'" class="Item" target="_blank">'.$courseName.'</a></td>';
+		} else {
+			echo '<td><a href="'.LogicCourses::getBaseURL().'/course/view.php?id='.$course->mdl_course_id.'" class="Item" target="_blank">'.$courseName.'</a></td>';
+		}
 	}
 	else
 	{
@@ -525,15 +609,96 @@ if (Database::rowsNumber($testCourses) > 0)
 	if ($moodleCourse != null)
 	{
 		$testCourseFound = true;
-		echo '<a href="'.LogicCourses::getBaseURL().'/course/view.php?id='.$moodleCourse->id.'" class="Item" target="_blank">'.LogicCourses::convertHtmlChars($moodleCourse->fullname).'</a>';
+		$copyState = false;
+		if (isset($mdl_source_course_copy_state[$moodleCourse->id]) && $mdl_source_course_copy_state[$moodleCourse->id]) {
+			$copyState = $mdl_source_course_copy_state[$moodleCourse->id];
+		} elseif (LogicCourses::isStandardized($lehrveranstaltung)) {
+			$copyState = LogicCourses::getSourceCourseCopyState($moodleCourse->id);
+		}
+		if ($copyState) {
+			echo '<span><a data-state-unzipid="' . $copyState->unzipid . '" data-state-contextid="' . $copyState->contextid . '" data-state-restoreid="' . (property_exists($copyState, 'restoreid') ? $copyState->restoreid : '') . '" href="'.LogicCourses::getBaseURL().'/course/view.php?id='.$moodleCourse->id.'" class="Item" target="_blank">'.LogicCourses::convertHtmlChars($moodleCourse->fullname).'</a></span>';
+		} else {
+			echo '<a href="'.LogicCourses::getBaseURL().'/course/view.php?id='.$moodleCourse->id.'" class="Item" target="_blank">'.LogicCourses::convertHtmlChars($moodleCourse->fullname).'</a>';
+		}
 	}
 }
-
 if (!$testCourseFound)
 {
-	echo "<a href='".$_SERVER['PHP_SELF']."?lvid=$lvid&stsem=$stsem&action=createtestkurs' class='Item'>".$p->t('moodle/klickenSieHierUmTestkursErstellen')."</a>";
+	echo '<form method="GET">
+		<input type="hidden" name="lvid" value="' . $lvid . '"/>
+		<input type="hidden" name="stsem" value="' . $stsem . '"/>
+		<input type="hidden" name="action" value="createtestkurs"/>
+		<button type="submit">'.$p->t('moodle/klickenSieHierUmTestkursErstellen').'</button>';
+	if (LogicCourses::isStandardized($lehrveranstaltung)) {
+		$logicTemplates = new LogicTemplates();
+		$template = $logicTemplates->getTemplate($lehrveranstaltung->lehrveranstaltung_template_id);
+
+		if ($template && isset($template->mdl_courses) && count($template->mdl_courses) > 1) {
+			echo ' ' . $p->t('moodle/quellkurs') . ': <select name="qk">';
+			foreach ($template->mdl_courses as $lang => $qk) {
+				$moodleCourses = LogicCourses::core_course_get_courses([$qk]);
+				$bez = $moodleCourses[0]->fullname;
+				echo '<option value="' . $qk . '"' . ($lang == $lehrveranstaltung->sprache ? ' selected' : '') . '>' . $bez . ' (' . $lang . ')</option>';
+			}
+			echo '</select>';
+		}
+	}
+	echo '</form>';
 }
 
+echo '<script type="text/javascript">
+	$("[data-state-unzipid]").each(function() {
+		var $this = $(this),
+			to = 100, 
+			progress;
+		function progress_func() {
+			$.ajax({
+				url: "pb_quellkurs_restore.php",
+				dataType: "json",
+				data: {
+					unzipid: $this.data("stateUnzipid"),
+					contextid: $this.data("stateContextid"),
+					restoreid: $this.data("stateRestoreid"),
+					time: Date.now()
+				},
+				success: function(data) {
+					if (progress.progressbar("value") == data.value) {
+						to = 100;
+					} else {
+						to = 0;
+					}
+					if (data.contextid)
+						$this.data("stateContextid", data.contextid);
+					if (data.restoreid)
+						$this.data("stateRestoreid", data.restoreid);
+					if (data.value)
+						progress.progressbar("value", data.value);
+					if (!data.value || data.value < 100) {
+						setTimeout(progress_func, to);
+					} else {
+						progress.progressbar("destroy").detach();
+					}
+				},
+				error: function(data, status, msg) {
+					if (data.responseJSON.message) {
+						msg = data.responseJSON.message;
+					}
+					progress.progressbar("destroy").detach();
+					$this.after($("<span/>").addClass("error").text(" Error: " + msg));
+				}
+			});
+		}
+
+		if ($this.data("stateUnzipid") || $this.data("stateContextid") || $this.data("stateRestoreid")) {
+			progress = $("<div/>").prependTo($this.parent().addClass("progressbar-container")).progressbar({
+				value: false,
+				create: function(e, ui) {
+					setTimeout(progress_func, 0);
+				}
+			});
+		}
+	});
+</script>';
 echo '
 </body>
 </html>';

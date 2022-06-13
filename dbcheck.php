@@ -70,6 +70,7 @@ if(!$result = @$db->db_query("SELECT 1 FROM addon.tbl_moodle"))
 			(
 				moodle_id bigint NOT NULL,
 				mdl_course_id bigint,
+				mdl_source_course_id bigint,
 				lehreinheit_id bigint,
 				lehrveranstaltung_id bigint,
 				studiensemester_kurzbz varchar(16),
@@ -111,6 +112,53 @@ if(!$result = @$db->db_query("SELECT 1 FROM addon.tbl_moodle"))
 		echo '<strong>addon.tbl_moodle: '.$db->db_last_error().'</strong><br>';
 	else
 		echo ' addon.tbl_moodle: Tabelle addon.tbl_moodle hinzugefuegt!<br>';
+}
+elseif(!$result = @$db->db_query("SELECT mdl_source_course_id FROM addon.tbl_moodle"))
+{
+	$qry = 'ALTER TABLE addon.tbl_moodle ADD mdl_source_course_id bigint;';
+	if(!$db->db_query($qry))
+		echo '<strong>addon.tbl_moodle: '.$db->db_last_error().'</strong><br>';
+	else
+		echo ' addon.tbl_moodle: Tabelle addon.tbl_moodle um Feld mdl_source_course erweitert!<br>';
+}
+if(!$result = @$db->db_query("SELECT 1 FROM addon.tbl_moodle_quellkurs"))
+{
+	$qry = 'CREATE TABLE addon.tbl_moodle_quellkurs
+			(
+				moodle_quellkurs_id bigint NOT NULL,
+				lehrveranstaltung_id bigint NOT NULL,
+				sprache varchar(16) NOT NULL,
+				mdl_course_id bigint NOT NULL,
+				insertamum timestamp,
+				insertvon varchar(32),
+				updateamum timestamp,
+				updatevon varchar(32)
+			);
+
+	CREATE SEQUENCE addon.seq_moodle_quellkurs_moodle_quellkurs_id
+	 INCREMENT BY 1
+	 NO MAXVALUE
+	 NO MINVALUE
+	 CACHE 1;
+
+	ALTER TABLE addon.tbl_moodle_quellkurs ADD CONSTRAINT pk_moodle_quellkurs PRIMARY KEY (moodle_quellkurs_id);
+	ALTER TABLE addon.tbl_moodle_quellkurs ADD CONSTRAINT uc_moodle_quellkurs_local UNIQUE (lehrveranstaltung_id, sprache);
+	ALTER TABLE addon.tbl_moodle_quellkurs ADD CONSTRAINT uc_moodle_quellkurs_foreign UNIQUE (mdl_course_id);
+	ALTER TABLE addon.tbl_moodle_quellkurs ALTER COLUMN moodle_quellkurs_id SET DEFAULT nextval(\'addon.seq_moodle_quellkurs_moodle_quellkurs_id\');
+
+	ALTER TABLE addon.tbl_moodle_quellkurs ADD CONSTRAINT fk_moodle_quellkurs_lehrveranstaltung FOREIGN KEY (lehrveranstaltung_id) REFERENCES lehre.tbl_lehrveranstaltung (lehrveranstaltung_id) ON DELETE RESTRICT ON UPDATE CASCADE;
+	ALTER TABLE addon.tbl_moodle_quellkurs ADD CONSTRAINT fk_moodle_quellkurs_sprache FOREIGN KEY (sprache) REFERENCES public.tbl_sprache (sprache) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+	GRANT SELECT, UPDATE, INSERT, DELETE ON addon.tbl_moodle_quellkurs TO web;
+	GRANT SELECT, UPDATE, INSERT, DELETE ON addon.tbl_moodle_quellkurs TO vilesci;
+	GRANT SELECT, UPDATE ON addon.seq_moodle_quellkurs_moodle_quellkurs_id TO web;
+	GRANT SELECT, UPDATE ON addon.seq_moodle_quellkurs_moodle_quellkurs_id TO vilesci;
+	';
+
+	if(!$db->db_query($qry))
+		echo '<strong>addon.tbl_moodle_quellkurs: '.$db->db_last_error().'</strong><br>';
+	else
+		echo ' addon.tbl_moodle_quellkurs: Tabelle addon.tbl_moodle_quellkurs hinzugefuegt!<br>';
 }
 
 // Cronjob Installieren
@@ -170,8 +218,19 @@ $tabellen = array(
 		'updateamum',
 		'updatevon',
 		'ext_id',
-		'gruppe_kurzbz'
-	)
+                'gruppe_kurzbz',
+                'mdl_source_course_id'
+	),
+        'addon.tbl_moodle_quellkurs' => array(
+                'moodle_quellkurs_id',
+	        'lehrveranstaltung_id',
+                'sprache',
+	        'mdl_course_id',
+	        'insertamum',
+	        'insertvon',
+	        'updateamum',
+	        'updatevon'
+        )
 );
 
 $tabs=array_keys($tabellen);
