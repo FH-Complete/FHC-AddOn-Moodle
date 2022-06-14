@@ -633,14 +633,20 @@ if (!$testCourseFound)
 		$logicTemplates = new LogicTemplates();
 		$template = $logicTemplates->getTemplate($lehrveranstaltung->lehrveranstaltung_template_id);
 
-		if ($template && isset($template->mdl_courses) && count($template->mdl_courses) > 1) {
-			echo ' ' . $p->t('moodle/quellkurs') . ': <select name="qk">';
-			foreach ($template->mdl_courses as $lang => $qk) {
-				$moodleCourses = LogicCourses::core_course_get_courses([$qk]);
-				$bez = $moodleCourses[0]->fullname;
-				echo '<option value="' . $qk . '"' . ($lang == $lehrveranstaltung->sprache ? ' selected' : '') . '>' . $bez . ' (' . $lang . ')</option>';
+		if ($template && isset($template->mdl_courses)) {
+			if (count($template->mdl_courses) > 1) {
+				echo ' ' . $p->t('moodle/quellkurs') . ': <select name="qk">';
+				foreach ($template->mdl_courses as $lang => $qk) {
+					$moodleCourses = LogicCourses::core_course_get_courses([$qk]);
+					$bez = $moodleCourses[0]->fullname;
+					echo '<option value="' . $qk . '"' . ($lang == $lehrveranstaltung->sprache ? ' selected' : '') . '>' . $bez . ' (' . $lang . ')</option>';
+				}
+				echo '</select>';
+			} elseif (count($template->mdl_courses)) {
+				foreach ($template->mdl_courses as $lang => $qk) {
+					echo '<input type="hidden" name="qk" value="' . $qk . '"/>';
+				}
 			}
-			echo '</select>';
 		}
 	}
 	echo '</form>';
