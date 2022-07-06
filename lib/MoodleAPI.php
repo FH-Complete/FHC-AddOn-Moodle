@@ -487,8 +487,6 @@ class MoodleAPI extends MoodleClient
 	 */
 	public function core_cohort_create_cohorts($cohorts)
 	{
-		print_r($cohorts);
-		
 		return $this->call(
 			'core_cohort_create_cohorts', 
 			MoodleClient::HTTP_POST_METHOD, 
