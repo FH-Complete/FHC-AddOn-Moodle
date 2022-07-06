@@ -140,6 +140,17 @@ $fhc_moodle_wartung_ignore_le_typ = array();
 // do not create Moodle Courses for Studiengaenge with studiengang_kz listed in this array (cronjobs/synchronizeCourses.php)
 $fhc_synchronize_course_ignore_stg = array();
 
+// config to synchronize moodle cohorts
+$fhc_synchronize_cohorts = array(
+	array(
+		'categoryid' => 1, // id of the moodle category where cohort should be created
+		'contextid' => 1, // id of the moodle context where cohort should be searched
+		'cohort_name_prefix' => 'FHC_', // prefix for cohort name, studiensemester is appended
+		'theme' => null, // shortname of the theme that should be forced for the cohort or null
+		'uidsquery' => 'SELECT \'test\' AS uid' // sql statement to retrieve uids that should be members of the cohort
+	)
+);
+
 // ------------------------------------------------------------------------------------------------------------
 // Connection configuration
 

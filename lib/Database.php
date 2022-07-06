@@ -1025,26 +1025,16 @@ EOABRSQL;
 	/**
 	 * 
 	 */
-	public function getLehrgangsCohort($studiensemester_kurzbz)
+	public function getCohortUids($query, $studiensemester_kurzbz)
 	{
-		$query = <<<EOCQ
-			SELECT 
-				s.student_uid 
-			FROM 
-				public.tbl_student s 
-			JOIN 
-				public.tbl_prestudent p ON s.prestudent_id = p.prestudent_id 
-			JOIN 
-				public.tbl_prestudentstatus ps ON p.prestudent_id = ps.prestudent_id 
-			JOIN 
-				public.tbl_studiengang sg ON p.studiengang_kz = sg.studiengang_kz 
-			WHERE 
-				ps.status_kurzbz = 'Student' AND 
-				ps.studiensemester_kurzbz = {$this->db_add_param($studiensemester_kurzbz)} AND 
-				sg.typ = 'l' 
-			ORDER BY 
-				s.student_uid ASC
-EOCQ;
+		$patterns = array(
+			'/{studiensemester_kurzbz}/'
+		);
+		$replacements = array(
+			$this->db_add_param($studiensemester_kurzbz)
+		);
+		$query = preg_replace($patterns, $replacements, $query);
+		
 		return $this->_execQuery($query);
 	}
 
