@@ -201,7 +201,7 @@ class LogicTemplates extends Database
 	public function updateMoodleQuellkurs($mdl_course, $template_id, $sprache, $overwrite = false)
 	{
 		$template = $this->getTemplate($template_id);
-		if (!$template) {
+		if ($template_id !== '' && !$template) {
 			return 'template.wrong';
 		}
 		$qry = '';
@@ -213,7 +213,7 @@ class LogicTemplates extends Database
 				AND sprache=" . $this->db_add_param($mdl_course->template_sprache, FHC_STRING) . "
 				AND mdl_course_id=" . $this->db_add_param($mdl_course->id, FHC_INTEGER) . ";";
 		}
-		if ($template_id) {
+		if ($template_id !== '') {
 			if (isset($template->mdl_courses[$sprache])) {
 				if (!$overwrite)
 					return 'moodle.overwrite';
