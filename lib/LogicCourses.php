@@ -156,7 +156,7 @@ class LogicCourses extends Logic
 			$shortname .= '-'.$course->lehreinheit_id;
 		}
 
-		if (defined(ADDON_MOODLE_ADD_LANG_TO_STANDARDIZED_COURSES) && ADDON_MOODLE_ADD_LANG_TO_STANDARDIZED_COURSES == true)
+		if (defined('ADDON_MOODLE_ADD_LANG_TO_STANDARDIZED_COURSES') && ADDON_MOODLE_ADD_LANG_TO_STANDARDIZED_COURSES == true)
 		{
 			$lang = null;
 			$lv = null;
