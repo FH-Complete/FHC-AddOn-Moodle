@@ -222,7 +222,7 @@ if (isset($_POST['neu']))
 		$course->studiengang = $studiengang->typ.$studiengang->kurzbz;
 		$course->semester = $lehrveranstaltung->semester;
 
-		if (ADDON_MOODLE_ADD_LANG_TO_STANDARDIZED_COURSES == true && isset($_POST['qk']) && intval($_POST['qk']) > 0) {
+		if (defined(ADDON_MOODLE_ADD_LANG_TO_STANDARDIZED_COURSES) && ADDON_MOODLE_ADD_LANG_TO_STANDARDIZED_COURSES == true && isset($_POST['qk']) && intval($_POST['qk']) > 0) {
 			$logicTemplates = new LogicTemplates();
 			$sourceCourse = $logicTemplates->getSourceCourse(intval($_POST['qk']));
 			$lang = new sprache();
