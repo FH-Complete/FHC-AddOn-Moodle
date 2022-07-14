@@ -156,28 +156,6 @@ class LogicCourses extends Logic
 			$shortname .= '-'.$course->lehreinheit_id;
 		}
 
-		return $shortname;
-	}
-
-	/**
-	 * Generates the parameter fullname for the given course
-	 */
-	public static function getCourseFullname($course, $studiensemester_kurzbz)
-	{
-		$orgform = ($course->lv_orgform_kurzbz != '' ? $course->lv_orgform_kurzbz : $course->sg_orgform_kurzbz);
-
-		$fullname = self::_getStudiengangKuerzel($course->studiengang_kz).'-'.
-			$orgform.'-'.
-			$course->semester.'-'.
-			$studiensemester_kurzbz.' - '.
-			$course->bezeichnung;
-
-		//
-		if (ADDON_MOODLE_JUST_MOODLE != true)
-		{
-			$fullname .= ' - '.$course->lehreinheit_id;
-		}
-
 		if (ADDON_MOODLE_ADD_LANG_TO_STANDARDIZED_COURSES == true)
 		{
 			$lang = null;
@@ -201,6 +179,28 @@ class LogicCourses extends Logic
 				$l->load($lang);
 				$shortname .= '-' . strtoupper(current(explode('-', $l->locale)));
 			}
+		}
+
+		return $shortname;
+	}
+
+	/**
+	 * Generates the parameter fullname for the given course
+	 */
+	public static function getCourseFullname($course, $studiensemester_kurzbz)
+	{
+		$orgform = ($course->lv_orgform_kurzbz != '' ? $course->lv_orgform_kurzbz : $course->sg_orgform_kurzbz);
+
+		$fullname = self::_getStudiengangKuerzel($course->studiengang_kz).'-'.
+			$orgform.'-'.
+			$course->semester.'-'.
+			$studiensemester_kurzbz.' - '.
+			$course->bezeichnung;
+
+		//
+		if (ADDON_MOODLE_JUST_MOODLE != true)
+		{
+			$fullname .= ' - '.$course->lehreinheit_id;
 		}
 
 		return $fullname;
