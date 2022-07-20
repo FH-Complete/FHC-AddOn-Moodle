@@ -1,8 +1,7 @@
 <?php
 
 /**
- * This script adds all the students present on FHComplete to moodle
- * The database table used to link users to moodle courses is addon.tbl_moodle
+ * This script creates and synchronizes students from FHComplete to moodle cohorts
  */
 
 require_once('../lib/LogicCohorts.php');
