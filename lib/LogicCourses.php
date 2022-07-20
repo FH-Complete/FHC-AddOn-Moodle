@@ -156,6 +156,31 @@ class LogicCourses extends Logic
 			$shortname .= '-'.$course->lehreinheit_id;
 		}
 
+		if (defined('ADDON_MOODLE_ADD_LANG_TO_STANDARDIZED_COURSES') && ADDON_MOODLE_ADD_LANG_TO_STANDARDIZED_COURSES == true)
+		{
+			$lang = null;
+			$lv = null;
+			if ($course->lehreinheit_id) {
+				$le = new lehreinheit();
+				$le->load($course->lehreinheit_id);
+
+				$lv = new lehrveranstaltung();
+				$lv->load($le->lehrveranstaltung_id);
+				
+				$lang = $le->sprache;
+			} elseif ($course->lehrveranstaltung_id) {
+				$lv = new lehrveranstaltung();
+				$lv->load($course->lehrveranstaltung_id);
+
+				$lang = $lv->sprache;
+			}
+			if ($lv && $lang && self::isStandardized($lv)) {
+				$l = new sprache();
+				$l->load($lang);
+				$shortname .= '-' . strtoupper(current(explode('-', $l->locale)));
+			}
+		}
+
 		return $shortname;
 	}
 
