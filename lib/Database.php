@@ -1021,6 +1021,22 @@ EOABRSQL;
 
  		return $this->_execQuery($query);
  	}
+	
+	/**
+	 * 
+	 */
+	public function getCohortUids($query, $studiensemester_kurzbz)
+	{
+		$patterns = array(
+			'/{studiensemester_kurzbz}/'
+		);
+		$replacements = array(
+			$this->db_add_param($studiensemester_kurzbz)
+		);
+		$query = preg_replace($patterns, $replacements, $query);
+		
+		return $this->_execQuery($query);
+	}
 
 	// --------------------------------------------------------------------------------------------
     // Public static methods

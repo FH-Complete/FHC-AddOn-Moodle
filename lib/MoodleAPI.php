@@ -481,4 +481,99 @@ class MoodleAPI extends MoodleClient
 			)
 		);
 	}
+	
+	/**
+	 * 
+	 */
+	public function core_cohort_create_cohorts($cohorts)
+	{
+		return $this->call(
+			'core_cohort_create_cohorts', 
+			MoodleClient::HTTP_POST_METHOD, 
+			array(
+				'cohorts' => $cohorts
+			)
+		);
+	}
+	
+	/**
+	 * 
+	 */
+	public function core_cohort_search_cohorts($query, 
+		$context=array(
+			'contextid' => 0, 
+			'contextlevel' => '',
+			'instanceid' => 0
+		), 
+		$includes='parents' , $limitfrom=0, $limitnum=25)
+	{
+		return $this->call(
+			'core_cohort_search_cohorts', 
+			MoodleClient::HTTP_POST_METHOD, 
+			array(
+				'query' => $query,
+				'context' => $context, 
+				'includes' => $includes, 
+				'limitfrom' => $limitfrom, 
+				'limitnum' => $limitnum
+			)
+		);
+	}
+	
+	/**
+	 * 
+	 */
+	public function core_cohort_get_cohort_members($cohortids)
+	{
+		return $this->call(
+			'core_cohort_get_cohort_members', 
+			MoodleClient::HTTP_POST_METHOD, 
+			array(
+				'cohortids' => $cohortids
+			)
+		);
+	}
+
+	/**
+	 * 
+	 */
+	public function core_cohort_add_cohort_members($members)
+	{
+		return $this->call(
+			'core_cohort_add_cohort_members', 
+			MoodleClient::HTTP_POST_METHOD, 
+			array(
+				'members' => $members
+			)
+		);
+	}
+	
+	/**
+	 * 
+	 */
+	public function core_cohort_delete_cohort_members($members)
+	{
+		return $this->call(
+			'core_cohort_delete_cohort_members', 
+			MoodleClient::HTTP_POST_METHOD, 
+			array(
+				'members' => $members
+			)
+		);
+	}
+	
+	/**
+	 *
+	 */
+	public function core_user_get_users_by_field_id($ids)
+	{
+		return $this->call(
+			'core_user_get_users_by_field',
+			MoodleClient::HTTP_POST_METHOD,
+			array(
+				'field' => 'id',
+				'values' => $ids
+			)
+		);
+	}
 }
