@@ -691,6 +691,7 @@ echo '<script type="text/javascript">
 						setTimeout(progress_func, to);
 					} else {
 						progress.progressbar("destroy").detach();
+						$this.css({cursor:"",color:"",textDecoration:""}).off("click");
 					}
 				},
 				error: function(data, status, msg) {
@@ -710,6 +711,7 @@ echo '<script type="text/javascript">
 					setTimeout(progress_func, 0);
 				}
 			});
+			$this.css({cursor:"text",color:"#333",textDecoration:"none"}).on("click", e => e.preventDefault());
 		}
 	});
 </script>';

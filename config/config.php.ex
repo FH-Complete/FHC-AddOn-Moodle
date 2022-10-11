@@ -17,6 +17,9 @@ define('ADDON_MOODLE_SOURCE_COURSE_ID', 0);
 // Create empty Moodle Courses if no Source Courses are specified
 define('MOODLE_ADDON_CREATE_COURSE_FOR_LVTEMPLATE_WITHOUT_QUELLKURS', true);
 
+// Mark Synchronization as done after X days - Use a number less than the days after which moodle deletes the backup logs and controllers
+define('ADDON_MOODLE_MARK_AS_DONE_AFTER_X_DAYS', 29);
+
 // ------------------------------------------------------------------------------------------------------------
 // Courses synching options
 
