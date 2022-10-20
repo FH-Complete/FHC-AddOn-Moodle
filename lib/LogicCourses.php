@@ -62,6 +62,31 @@ class LogicCourses extends Logic
 	 */
 	public static function getSourceCourseCopyState($mdl_course_id)
 	{
+		if (defined('ADDON_MOODLE_MARK_AS_DONE_AFTER_X_DAYS') && ADDON_MOODLE_MARK_AS_DONE_AFTER_X_DAYS) {
+			$result = self::_dbCall(
+				'getCoursesByIDs', 
+				[$mdl_course_id], 
+				'An error occurred while getting the createtime of moodle course: ' . $mdl_course_id
+			);
+			
+			if (Database::rowsNumber($result)) {
+				$result = Database::fetchAll($result);
+				$insert = 0;
+				foreach ($result as $row) {
+					$date = new \DateTime($row['insertamum']);
+					$date = $date->getTimestamp();
+					if ($date > $insert)
+						$insert = $date;
+				}
+				if ($insert) {
+					$date = new \DateTime();
+					$date->setTimestamp($insert);
+					$date->modify('+' . ADDON_MOODLE_MARK_AS_DONE_AFTER_X_DAYS . ' days');
+					if ($date < new \DateTime())
+						return null;
+				}
+			}
+		}
 		$result = self::_moodleAPICall(
 			'local_fhtw_std_current_restore',
 			[
