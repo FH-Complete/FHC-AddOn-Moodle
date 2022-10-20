@@ -94,6 +94,17 @@ class LogicCourses extends Logic
 			],
 			'An error occurred while getting the source course recovery state from moodle'
 		);
+
+		if (defined('ADDON_MOODLE_MARK_AS_DONE_AFTER_X_DAYS') && ADDON_MOODLE_MARK_AS_DONE_AFTER_X_DAYS && isset($result->timecreated)) 
+                {
+                    $now = time();
+                    $rts = $result->timecreated + (86400 * ADDON_MOODLE_MARK_AS_DONE_AFTER_X_DAYS);
+                    if($rts < $now) 
+                    {
+                        return null;
+                    }
+                }
+
 		return $result;
 	}
 
