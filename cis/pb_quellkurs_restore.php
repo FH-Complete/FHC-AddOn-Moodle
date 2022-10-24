@@ -57,6 +57,9 @@ $restoreid = trim(isset($_REQUEST['restoreid']) ? $_REQUEST['restoreid'] : '');
 $moodle = new MoodleAPI();
 if ($contextid && $restoreid) {
 	$result = $moodle->core_backup_get_async_backup_progress($contextid, [$restoreid]);
+	if ($moodle->isError()) {
+		returnOutput(['message' => $moodle->getError()], 400);
+	}
 	$res = is_array($result) ? current($result) : $result;
 	if (!property_exists($res, 'status') || !property_exists($res, 'progress'))
 		returnOutput($result, 400);
@@ -67,6 +70,9 @@ if ($contextid && $restoreid) {
 	}
 } elseif ($unzipid) {
 	$result = $moodle->local_fhtw_std_async_unzip_progress($unzipid);
+	if ($moodle->isError()) {
+		returnOutput(['message' => $moodle->getError()], 400);
+	}
 	if (!property_exists($result, 'progress') || !property_exists($result, 'restoreid') || !property_exists($result, 'contextid'))
 		returnOutput($result, 400);
 	if (floatval($result->progress) == 1 && $result->restoreid && $result->contextid) {
