@@ -49,6 +49,7 @@ else
 {
 	$searchItems = explode(' ', $search);
 }
+$filter = isset($_REQUEST['filter']) ? (object)['studiengang_kz' => $_REQUEST['filter']] : null;
 
 $data = [];
 
@@ -59,7 +60,7 @@ foreach ($searchItems as $searchItem) {
 	if (is_numeric($searchItem)) {
 		if ($res = $moodle->core_course_get_courses([$searchItem])) {
 			foreach ($res as $course) {
-				if ($templates->isSourceCourse($course))
+				if ($templates->isSourceCourse($course) && ($filter === null || $templates->areMapped($course, $filter)))
 					$result[$course->id] = ['value' => $course->id, 'label' => $course->fullname];
 			}
 		}
@@ -68,7 +69,7 @@ foreach ($searchItems as $searchItem) {
 foreach ($searchItems as $searchItem) {
 	if ($res = $moodle->core_course_search_courses('search', $searchItem)) {
 		foreach ($res->courses as $course) {
-			if ($templates->isSourceCourse($course))
+			if ($templates->isSourceCourse($course) && ($filter === null || $templates->areMapped($course, $filter)))
 				$result[$course->id] = ['value' => $course->id, 'label' => $course->fullname];
 		}
 	}

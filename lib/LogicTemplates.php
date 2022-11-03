@@ -116,7 +116,7 @@ class LogicTemplates extends Database
 	}
 
 	/**
-	 * @param integer | \stdClass $mdl_course
+	 * @param \stdClass $mdl_course
 	 * @return boolean
 	 */
 	public function isSourceCourse($mdl_course)
@@ -132,9 +132,45 @@ class LogicTemplates extends Database
 			
 			if (strpos($cat[0]->path . '/', '/' . ADDON_MOODLE_SOURCE_COURSE_ID . '/') === FALSE)
 				return false;
+		} elseif (isset($GLOBALS['fhc_templates_sourcecourse_mapping']) && $GLOBALS['fhc_templates_sourcecourse_mapping']) {
+			$moodle = new MoodleAPI();
+			$cat = $moodle->call('core_course_get_categories', MoodleClient::HTTP_POST_METHOD, ['criteria' => [['key'=>'id','value'=>$mdl_course->categoryid]], 'addsubcategories' => 0]);
+			if (!$cat)
+				return false;
+			
+			$cats = explode('/', $cat[0]->path);
+			foreach ($cats as $cat)
+				if (in_array($cat, $GLOBALS['fhc_templates_sourcecourse_mapping']))
+					return true;
+			return false;
 		}
 
 		return true;
+	}
+
+	/**
+	 * @param \stdClass $mdl_course
+	 * @param \stdClass $template
+	 * @return boolean
+	 */
+	public function areMapped($mdl_course, $template)
+	{
+		if (!isset($GLOBALS['fhc_templates_sourcecourse_mapping']) || !$GLOBALS['fhc_templates_sourcecourse_mapping'])
+			return true;
+
+		if (!isset($GLOBALS['fhc_templates_sourcecourse_mapping'][$template->studiengang_kz]))
+			return false;
+
+		$moodle = new MoodleAPI();
+		$cat = $moodle->call('core_course_get_categories', MoodleClient::HTTP_POST_METHOD, ['criteria' => [['key'=>'id','value'=>$mdl_course->categoryid]], 'addsubcategories' => 0]);
+		if (!$cat)
+			return false;
+
+		$cats = explode('/', $cat[0]->path);
+		if (in_array($GLOBALS['fhc_templates_sourcecourse_mapping'][$template->studiengang_kz], $cats))
+			return true;
+
+		return false;
 	}
 
 	/**
