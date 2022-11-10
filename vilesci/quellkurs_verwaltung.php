@@ -39,7 +39,7 @@ $rechte->getBerechtigungen($user);
 $db = new basis_db();
 $templates = new LogicTemplates();
 
-if(!$rechte->isBerechtigt('addon/moodle'))
+if(!$rechte->isBerechtigt('addon/moodle') && !$rechte->isBerechtigt('addon/moodle_quellkurs'))
 	die('Sie haben keine Berechtigung für diese Seite');
 
 $curr_lang = getSprache();
