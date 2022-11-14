@@ -64,6 +64,18 @@ if($result = $db->db_query("SELECT 1 FROM system.tbl_berechtigung WHERE berechti
 			echo ' neue Berechtigung addon/moodle hinzugefuegt!<br>';
 	}
 }
+if($result = $db->db_query("SELECT 1 FROM system.tbl_berechtigung WHERE berechtigung_kurzbz='addon/moodle_semesterkurs'"))
+{
+	if($db->db_num_rows($result)==0)
+	{
+		$qry="INSERT INTO system.tbl_berechtigung(berechtigung_kurzbz, beschreibung) VALUES('addon/moodle_semesterkurs','Addon Moodle Semesterkurse Erstellen');";
+
+		if(!$db->db_query($qry))
+			echo '<strong>'.$db->db_last_error().'</strong><br>';
+		else
+			echo ' neue Berechtigung addon/moodle_semesterkurs hinzugefuegt!<br>';
+	}
+}
 if(!$result = @$db->db_query("SELECT 1 FROM addon.tbl_moodle"))
 {
 	$qry = 'CREATE TABLE addon.tbl_moodle

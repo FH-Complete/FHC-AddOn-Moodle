@@ -59,16 +59,18 @@ if ($rechte->isBerechtigt('addon/moodle')) $berechtigt = true;
 
 if ($lem->existsLV($lvid, $stsem, $user)) $berechtigt = true;
 
-if (!$berechtigt)
-{
-	die('Sie haben keine Berechtigung für diese Seite');
-}
-
 $lehrveranstaltung = new lehrveranstaltung();
 $lehrveranstaltung->load($lvid);
 
 $studiengang = new studiengang();
 $studiengang->load($lehrveranstaltung->studiengang_kz);
+
+if ($rechte->isBerechtigt('addon/moodle_semesterkurs', $studiengang->oe_kurzbz)) $berechtigt = true;
+
+if (!$berechtigt)
+{
+	die('Sie haben keine Berechtigung für diese Seite');
+}
 
 $studiensemester = new studiensemester();
 $studiensemester->load($stsem);
