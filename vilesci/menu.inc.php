@@ -23,13 +23,13 @@ $menu_addon=array
 (
 	'AddonMoodle'=>array
 	(
-		'name'=>'Moodle', 'permissions'=>array('basis/moodle'),
-		'Account'=>array('name'=>'Account Moodle', 'link'=>'../addons/moodle/vilesci/account_verwaltung.php', 'target'=>'main'),
-		'Kursentfernen'=>array('name'=>'Kurszuteilung', 'link'=>'../addons/moodle/vilesci/kurs_verwaltung.php', 'target'=>'main'),
-        'quellkursverwaltung'=>array('name'=>'Quellkurszuteilung', 'link'=>'../addons/moodle/vilesci/quellkurs_verwaltung.php', 'target'=>'main'),
-		'Rollenzuteilung'=>array('name'=>'Rollenzuteilung', 'link'=>'../addons/moodle/vilesci/rollenzuteilung.php', 'target'=>'main'),
-		'UserSync'=>array('name'=>'User Sync', 'link'=>'../addons/moodle/vilesci/usersSynchronization.php', 'target'=>'main'),
-		'UserMassCreate'=>array('name'=>'User Massenanlage', 'link'=>'../addons/moodle/vilesci/account_masscreate.php', 'target'=>'main'),
+		'name'=>'Moodle', 'permissions'=>array('basis/moodle', 'addon/moodle_quellkurs'),
+		'Account'=>array('name'=>'Account Moodle', 'link'=>'../addons/moodle/vilesci/account_verwaltung.php', 'target'=>'main', 'permissions'=>array('basis/moodle')),
+		'Kursentfernen'=>array('name'=>'Kurszuteilung', 'link'=>'../addons/moodle/vilesci/kurs_verwaltung.php', 'target'=>'main', 'permissions'=>array('basis/moodle')),
+        'quellkursverwaltung'=>array('name'=>'Quellkurszuteilung', 'link'=>'../addons/moodle/vilesci/quellkurs_verwaltung.php', 'target'=>'main', 'permissions'=>array('basis/moodle', 'addon/moodle_quellkurs')),
+		'Rollenzuteilung'=>array('name'=>'Rollenzuteilung', 'link'=>'../addons/moodle/vilesci/rollenzuteilung.php', 'target'=>'main', 'permissions'=>array('basis/moodle')),
+		'UserSync'=>array('name'=>'User Sync', 'link'=>'../addons/moodle/vilesci/usersSynchronization.php', 'target'=>'main', 'permissions'=>array('basis/moodle')),
+		'UserMassCreate'=>array('name'=>'User Massenanlage', 'link'=>'../addons/moodle/vilesci/account_masscreate.php', 'target'=>'main', 'permissions'=>array('basis/moodle')),
 	)
 );
 
