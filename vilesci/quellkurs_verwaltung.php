@@ -39,7 +39,7 @@ $rechte->getBerechtigungen($user);
 $db = new basis_db();
 $templates = new LogicTemplates();
 
-if(!$rechte->isBerechtigt('addon/moodle'))
+if(!$rechte->isBerechtigt('addon/moodle') && !$rechte->isBerechtigt('addon/moodle_quellkurs'))
 	die('Sie haben keine Berechtigung für diese Seite');
 
 $curr_lang = getSprache();
@@ -77,7 +77,7 @@ if (isset($_GET['template_id'])) {
 		$_action = '';
 		add_error('template.wrong');
 	} elseif (isset($_POST['mdl_courses'])) {
-		if ($error = $templates->updateMoodleQuellkurse($template, $_POST['mdl_courses'])) {
+		if ($error = $templates->updateMoodleQuellkurse($template, $_POST['mdl_courses'], $user)) {
 			add_error($error);
 		} else {
 			add_success('success.template.update');
@@ -93,7 +93,7 @@ if (isset($_GET['mdl_course_id'])) {
 		add_error('moodle.wrong');
 	} elseif (isset($_POST['template']) && isset($_POST['sprache'])) {
 		$template = $templates->getTemplate($_POST['template']);
-		if ($error = $templates->updateMoodleQuellkurs($mdl_course, $_POST['template'], $_POST['sprache'], isset($_POST['overwrite']))) {
+		if ($error = $templates->updateMoodleQuellkurs($mdl_course, $_POST['template'], $_POST['sprache'], isset($_POST['overwrite']), $user)) {
 			add_error($error);
 		} else {
 			add_success('success.template.update');

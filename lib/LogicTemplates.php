@@ -140,9 +140,11 @@ class LogicTemplates extends Database
 	/**
 	 * @param \stdClass $template
 	 * @param array $mdl_courses An array of "moodle course ids" with "sprache" as index
+	 * @param string | null $user The user making this operation
+	 * 
 	 * @return string Returns an empty string on success or the error message
 	 */
-	public function updateMoodleQuellkurse($template, $mdl_courses)
+	public function updateMoodleQuellkurse($template, $mdl_courses, $user=null)
 	{
 		$qrys = [];
 		foreach ($mdl_courses as $sprache => $mdl_course_id) {
@@ -156,7 +158,7 @@ class LogicTemplates extends Database
 
 				if (isset($template->mdl_courses[$sprache])) {
 					$qrys[] = "UPDATE addon.tbl_moodle_quellkurs 
-						SET mdl_course_id=" . $this->db_add_param($mdl_course_id, FHC_INTEGER) . " 
+						SET mdl_course_id=" . $this->db_add_param($mdl_course_id, FHC_INTEGER) . ", updateamum=NOW(), updatevon=" . ($user !== null ? $this->db_add_param($user, FHC_STRING) : "NULL") . " 
 						WHERE sprache=" . $this->db_add_param($sprache, FHC_STRING) . " 
 						AND lehrveranstaltung_id=" . $this->db_add_param($template->lehrveranstaltung_id, FHC_INTEGER);
 				} else {
@@ -164,13 +166,17 @@ class LogicTemplates extends Database
 						(
 							lehrveranstaltung_id, 
 							sprache, 
-							mdl_course_id
+							mdl_course_id,
+							insertamum,
+							insertvon
 						)
 						VALUES 
 						(
 							" . $this->db_add_param($template->lehrveranstaltung_id, FHC_INTEGER) . ", 
 							" . $this->db_add_param($sprache, FHC_STRING) . ", 
-							" . $this->db_add_param($mdl_course_id, FHC_INTEGER) . "
+							" . $this->db_add_param($mdl_course_id, FHC_INTEGER) . ",
+							NOW(),
+							" . ($user !== null ? $this->db_add_param($user, FHC_STRING) : "NULL") . "
 						)";
 				}
 			} else {
@@ -196,9 +202,11 @@ class LogicTemplates extends Database
 	 * @param integer $template_id
 	 * @param string $sprache
 	 * @param boolean $overwrite
+	 * @param string | null $user The user making this operation
+	 * 
 	 * @return string Returns an empty string on success or the error message
 	 */
-	public function updateMoodleQuellkurs($mdl_course, $template_id, $sprache, $overwrite = false)
+	public function updateMoodleQuellkurs($mdl_course, $template_id, $sprache, $overwrite = false, $user=null)
 	{
 		$template = $this->getTemplate($template_id);
 		if ($template_id !== '' && !$template) {
@@ -218,7 +226,7 @@ class LogicTemplates extends Database
 				if (!$overwrite)
 					return 'moodle.overwrite';
 				$qry .= "UPDATE addon.tbl_moodle_quellkurs 
-					SET mdl_course_id=" . $this->db_add_param($mdl_course->id, FHC_INTEGER) . " 
+					SET mdl_course_id=" . $this->db_add_param($mdl_course->id, FHC_INTEGER) . ", updateamum=NOW(), updatevon=" . ($user !== null ? $this->db_add_param($user, FHC_STRING) : "NULL") . " 
 					WHERE sprache=" . $this->db_add_param($sprache, FHC_STRING) . " 
 					AND lehrveranstaltung_id=" . $this->db_add_param($template_id, FHC_INTEGER);
 			} else {
@@ -226,13 +234,17 @@ class LogicTemplates extends Database
 					(
 						lehrveranstaltung_id, 
 						sprache, 
-						mdl_course_id
+						mdl_course_id,
+						insertamum,
+						insertvon
 					)
 					VALUES 
 					(
 						" . $this->db_add_param($template_id, FHC_INTEGER) . ", 
 						" . $this->db_add_param($sprache, FHC_STRING) . ", 
-						" . $this->db_add_param($mdl_course->id, FHC_INTEGER) . "
+						" . $this->db_add_param($mdl_course->id, FHC_INTEGER) . ",
+						NOW(),
+						" . ($user !== null ? $this->db_add_param($user, FHC_STRING) : "NULL") . "
 					)";
 			}
 		}
