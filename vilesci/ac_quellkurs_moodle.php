@@ -36,7 +36,7 @@ if (!$db = new basis_db())
 $rechte = new benutzerberechtigung();
 $rechte->getBerechtigungen($uid);
 
-if(!$rechte->isBerechtigt('addon/moodle'))
+if(!$rechte->isBerechtigt('addon/moodle') && !$rechte->isBerechtigt('addon/moodle_quellkurs'))
 	die('Sie haben keine Berechtigung für diese Seite');
 
 // Get search string that shall be used for suggestions in autocomplete field
