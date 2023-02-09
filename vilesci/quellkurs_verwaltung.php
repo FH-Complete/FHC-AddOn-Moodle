@@ -123,58 +123,64 @@ if (isset($_GET['mdl_course_id'])) {
 					$(this).hide().prev().val('').removeAttr('disabled').next().next().text('');
 					$('.input-overwrite').data('sprachen', []).trigger('check.overwrite');
 				});
-				$('.ac-moodle').autocomplete({
-					minLength: 2,
-					source: 'ac_quellkurs_moodle.php',
-					close: function(e, ui) {
+				$('.ac-moodle').each(function() {
+					let $this = $(this),
+						url = 'ac_quellkurs_moodle.php';
+					if ($this.data('acFilter'))
+						url += '?filter=' + $this.data('acFilter');
+					$this.autocomplete({
+						minLength: 2,
+						source: url,
+						close: function(e, ui) {
+							$(this).trigger('check.ac-moodle');
+						},
+						focus: function(e, ui) {
+							$(this).removeClass('input_ok input_error').val(ui.item.value).parent().find('.text-mdl_course_name').text(ui.item.label);
+							return false;
+						},
+						select: function (e, ui) {
+							$(this).addClass('input_ok').val(ui.item.value).parent().find('.text-mdl_course_name').text(ui.item.label);
+							return false;
+						}
+					}).focus(function(e) {
+						$(this).removeClass('input_ok input_error');
+					}).blur(function(e) {
 						$(this).trigger('check.ac-moodle');
-					},
-					focus: function(e, ui) {
-						$(this).removeClass('input_ok input_error').val(ui.item.value).parent().find('.text-mdl_course_name').text(ui.item.label);
-						return false;
-					},
-					select: function (e, ui) {
-						$(this).addClass('input_ok').val(ui.item.value).parent().find('.text-mdl_course_name').text(ui.item.label);
-						return false;
-					}
-				}).focus(function(e) {
-					$(this).removeClass('input_ok input_error');
-				}).blur(function(e) {
-					$(this).trigger('check.ac-moodle');
-				}).on('check.ac-moodle', function(e) {
-					var self = $(this),
-						val = self.val();
-					if (!val) {
-						self.removeClass('input_ok input_error').parent().find('.text-mdl_course_name').text('');
-						self.siblings('.action-send').attr('disabled', true);
-					} else {
-						$.ajax({
-							url: 'ac_quellkurs_moodle.php',
-							dataType: 'json',
-							data: {
-								'term': val
-							},
-							success: function(data) {
-								if (self.val() == val) {
-									var label = '',
-										state = '';
+					}).on('check.ac-moodle', function(e) {
+						var self = $(this),
+							val = self.val();
+						if (!val) {
+							self.removeClass('input_ok input_error').parent().find('.text-mdl_course_name').text('');
+							self.siblings('.action-send').attr('disabled', true);
+						} else {
+							$.ajax({
+								url: url,
+								dataType: 'json',
+								data: {
+									'term': val
+								},
+								success: function(data) {
+									if (self.val() == val) {
+										var label = '',
+											state = '';
 
-									if (data[val]) {
-										state = 'input_ok';
-										label = data[val].label;
-									} else if (val) {
-										state = 'input_error';
+										if (data[val]) {
+											state = 'input_ok';
+											label = data[val].label;
+										} else if (val) {
+											state = 'input_error';
+										}
+										self.removeClass('input_ok input_error').addClass(state).parent().find('.text-mdl_course_name').text(label);
 									}
-									self.removeClass('input_ok input_error').addClass(state).parent().find('.text-mdl_course_name').text(label);
+									if (self.is('.input_ok'))
+										self.siblings('.action-send').removeAttr('disabled');
+									else
+										self.siblings('.action-send').attr('disabled', true);
 								}
-								if (self.is('.input_ok'))
-									self.siblings('.action-send').removeAttr('disabled');
-								else
-									self.siblings('.action-send').attr('disabled', true);
-							}
-						});
-					}
-				}).trigger('check.ac-moodle');
+							});
+						}
+					}).trigger('check.ac-moodle');
+				});
 
 				$('.input-overwrite').on('check.overwrite', function(e) {
 					var self = $(this),
@@ -191,64 +197,70 @@ if (isset($_GET['mdl_course_id'])) {
 					$('.input-overwrite').trigger('check.overwrite');
 				});
 				
-				$('.ac-template').autocomplete({
-					minLength: 2,
-					source: 'ac_quellkurs_template.php',
-					close: function(e, ui) {
+				$('.ac-template').each(function() {
+					let $this = $(this),
+						url = 'ac_quellkurs_template.php';
+					if ($this.data('acFilter'))
+						url += '?filter=' + $this.data('acFilter');
+					$this.autocomplete({
+						minLength: 2,
+						source: url,
+						close: function(e, ui) {
+							$(this).trigger('check.ac-template');
+						},
+						focus: function(e, ui) {
+							$(this).removeClass('input_ok input_error').val(ui.item.value).parent().find('.text-template_name').text(ui.item.label);
+							return false;
+						},
+						select: function (e, ui) {
+							$(this).addClass('input_ok').val(ui.item.value).parent().find('.text-template_name').text(ui.item.label);
+							$('.input-overwrite').data('sprachen', ui.item.sprachen).trigger('check.overwrite');
+							return false;
+						}
+					}).focus(function(e) {
+						$(this).parent().removeClass('input_ok input_error');
+					}).blur(function(e) {
 						$(this).trigger('check.ac-template');
-					},
-					focus: function(e, ui) {
-						$(this).removeClass('input_ok input_error').val(ui.item.value).parent().find('.text-template_name').text(ui.item.label);
-						return false;
-					},
-					select: function (e, ui) {
-						$(this).addClass('input_ok').val(ui.item.value).parent().find('.text-template_name').text(ui.item.label);
-						$('.input-overwrite').data('sprachen', ui.item.sprachen).trigger('check.overwrite');
-						return false;
-					}
-				}).focus(function(e) {
-					$(this).parent().removeClass('input_ok input_error');
-				}).blur(function(e) {
-					$(this).trigger('check.ac-template');
-				}).on('check.ac-template', function(e) {
-					var self = $(this),
-						val = self.val();
-					if (!val) {
-						self.removeClass('input_ok input_error').parent().find('.text-template_name').text('');
-						self.siblings('.action-send').attr('disabled', true);
-						$('.input-overwrite').data('sprachen', []).trigger('check.overwrite');
-					} else {
-						$.ajax({
-							url: 'ac_quellkurs_template.php',
-							dataType: 'json',
-							data: {
-								'term': val
-							},
-							success: function(data) {
-								if (self.val() == val) {
-									var label = '',
-										state = '',
-										sprachen = [];
+					}).on('check.ac-template', function(e) {
+						var self = $(this),
+							val = self.val();
+						if (!val) {
+							self.removeClass('input_ok input_error').parent().find('.text-template_name').text('');
+							self.siblings('.action-send').attr('disabled', true);
+							$('.input-overwrite').data('sprachen', []).trigger('check.overwrite');
+						} else {
+							$.ajax({
+								url: url,
+								dataType: 'json',
+								data: {
+									'term': val
+								},
+								success: function(data) {
+									if (self.val() == val) {
+										var label = '',
+											state = '',
+											sprachen = [];
 
-									if (data[val]) {
-										state = 'input_ok';
-										label = data[val].label;
-										sprachen = data[val].sprachen;
-									} else if (val) {
-										state = 'input_error';
+										if (data[val]) {
+											state = 'input_ok';
+											label = data[val].label;
+											sprachen = data[val].sprachen;
+										} else if (val) {
+											state = 'input_error';
+										}
+										self.removeClass('input_ok input_error').addClass(state).parent().find('.text-template_name').text(label);
+										$('.input-overwrite').data('sprachen', sprachen).trigger('check.overwrite');
 									}
-									self.removeClass('input_ok input_error').addClass(state).parent().find('.text-template_name').text(label);
-									$('.input-overwrite').data('sprachen', sprachen).trigger('check.overwrite');
+									if (self.is('.input_ok')) {
+										self.siblings('.action-send').removeAttr('disabled');
+									} else {
+										self.siblings('.action-send').attr('disabled', true);
+									}
 								}
-								if (self.is('.input_ok')) {
-									self.siblings('.action-send').removeAttr('disabled');
-								} else {
-									self.siblings('.action-send').attr('disabled', true);
-								}
-							}
-						});
-					}
-				}).trigger('check.ac-template');
+							});
+						}
+					}).trigger('check.ac-template');
+				});
 			});
 		</script>
 		<style type="text/css">
@@ -294,7 +306,7 @@ if ($_action == 'moodle') {
 					<tr>
 						<th align="left">' . $p->t('moodle/quellkurs.form.label.template') . '</th>
 						<td>
-							<input type="text" class="ac-template" name="template"' . $value . '>
+							<input type="text" class="ac-template" data-ac-filter="' . $_GET['mdl_course_id'] . '" name="template"' . $value . '>
 							<span class="text-template_name">' . $label . '</span>
 						</td>
 					</tr>
@@ -358,7 +370,7 @@ if ($_action == 'moodle') {
 					<tr>
 						<' . $tc . ' align="left">' . $sprache->bezeichnung_arr[$curr_lang] . '</' . $tc . '>
 						<td>
-							<input type="text" class="ac-moodle" name="mdl_courses[' . $sprache->sprache . ']"' . $value . '>
+							<input type="text" class="ac-moodle" data-ac-filter="' . $template->studiengang_kz . '" name="mdl_courses[' . $sprache->sprache . ']"' . $value . '>
 							<span class="text-mdl_course_name">' . $label . '</span>
 						</td>
 					</tr>';
