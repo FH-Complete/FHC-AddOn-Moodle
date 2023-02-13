@@ -35,7 +35,7 @@ if (!$db = new basis_db())
 $rechte = new benutzerberechtigung();
 $rechte->getBerechtigungen($uid);
 
-if(!$rechte->isBerechtigt('addon/moodle'))
+if(!$rechte->isBerechtigt('addon/moodle') && !$rechte->isBerechtigt('addon/moodle_quellkurs'))
 	die('Sie haben keine Berechtigung für diese Seite');
 
 // Get search string that shall be used for suggestions in autocomplete field
@@ -48,19 +48,23 @@ else
 {
 	$searchItems = str_replace(' ', '%', $search);
 }
+$filter = isset($_REQUEST['filter']) ? $_REQUEST['filter'] : null;
 
 $data = [];
 
 $result = [];
 $templates = new LogicTemplates();
+if ($filter !== null)
+	$filter = $templates->getSourceCourse($filter);
 if ($res = $templates->findTemplates($searchItems)) {
 	foreach ($res as $template) {
-		$result[$template->lehrveranstaltung_id] = [
-			'value' => $template->lehrveranstaltung_id,
-			'label' => $template->bezeichnung,
-			'sprachen' => $template->mdl_courses
-		];
-	}
+		if ($filter === null || $templates->areMapped($filter, $template))
+			$result[$template->lehrveranstaltung_id] = [
+				'value' => $template->lehrveranstaltung_id,
+				'label' => $template->bezeichnung,
+				'sprachen' => $template->mdl_courses
+			];
+	 }
 }
 
 echo json_encode($result);

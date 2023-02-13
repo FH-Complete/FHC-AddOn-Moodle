@@ -116,7 +116,7 @@ class LogicTemplates extends Database
 	}
 
 	/**
-	 * @param integer | \stdClass $mdl_course
+	 * @param \stdClass $mdl_course
 	 * @return boolean
 	 */
 	public function isSourceCourse($mdl_course)
@@ -132,17 +132,55 @@ class LogicTemplates extends Database
 			
 			if (strpos($cat[0]->path . '/', '/' . ADDON_MOODLE_SOURCE_COURSE_ID . '/') === FALSE)
 				return false;
+		} elseif (isset($GLOBALS['fhc_templates_sourcecourse_mapping']) && $GLOBALS['fhc_templates_sourcecourse_mapping']) {
+			$moodle = new MoodleAPI();
+			$cat = $moodle->call('core_course_get_categories', MoodleClient::HTTP_POST_METHOD, ['criteria' => [['key'=>'id','value'=>$mdl_course->categoryid]], 'addsubcategories' => 0]);
+			if (!$cat)
+				return false;
+			
+			$cats = explode('/', $cat[0]->path);
+			foreach ($cats as $cat)
+				if (in_array($cat, $GLOBALS['fhc_templates_sourcecourse_mapping']))
+					return true;
+			return false;
 		}
 
 		return true;
 	}
 
 	/**
+	 * @param \stdClass $mdl_course
+	 * @param \stdClass $template
+	 * @return boolean
+	 */
+	public function areMapped($mdl_course, $template)
+	{
+		if (!isset($GLOBALS['fhc_templates_sourcecourse_mapping']) || !$GLOBALS['fhc_templates_sourcecourse_mapping'])
+			return true;
+
+		if (!isset($GLOBALS['fhc_templates_sourcecourse_mapping'][$template->studiengang_kz]))
+			return false;
+
+		$moodle = new MoodleAPI();
+		$cat = $moodle->call('core_course_get_categories', MoodleClient::HTTP_POST_METHOD, ['criteria' => [['key'=>'id','value'=>$mdl_course->categoryid]], 'addsubcategories' => 0]);
+		if (!$cat)
+			return false;
+
+		$cats = explode('/', $cat[0]->path);
+		if (in_array($GLOBALS['fhc_templates_sourcecourse_mapping'][$template->studiengang_kz], $cats))
+			return true;
+
+		return false;
+	}
+
+	/**
 	 * @param \stdClass $template
 	 * @param array $mdl_courses An array of "moodle course ids" with "sprache" as index
+	 * @param string | null $user The user making this operation
+	 * 
 	 * @return string Returns an empty string on success or the error message
 	 */
-	public function updateMoodleQuellkurse($template, $mdl_courses)
+	public function updateMoodleQuellkurse($template, $mdl_courses, $user=null)
 	{
 		$qrys = [];
 		foreach ($mdl_courses as $sprache => $mdl_course_id) {
@@ -156,7 +194,7 @@ class LogicTemplates extends Database
 
 				if (isset($template->mdl_courses[$sprache])) {
 					$qrys[] = "UPDATE addon.tbl_moodle_quellkurs 
-						SET mdl_course_id=" . $this->db_add_param($mdl_course_id, FHC_INTEGER) . " 
+						SET mdl_course_id=" . $this->db_add_param($mdl_course_id, FHC_INTEGER) . ", updateamum=NOW(), updatevon=" . ($user !== null ? $this->db_add_param($user, FHC_STRING) : "NULL") . " 
 						WHERE sprache=" . $this->db_add_param($sprache, FHC_STRING) . " 
 						AND lehrveranstaltung_id=" . $this->db_add_param($template->lehrveranstaltung_id, FHC_INTEGER);
 				} else {
@@ -164,13 +202,17 @@ class LogicTemplates extends Database
 						(
 							lehrveranstaltung_id, 
 							sprache, 
-							mdl_course_id
+							mdl_course_id,
+							insertamum,
+							insertvon
 						)
 						VALUES 
 						(
 							" . $this->db_add_param($template->lehrveranstaltung_id, FHC_INTEGER) . ", 
 							" . $this->db_add_param($sprache, FHC_STRING) . ", 
-							" . $this->db_add_param($mdl_course_id, FHC_INTEGER) . "
+							" . $this->db_add_param($mdl_course_id, FHC_INTEGER) . ",
+							NOW(),
+							" . ($user !== null ? $this->db_add_param($user, FHC_STRING) : "NULL") . "
 						)";
 				}
 			} else {
@@ -196,9 +238,11 @@ class LogicTemplates extends Database
 	 * @param integer $template_id
 	 * @param string $sprache
 	 * @param boolean $overwrite
+	 * @param string | null $user The user making this operation
+	 * 
 	 * @return string Returns an empty string on success or the error message
 	 */
-	public function updateMoodleQuellkurs($mdl_course, $template_id, $sprache, $overwrite = false)
+	public function updateMoodleQuellkurs($mdl_course, $template_id, $sprache, $overwrite = false, $user=null)
 	{
 		$template = $this->getTemplate($template_id);
 		if ($template_id !== '' && !$template) {
@@ -218,7 +262,7 @@ class LogicTemplates extends Database
 				if (!$overwrite)
 					return 'moodle.overwrite';
 				$qry .= "UPDATE addon.tbl_moodle_quellkurs 
-					SET mdl_course_id=" . $this->db_add_param($mdl_course->id, FHC_INTEGER) . " 
+					SET mdl_course_id=" . $this->db_add_param($mdl_course->id, FHC_INTEGER) . ", updateamum=NOW(), updatevon=" . ($user !== null ? $this->db_add_param($user, FHC_STRING) : "NULL") . " 
 					WHERE sprache=" . $this->db_add_param($sprache, FHC_STRING) . " 
 					AND lehrveranstaltung_id=" . $this->db_add_param($template_id, FHC_INTEGER);
 			} else {
@@ -226,13 +270,17 @@ class LogicTemplates extends Database
 					(
 						lehrveranstaltung_id, 
 						sprache, 
-						mdl_course_id
+						mdl_course_id,
+						insertamum,
+						insertvon
 					)
 					VALUES 
 					(
 						" . $this->db_add_param($template_id, FHC_INTEGER) . ", 
 						" . $this->db_add_param($sprache, FHC_STRING) . ", 
-						" . $this->db_add_param($mdl_course->id, FHC_INTEGER) . "
+						" . $this->db_add_param($mdl_course->id, FHC_INTEGER) . ",
+						NOW(),
+						" . ($user !== null ? $this->db_add_param($user, FHC_STRING) : "NULL") . "
 					)";
 			}
 		}

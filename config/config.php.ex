@@ -17,6 +17,11 @@ define('ADDON_MOODLE_MARK_AS_DONE_AFTER_X_DAYS', 29);
 // Add the short form of the selected language to standardized courses
 define('ADDON_MOODLE_ADD_LANG_TO_STANDARDIZED_COURSES', true);
 
+// Map LV-Templates in a certain Studiengang to Moodle Courses in a corresponding Category.
+// This feature works only if ADDON_MOODLE_SOURCE_COURSE_ID is 0
+// Use the studiengang_kz as key and the moodle category id as value in the array
+$fhc_templates_sourcecourse_mapping = array();
+
 // ------------------------------------------------------------------------------------------------------------
 // Courses synching options
 
