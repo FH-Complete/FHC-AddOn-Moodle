@@ -82,7 +82,7 @@ class local_fhcompletews_external extends external_api
 		{
 			$method = new ReflectionMethod('grade_export_ods','__construct');
 		
-			if(count($method->getParameters())==3)
+			if(numberOfElements($method->getParameters())==3)
 				$moodle28=true;
 		}
 		catch(ReflectionException $e)
@@ -167,7 +167,7 @@ class local_fhcompletews_external extends external_api
 		$gui->close();
 		$geub->close();
 	
-		if (count($data)==0)	
+		if (numberOfElements($data)==0)	
 		{
 			throw new moodle_exception('Fehler', '', '', null,"Moodle-Kurs ".$id." ".$shortname." - keine Kurs-Noten Informationen gefunden ");
 			return false;

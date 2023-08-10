@@ -138,7 +138,7 @@ class local_fhcompletews_external extends external_api
 		$gui->close();
 		$geub->close();
 	
-		if (count($data)==0)	
+		if (numberOfElements($data)==0)	
 		{
 			throw new moodle_exception('Fehler', '', '', null,"Moodle-Kurs ".$id." ".$shortname." - keine Kurs-Noten Informationen gefunden ");
 			return false;

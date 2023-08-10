@@ -39,7 +39,7 @@ try
 
 	$response = $client->fhcomplete_get_course_grades($mdl_course_id, $type);
 
-	if (count($response) > 0)
+	if (numberOfElements($response) > 0)
 	{
 
 		foreach ($response as $row)

@@ -165,7 +165,7 @@ if (isset($_POST['neu']))
 				}
 			}
 
-			if (count($lehreinheiten) > 0)
+			if (numberOfElements($lehreinheiten) > 0)
 			{
 				$mdl_course = new moodle_course();
 

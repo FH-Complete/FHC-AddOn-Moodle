@@ -446,7 +446,7 @@ class moodle_user extends basis_db
 				}
 			}
 
-			if (count($userstoenroll)>0)
+			if (numberOfElements($userstoenroll)>0)
 			{
 				try
 				{
@@ -457,7 +457,7 @@ class moodle_user extends basis_db
 					// abschluss des SOAP Requests von Moodle noch weiterverarbeitet und
 					// erst zeitversetzt zugeordnet.
 					// Die Pause ist abgaengig von der Anzahl der User die hinzugefuegt werden
-					usleep(count($userstoenroll)*150000);
+					usleep(numberOfElements($userstoenroll)*150000);
 				}
 				catch (SoapFault $E)
 				{
@@ -466,7 +466,7 @@ class moodle_user extends basis_db
 				}
 			}
 
-			if (count($groupmembertoadd) > 0)
+			if (numberOfElements($groupmembertoadd) > 0)
 			{
 				try
 				{

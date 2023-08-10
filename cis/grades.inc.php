@@ -29,7 +29,7 @@ $moodle->loadNoten($lvid, $stsem);
 $moodle_course_bezeichnung = array();
 $moodle_course_gewicht = array();
 
-if (isset($moodle) && count($moodle->result) > 0)
+if (isset($moodle) && numberOfElements($moodle->result) > 0)
 {
 	foreach ($moodle->result as $moodle_noten)
 	{
