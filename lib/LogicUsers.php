@@ -39,7 +39,7 @@ class LogicUsers extends Logic
 		if ($benutzer = Database::fetchRow($benutzerRow))
 		{
 			$user = new stdClass();
-			$user->username = $benutzer->uid;
+			$user->username = FHCMoodleUsernameMapper::FHCUidToMoodleUsername($benutzer->uid);
 			// Passwort muss gesetzt werden damit das Anlegen funktioniert.
 			// Es wird ein random Passwort gesetzt
 			// Dieses wird beim Login nicht verwendet da ueber ldap authentifiziert wird.
@@ -79,7 +79,7 @@ class LogicUsers extends Logic
 			{
 				$user = array();
 				$user['id'] = $users[0]->id;
-				$user['auth'] = ADDON_MOODLE_USER_LDAP_AUTH;
+				$user['auth'] = ADDON_MOODLE_USER_AUTH_PLUGIN;
 
 				self::_core_user_update_users($user);
 			}
@@ -405,7 +405,7 @@ class LogicUsers extends Logic
 				foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
 				{
 					//
-					if ($employee->mitarbeiter_uid == $moodleEnrolledUser->username)
+					if (FHCMoodleUsernameMapper::FHCUidToMoodleUsername($employee->mitarbeiter_uid) == $moodleEnrolledUser->username)
 					{
 						$debugMessage .= ' >> already enrolled in moodle';
 						$userFound = true;
@@ -492,7 +492,7 @@ class LogicUsers extends Logic
 			foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
 			{
 				//
-				if ($employee->mitarbeiter_uid == $moodleEnrolledUser->username)
+				if (FHCMoodleUsernameMapper::FHCUidToMoodleUsername($employee->mitarbeiter_uid) == $moodleEnrolledUser->username)
 				{
 					$debugMessage .= ' >> already enrolled in moodle';
 					$userFound = true;
@@ -574,7 +574,7 @@ class LogicUsers extends Logic
 				foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
 				{
 					//
-					if ($employee->mitarbeiter_uid == $moodleEnrolledUser->username)
+					if (FHCMoodleUsernameMapper::FHCUidToMoodleUsername($employee->mitarbeiter_uid) == $moodleEnrolledUser->username)
 					{
 						$debugMessage .= ' >> already enrolled in moodle';
 						$userFound = true;
@@ -769,7 +769,7 @@ class LogicUsers extends Logic
 					foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
 					{
 						//
-						if ($student->student_uid == $moodleEnrolledUser->username)
+						if (FHCMoodleUsernameMapper::FHCUidToMoodleUsername($student->student_uid) == $moodleEnrolledUser->username)
 						{
 							foreach( $moodleEnrolledUser->roles AS $role ) 
 							{
@@ -850,7 +850,9 @@ class LogicUsers extends Logic
 						$numAbbrecher = 0;
 						foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
 						{
-							if ( false !== array_search($moodleEnrolledUser->username, $semesterAbbrecher) )
+							if ( false !== array_search(
+								FHCMoodleUsernameMapper::MoodleUsernameToFHCUid($moodleEnrolledUser->username), 
+								$semesterAbbrecher) )
 							{
 								self::changeMoodleRole(ADDON_MOODLE_STUDENT_ROLEID, 
 											ADDON_MOODLE_ABBRECHER_ROLEID, 
@@ -1047,7 +1049,7 @@ class LogicUsers extends Logic
 		{
 			if( in_array($moodleEnrolledUser->id, $groupmembers[0]->userids) ) 
 			{
-				unset($uidsToUnenrol[$moodleEnrolledUser->username]);
+				unset($uidsToUnenrol[FHCMoodleUsernameMapper::MoodleUsernameToFHCUid($moodleEnrolledUser->username)]);
 			}
 		}
 	}
@@ -1113,7 +1115,7 @@ class LogicUsers extends Logic
 					foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
 					{
 						//
-						if ($groupMember->uid == $moodleEnrolledUser->username)
+						if (FHCMoodleUsernameMapper::FHCUidToMoodleUsername($groupMember->uid) == $moodleEnrolledUser->username)
 						{
 							$debugMessage .= ' >> already enrolled in moodle';
 							$shouldbegroupmembers[] = $moodleEnrolledUser->id;
@@ -1220,7 +1222,7 @@ class LogicUsers extends Logic
 			foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
 			{
 				//
-				if ($uid == $moodleEnrolledUser->username)
+				if (FHCMoodleUsernameMapper::FHCUidToMoodleUsername($uid) == $moodleEnrolledUser->username)
 				{
 					$userFound = true;
 					break;
@@ -1305,7 +1307,7 @@ class LogicUsers extends Logic
 					foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
 					{
 						//
-						if ($leader->uid == $moodleEnrolledUser->username)
+						if (FHCMoodleUsernameMapper::FHCUidToMoodleUsername($leader->uid) == $moodleEnrolledUser->username)
 						{
 							$debugMessage .= ' >> already assigned in moodle';
 							$userFound = true;
@@ -1395,7 +1397,7 @@ class LogicUsers extends Logic
 		foreach ($uidsToUnenrol as $uidToUnenrol)
 		{
 			//
-			$users = self::core_user_get_users_by_field($uidToUnenrol);
+			$users = self::core_user_get_users_by_field(FHCMoodleUsernameMapper::FHCUidToMoodleUsername($uidToUnenrol));
 			if (count($users) > 0) //
 			{
 				$debugMessage = 'Group member '.$uidToUnenrol.':"'.$users[0]->firstname.' '.$users[0]->lastname.'"';
@@ -1594,7 +1596,7 @@ class LogicUsers extends Logic
 	 */
 	private static function _getOrCreateMoodleUser($uid, &$numCreatedUsers)
 	{
-		$users = self::core_user_get_users_by_field($uid);
+		$users = self::core_user_get_users_by_field(FHCMoodleUsernameMapper::FHCUidToMoodleUsername($uid));
 
 		// If not found
 		if (is_array($users) && count($users) == 0)

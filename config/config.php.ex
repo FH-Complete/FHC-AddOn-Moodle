@@ -124,8 +124,11 @@ define('ADDON_MOODLE_CATEGORY_FUNCTION_LEADER', 'Leitung');
 // Parameters used to create a new user in moodle
 define('ADDON_MOODLE_USER_MANUAL_AUTH', 'manual');
 define('ADDON_MOODLE_USER_PWD_PREFIX', 'FHCv!A2');
-define('ADDON_MOODLE_USER_LDAP_AUTH', 'ldap');
+define('ADDON_MOODLE_USER_AUTH_PLUGIN', 'ldap');
 define('ADDON_MOODLE_USER_PKZ_TYPE', 'pkz');
+
+// File where FHCMoodleUsernameMapper is implemented, path relative to FHC BaseDir with leading slash
+define('ADDON_MOODLE_USERNAME_MAPPER_INCLUDE_FILE', '/addons/moodle/include/FHCMoodleUsernameMapper.php');
 
 // To avoid incurring the limitation of parameters that can be posted imposed by apache + php + moodle
 define('ADDON_MOODLE_POST_PARAMS_NUMBER', 300);
