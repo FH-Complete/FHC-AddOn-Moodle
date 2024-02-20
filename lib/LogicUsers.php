@@ -51,7 +51,7 @@ class LogicUsers extends Logic
 			// Anlegen eines Users ohne Passwortuebergabe ist jedoch nicht moeglich-
 			// Deshalb wird die Authentifizierungsmethode beim Anlegen auf manual
 			// gesetzt und nach dem anlegen auf ldap geändert
-			$user->password = ADDON_MOODLE_USER_PWD_PREFIX.hash('sha512', rand());
+			$user->password = substr(ADDON_MOODLE_USER_PWD_PREFIX.hash('sha512', rand()), 0, 128);
 			$user->firstname = $benutzer->vorname;
 			$user->lastname = $benutzer->nachname;
 			$user->email = $benutzer->uid.'@'.DOMAIN;
