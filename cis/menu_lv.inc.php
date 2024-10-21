@@ -83,7 +83,8 @@ if ($angemeldet)
 			&& (!defined('ADDON_MOODLE_LECTOR_CREATE_COURSE') || (defined('ADDON_MOODLE_LECTOR_CREATE_COURSE') && ADDON_MOODLE_LECTOR_CREATE_COURSE))
 		)
 		{
-						
+			$text .= $p->t('moodle/subTextIcon', array(urlencode($lvid), urlencode($angezeigtes_stsem)));
+
 			$dom = new DOMDocument;
 			$dom->loadHTML($p->t('moodle/subTextIcon', array(urlencode($lvid),urlencode($angezeigtes_stsem))),LIBXML_NOERROR);
 			$text_links = $dom->getElementsByTagName('a');
