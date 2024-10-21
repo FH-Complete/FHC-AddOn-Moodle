@@ -69,7 +69,7 @@ if ($angemeldet)
 				if (Database::rowsNumber($courses) == 1)
 				{
 					$course = Database::fetchRow($courses);
-					$link = LogicCourses::getBaseURL() . '/course/view.php?id=' . urlencode($course->mdl_course_id);
+					$link = LogicCourses::getBaseURL().'/course/view.php?id='.urlencode($course->mdl_course_id);
 				}
 			}
 			$link_target = '_blank';
