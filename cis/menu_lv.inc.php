@@ -100,6 +100,8 @@ if ($showmoodle) {
 		'link_onclick' => $link_onclick,
 		'text' => $text,
 		'c4_icon' => APP_ROOT . 'addons/moodle/skin/images/button_moodle.png',
+		'c4_icon2' => 'fa-solid fa-graduation-cap',
+		'c4_target' => '_blank',
 		'c4_link' => $link,
 		'c4_linkList' => $c4_linkList,
 
