@@ -29,11 +29,14 @@ $text = '';
 $link = '';
 $c4_linkList = array();
 
+$moodleLinks = [];
+
 $stg = new studiengang();
 $stg->load($lv->studiengang_kz);
 if ($stg->moodle) $showmoodle = true;
 
 $courses = LogicCourses::getCoursesByLehrveranstaltungLehreinheit($lvid, $angezeigtes_stsem);
+
 if (Database::rowsNumber($courses) > 0) $showmoodle = true;
 
 if ($angemeldet)
@@ -62,6 +65,32 @@ if ($angemeldet)
 					}
 
 					$link = LogicCourses::getBaseURL().'/course/view.php?id='.urlencode($mdl_course_id);
+				}
+				// if there are multiple moodle courses for the different lehreinheiten of a lehrveranstaltung
+				// then the different lehreinheit moodle_links will be collected in $moodleLinks
+				else
+				{
+					// fetch all courses of the Student
+					$courses = Database::fetchAll($coursesStudent);
+					// maps the courses to an array of mdl_course_id
+					$moodle_courses = array_map(function($course){return $course['mdl_course_id'];}, $courses);
+					// removes duplicates
+					$moodle_courses = array_unique($moodle_courses);
+					$filtered_moodle_courses = array_filter($courses, function($item) use ($moodle_courses){ return in_array($item['mdl_course_id'],$moodle_courses);});
+					
+					foreach ($filtered_moodle_courses as $mdl_course) 
+					{
+						$moodleCourse = LogicCourses::core_course_get_courses(array($mdl_course['mdl_course_id']));
+	
+						if(isset($moodleCourse[0]))
+							$bezeichnung = $moodleCourse[0]->fullname;
+						else
+							$bezeichnung = '';
+	
+						if ($bezeichnung == '') $bezeichnung = 'Course '.$course->mdl_course_id;
+
+						array_push($moodleLinks, ["lehrform"=>$bezeichnung,"url"=>LogicCourses::getBaseURL() . '/course/view.php?id=' . urlencode($mdl_course['mdl_course_id'])]); 
+					}
 				}
 			}
 			else
@@ -108,9 +137,12 @@ if ($showmoodle)
 		'link_onclick' => $link_onclick,
 		'text' => $text,
 		'c4_icon' => APP_ROOT . 'addons/moodle/skin/images/button_moodle.png',
+		'c4_icon2' => 'fa-solid fa-graduation-cap',
+		'c4_target' => '_blank',
 		'c4_link' => $link,
 		'c4_linkList' => $c4_linkList,
-
+		'c4_moodle_links'=>$moodleLinks,
+		
 	);
 }
 ?>
