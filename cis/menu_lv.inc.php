@@ -72,25 +72,35 @@ if ($angemeldet)
 				{
 					// fetch all courses of the Student
 					$courses = Database::fetchAll($coursesStudent);
-					// maps the courses to an array of mdl_course_id
-					$moodle_courses = array_map(function($course){return $course['mdl_course_id'];}, $courses);
-					// removes duplicates
-					$moodle_courses = array_unique($moodle_courses);
-					$filtered_moodle_courses = array_filter($courses, function($item) use ($moodle_courses){ return in_array($item['mdl_course_id'],$moodle_courses);});
-					
-					foreach ($filtered_moodle_courses as $mdl_course) 
-					{
-						$moodleCourse = LogicCourses::core_course_get_courses(array($mdl_course['mdl_course_id']));
-	
-						if(isset($moodleCourse[0]))
-							$bezeichnung = $moodleCourse[0]->fullname;
-						else
-							$bezeichnung = '';
-	
-						if ($bezeichnung == '') $bezeichnung = 'Course '.$course->mdl_course_id;
 
-						array_push($moodleLinks, ["lehrform"=>$bezeichnung,"url"=>LogicCourses::getBaseURL() . '/course/view.php?id=' . urlencode($mdl_course['mdl_course_id'])]); 
+					// if fetchAll returns false then return the moodle_choice link otherwise add the links to the c4_moodle_links
+					if(!$courses)
+					{
+						$c4_link = '';
 					}
+					else
+					{
+						// maps the courses to an array of mdl_course_id
+						$moodle_courses = array_map(function($course){return $course['mdl_course_id'];}, $courses);
+						// removes duplicates
+						$moodle_courses = array_unique($moodle_courses);
+						$filtered_moodle_courses = array_filter($courses, function($item) use ($moodle_courses){ return in_array($item['mdl_course_id'],$moodle_courses);});
+						
+						foreach ($filtered_moodle_courses as $mdl_course) 
+						{
+							$moodleCourse = LogicCourses::core_course_get_courses(array($mdl_course['mdl_course_id']));
+		
+							if(isset($moodleCourse[0]))
+								$bezeichnung = $moodleCourse[0]->fullname;
+							else
+								$bezeichnung = '';
+		
+							if ($bezeichnung == '') $bezeichnung = 'Course '.$course->mdl_course_id;
+	
+							array_push($moodleLinks, ["lehrform"=>$bezeichnung,"url"=>LogicCourses::getBaseURL() . '/course/view.php?id=' . urlencode($mdl_course['mdl_course_id'])]); 
+						}
+					}
+
 				}
 			}
 			else
