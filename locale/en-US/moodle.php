@@ -30,7 +30,7 @@ $this->phrasen['moodle/moodle']='Moodle';
 $this->phrasen['moodle/kursfuerganzeLV']='one single Moodle course for all groups';
 $this->phrasen['moodle/kursfuerLE']='one Moodle course for selected groups';
 $this->phrasen['moodle/zusatztextWartung']='';
-$this->phrasen['moodle/subTextIcon']='<a href="'.APP_ROOT.'addons/moodle/cis/moodle_wartung.php?lvid=%s&stsem=%s" class="Item">Create course</a>';
+$this->phrasen['moodle/subTextIcon']='<a href="'.APP_ROOT.'addons/moodle/cis/moodle_wartung.php?lvid=%s&amp;stsem=%s" class="Item">Create course</a>';
 $this->phrasen['moodle/success.template.update']='Template successfully saved';
 $this->phrasen['moodle/warn.lang.multiple']='<b>Attention:</b> The LV Parts have different languages!';
 $this->phrasen['moodle/warn.sourcecourse.missing']='The Template has no Source Courses linked to it. An empty Moodle Course has been created.';

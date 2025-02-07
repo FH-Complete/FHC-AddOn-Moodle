@@ -30,7 +30,7 @@ $this->phrasen['moodle/moodle']='Moodle';
 $this->phrasen['moodle/kursfuerganzeLV']='einen Moodle Kurs für die gesamte LV anlegen';
 $this->phrasen['moodle/kursfuerLE']='einen Moodle Kurs für einzelne Lehreinheiten anlegen';
 $this->phrasen['moodle/zusatztextWartung']='';
-$this->phrasen['moodle/subTextIcon']='<a href="'.APP_ROOT.'addons/moodle/cis/moodle_wartung.php?lvid=%s&stsem=%s" class="Item">Kurse anlegen</a>';
+$this->phrasen['moodle/subTextIcon'] = '<a href="' . APP_ROOT . 'addons/moodle/cis/moodle_wartung.php?lvid=%s&amp;stsem=%s" class="Item">Kurse anlegen</a>';
 $this->phrasen['moodle/success.template.update']='Template erfolgreich gespeichert';
 $this->phrasen['moodle/warn.lang.multiple']='<b>Achtung:</b> Die LV Teile haben unterschiedliche Sprachen!';
 $this->phrasen['moodle/warn.sourcecourse.missing']='Dem Template sind keine Quellkurse zugewiesen. Ein leerer Moodle Kurs wurde erstellt.';
