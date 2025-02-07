@@ -101,23 +101,27 @@ define('ADDON_MOODLE_DEPARTMENTLEITUNG_ROLEID', 20);
 define('ADDON_MOODLE_STUDIENGANGSLEITUNG_ROLEID', 17);
 define('ADDON_MOODLE_ASSISTENT_ROLEID', 30);
 define('ADDON_MOODLE_FACULTY_LEADER_ROLEID', 40);
+define('ADDON_MOODLE_FACHKOORDINATOR_ROLEID', 29);
 
 // Organisation unit types deifinition
 define('ADDON_MOODLE_DEPARTMENT', 'Department');
 define('ADDON_MOODLE_KOMPETENZFELD', 'Kompetenzfeld');
+define('ADDON_MOODLE_FACHGEBIET', 'Fachgebiet');
 
 // Organisation unit types
-define('ADDON_MOODLE_OUTYPES', '\'Department\', \'Kompetenzfeld\'');
+define('ADDON_MOODLE_OUTYPES', '\'Department\', \'Kompetenzfeld\', \'Fachgebiet\'');
 define('ADDON_MOODLE_OUTYPES_CATEGORIES', '\'Fakultaet\', \'Studiengang\', \'Lehrgang\'');
 define('ADDON_MOODLE_OUTYPE_COURSE', 'Lehrgang');
 define('ADDON_MOODLE_OUTYPE_FACULTY', 'Fakultaet');
 define('ADDON_MOODLE_OUTYPE_DEGREE', 'Studiengang');
 
 // User functions used to retrieve users from database
-define('ADDON_MOODLE_COURSE_FUNCTIONS', '\'Leitung\'');
+define('ADDON_MOODLE_COURSE_FUNCTIONS', '\'Leitung\', \'fachkoordinator\'');
 define('ADDON_MOODLE_CATEGORY_FUNCTIONS', '\'Leitung\', \'ass\', \'stvLtg\'');
 
 // User functions values
+define('ADDON_MOODLE_COURSE_FUNCTION_LEADER', 'Leitung');
+define('ADDON_MOODLE_COURSE_FUNCTION_FACHKOORDINATOR', 'fachkoordinator');
 define('ADDON_MOODLE_CATEGORY_FUNCTION_ASSISTENT', 'ass');
 define('ADDON_MOODLE_CATEGORY_FUNCTION_LEADER', 'Leitung');
 

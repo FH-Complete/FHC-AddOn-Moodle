@@ -1292,16 +1292,27 @@ class LogicUsers extends Logic
 					$userFound = false; //
 
 					$leaderDesc = '';
-					if ($leader->organisationseinheittyp_kurzbz == ADDON_MOODLE_DEPARTMENT)
+					if ($leader->organisationseinheittyp_kurzbz == ADDON_MOODLE_DEPARTMENT
+						&& $leader->funktion_kurzbz == ADDON_MOODLE_COURSE_FUNCTION_LEADER)
 					{
-						$leaderDesc = 'department';
+						$leaderDesc = 'department leader';
 					}
-					elseif ($leader->organisationseinheittyp_kurzbz == ADDON_MOODLE_KOMPETENZFELD)
+					elseif ($leader->organisationseinheittyp_kurzbz == ADDON_MOODLE_KOMPETENZFELD
+						&& $leader->funktion_kurzbz == ADDON_MOODLE_COURSE_FUNCTION_LEADER)
 					{
-						$leaderDesc = 'competence field';
+						$leaderDesc = 'competence field leader';
+					}
+					elseif ($leader->organisationseinheittyp_kurzbz == ADDON_MOODLE_FACHGEBIET
+						&& $leader->funktion_kurzbz == ADDON_MOODLE_COURSE_FUNCTION_FACHKOORDINATOR)
+					{
+						$leaderDesc = 'special field coordinator';
+					}
+					else
+					{
+						continue;
 					}
 
-					$debugMessage = 'Syncing '.$leaderDesc.' leader '.$leader->uid.':"'.$leader->vorname.' '.$leader->nachname.'"';
+					$debugMessage = 'Syncing '.$leaderDesc.' '.$leader->uid.':"'.$leader->vorname.' '.$leader->nachname.'"';
 
 					//
 					foreach ($moodleEnrolledUsers as $moodleEnrolledUser)
@@ -1323,13 +1334,20 @@ class LogicUsers extends Logic
 						if (!ADDON_MOODLE_DRY_RUN) // If a dry run is NOT required
 						{
 							$roleid = -42;
-							if ($leader->organisationseinheittyp_kurzbz == ADDON_MOODLE_DEPARTMENT)
+							if ($leader->organisationseinheittyp_kurzbz == ADDON_MOODLE_DEPARTMENT
+								&& $leader->funktion_kurzbz == ADDON_MOODLE_COURSE_FUNCTION_LEADER)
 							{
 								$roleid = ADDON_MOODLE_DEPARTMENTLEITUNG_ROLEID;
 							}
-							elseif ($leader->organisationseinheittyp_kurzbz == ADDON_MOODLE_KOMPETENZFELD)
+							elseif ($leader->organisationseinheittyp_kurzbz == ADDON_MOODLE_KOMPETENZFELD
+								&& $leader->funktion_kurzbz == ADDON_MOODLE_COURSE_FUNCTION_LEADER)
 							{
 								$roleid = ADDON_MOODLE_KOMPETENZFELDLEITUNG_ROLEID;
+							}
+							elseif ($leader->organisationseinheittyp_kurzbz == ADDON_MOODLE_FACHGEBIET
+								&& $leader->funktion_kurzbz == ADDON_MOODLE_COURSE_FUNCTION_FACHKOORDINATOR)
+							{
+								$roleid = ADDON_MOODLE_FACHKOORDINATOR_ROLEID;
 							}
 
 							$usersToAssign[] = array(
@@ -1358,7 +1376,7 @@ class LogicUsers extends Logic
 			{
 				self::_core_role_assign_roles($usersToAssign);
 
-				Output::printDebug('Number of leaders assigned to a course in moodle: '.count($usersToAssign));
+				Output::printDebug('Number of leaders/coordinators assigned to a course in moodle: '.count($usersToAssign));
 			}
 
 			self::_printDebugEmptyline();
