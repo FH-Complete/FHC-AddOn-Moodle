@@ -101,31 +101,38 @@ define('ADDON_MOODLE_DEPARTMENTLEITUNG_ROLEID', 20);
 define('ADDON_MOODLE_STUDIENGANGSLEITUNG_ROLEID', 17);
 define('ADDON_MOODLE_ASSISTENT_ROLEID', 30);
 define('ADDON_MOODLE_FACULTY_LEADER_ROLEID', 40);
+define('ADDON_MOODLE_FACHKOORDINATOR_ROLEID', 29);
 
 // Organisation unit types deifinition
 define('ADDON_MOODLE_DEPARTMENT', 'Department');
 define('ADDON_MOODLE_KOMPETENZFELD', 'Kompetenzfeld');
+define('ADDON_MOODLE_FACHGEBIET', 'Fachgebiet');
 
 // Organisation unit types
-define('ADDON_MOODLE_OUTYPES', '\'Department\', \'Kompetenzfeld\'');
+define('ADDON_MOODLE_OUTYPES', '\'Department\', \'Kompetenzfeld\', \'Fachgebiet\'');
 define('ADDON_MOODLE_OUTYPES_CATEGORIES', '\'Fakultaet\', \'Studiengang\', \'Lehrgang\'');
 define('ADDON_MOODLE_OUTYPE_COURSE', 'Lehrgang');
 define('ADDON_MOODLE_OUTYPE_FACULTY', 'Fakultaet');
 define('ADDON_MOODLE_OUTYPE_DEGREE', 'Studiengang');
 
 // User functions used to retrieve users from database
-define('ADDON_MOODLE_COURSE_FUNCTIONS', '\'Leitung\'');
+define('ADDON_MOODLE_COURSE_FUNCTIONS', '\'Leitung\', \'fachkoordinator\'');
 define('ADDON_MOODLE_CATEGORY_FUNCTIONS', '\'Leitung\', \'ass\', \'stvLtg\'');
 
 // User functions values
+define('ADDON_MOODLE_COURSE_FUNCTION_LEADER', 'Leitung');
+define('ADDON_MOODLE_COURSE_FUNCTION_FACHKOORDINATOR', 'fachkoordinator');
 define('ADDON_MOODLE_CATEGORY_FUNCTION_ASSISTENT', 'ass');
 define('ADDON_MOODLE_CATEGORY_FUNCTION_LEADER', 'Leitung');
 
 // Parameters used to create a new user in moodle
 define('ADDON_MOODLE_USER_MANUAL_AUTH', 'manual');
 define('ADDON_MOODLE_USER_PWD_PREFIX', 'FHCv!A2');
-define('ADDON_MOODLE_USER_LDAP_AUTH', 'ldap');
+define('ADDON_MOODLE_USER_AUTH_PLUGIN', 'ldap');
 define('ADDON_MOODLE_USER_PKZ_TYPE', 'pkz');
+
+// File where FHCMoodleUsernameMapper is implemented, path relative to FHC BaseDir with leading slash
+define('ADDON_MOODLE_USERNAME_MAPPER_INCLUDE_FILE', '/addons/moodle/include/FHCMoodleUsernameMapper.php');
 
 // To avoid incurring the limitation of parameters that can be posted imposed by apache + php + moodle
 define('ADDON_MOODLE_POST_PARAMS_NUMBER', 300);

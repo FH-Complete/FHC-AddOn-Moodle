@@ -40,7 +40,9 @@ class LogicCohorts extends Logic
 		$todelete = array();
 		foreach( $moodleusers as $mdluser ) 
 		{
-			if( false !== ($idx = array_search($mdluser->username, $uids)) )
+			if( false !== ($idx = array_search(
+				FHCMoodleUsernameMapper::MoodleUsernameToFHCUid($mdluser->username), 
+				$uids)) )
 			{
 				unset($uids[$idx]);
 			}
@@ -79,7 +81,7 @@ class LogicCohorts extends Logic
 				),
 				'usertype' => array(
 					'type' => 'username',
-					'value' => $uid
+					'value' => FHCMoodleUsernameMapper::FHCUidToMoodleUsername($uid)
 				)
 			);
 		}
