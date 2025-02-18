@@ -131,6 +131,7 @@ if ($showmoodle)
 		'id' => 'addon_moodle_menu_moodle',
 		'position' => '70',
 		'name' => $p->t('moodle/moodle'),
+		'phrase' => 'moodle/moodle',
 		'icon' => '../../../addons/moodle/skin/images/button_moodle.png',
 		'link' => $link,
 		'link_target' => $link_target,
