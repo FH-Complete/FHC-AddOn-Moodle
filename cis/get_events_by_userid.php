@@ -3,8 +3,7 @@
 require_once(dirname(__DIR__).'/lib/MoodleAPI.php');
 
 $moodleAPI = new MoodleAPI();
-header('Content-Type: application/json');
-//echo json_encode($result);
+
 // Call the method
 $events = $moodleAPI->fhcomplete_events_by_userid($username,$timestart,$timeend);
 $tz = new DateTimeZone(date_default_timezone_get());
