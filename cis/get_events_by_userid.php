@@ -1,13 +1,6 @@
 <?php
 
-require_once('../lib/MoodleAPI.php');
-require_once('../config/config.php');
-require_once(dirname(__DIR__).'/../../config/cis.config.inc.php');
-
-
-$username = $_GET['username'];
-$timestart = intval($_GET['timestart']);
-$timeend = intval($_GET['timeend']);
+require_once(dirname(__DIR__).'/lib/MoodleAPI.php');
 
 $moodleAPI = new MoodleAPI();
 header('Content-Type: application/json');
@@ -15,9 +8,11 @@ header('Content-Type: application/json');
 // Call the method
 $events = $moodleAPI->fhcomplete_events_by_userid($username,$timestart,$timeend);
 $tz = new DateTimeZone(date_default_timezone_get());
-foreach($events->events as $event){
+
+foreach($events as $event){
 	$timestart = new DateTime("@".$event->timestart);
 	$timestart->setTimezone($tz);
+	$timestart->modify('-1 seconds');
 	$event->timestart = $timestart->format(DateTime::ATOM);
 
 	$timeend = clone $timestart;
@@ -25,6 +20,6 @@ foreach($events->events as $event){
 	$event->timeend = $timeend->format(DateTime::ATOM);
 }
 
-echo json_encode($events); 
+$moodle_events = $events; 
 
 ?>
