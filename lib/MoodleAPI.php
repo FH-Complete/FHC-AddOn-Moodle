@@ -45,7 +45,7 @@ class MoodleAPI extends MoodleClient
 	/**
 	 * 
 	 */
-	public function fhcomplete_events_by_userid($username,$timestart,$timeend)
+	public function fhcomplete_events_by_userid($username, $timestart, $timeend, $moodlewssettinglang='de')
 	{
 		return $this->call(
 			'fhcomplete_events_by_userid',
@@ -54,6 +54,7 @@ class MoodleAPI extends MoodleClient
 				'username' => (string)$username,
 				'timestart' => (int)$timestart,
 				'timeend' => (int)$timeend,
+				'moodlewssettinglang' => (string)$moodlewssettinglang
 			]
 		);
 	}
