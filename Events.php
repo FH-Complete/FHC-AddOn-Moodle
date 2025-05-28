@@ -40,3 +40,9 @@ Events::on('moodleCalendarEvents', function ($moodle_events_reference, $params) 
 	require_once(__DIR__ . '/cis/get_events_by_userid.php');
 });
 
+Events::on('loadRenderers', function ($renderers) {
+	$moodle_renderers =& $renderers();
+	$moodle_renderers["moodleEvent"] = '/addons/moodle/renderers/moodleEvent.js';
+});
+
+
