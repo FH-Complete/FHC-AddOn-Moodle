@@ -16,6 +16,7 @@ require_once('MoodleAPI.php');
 require_once('Database.php');
 
 require_once(dirname(__FILE__).'/../config/config.php');
+require_once dirname(dirname(dirname(__DIR__))) . ADDON_MOODLE_USERNAME_MAPPER_INCLUDE_FILE;
 
 /**
  *
@@ -139,6 +140,7 @@ abstract class Logic
 				if ($grade->note != '-')
 				{
 					$grade->mdl_course_id = $course->mdl_course_id;
+					$grade->username = FHCMoodleUsernameMapper::MoodleUsernameToFHCUid($grade->username);
 					$courseGrades[] = $grade;
 				}
 			}

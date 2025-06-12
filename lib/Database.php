@@ -144,7 +144,7 @@ class Database extends basis_db
 							AND o.aktiv = TRUE
 					)
 					SELECT
-						b.uid, p.vorname, p.nachname, oes.organisationseinheittyp_kurzbz
+						b.uid, p.vorname, p.nachname, oes.organisationseinheittyp_kurzbz, bf.funktion_kurzbz
 					FROM
 						oes
 						JOIN public.tbl_benutzerfunktion bf USING(oe_kurzbz)
