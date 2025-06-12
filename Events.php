@@ -42,7 +42,11 @@ Events::on('moodleCalendarEvents', function ($moodle_events_reference, $params) 
 
 Events::on('loadRenderers', function ($renderers) {
 	$moodle_renderers =& $renderers();
-	$moodle_renderers["moodleEvent"] = '/addons/moodle/renderers/moodleEvent.js';
+	$moodle_renderers["moodle"] = array(
+		'calendarEvent' => APP_ROOT.'addons/moodle/renderers/calendarEvent.js',
+		'modalTitle' => APP_ROOT.'addons/moodle/renderers/modalTitle.js',
+		'modalContent' => APP_ROOT.'addons/moodle/renderers/modalContent.js'
+	);
 });
 
 
