@@ -45,7 +45,8 @@ Events::on('loadRenderers', function ($renderers) {
 	$moodle_renderers["moodle"] = array(
 		'calendarEvent' => APP_ROOT.'addons/moodle/renderers/calendarEvent.js',
 		'modalTitle' => APP_ROOT.'addons/moodle/renderers/modalTitle.js',
-		'modalContent' => APP_ROOT.'addons/moodle/renderers/modalContent.js'
+		'modalContent' => APP_ROOT.'addons/moodle/renderers/modalContent.js',
+		'calendarEventStyles' => APP_ROOT.'addons/moodle/renderers/moodleStyles.css'
 	);
 });
 

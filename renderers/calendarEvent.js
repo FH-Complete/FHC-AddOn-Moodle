@@ -12,7 +12,11 @@ export default {
 	},
 	template: `
 		<div class="moodleEventContent " >
-			<moodle-svg></moodle-svg>
-			<span class="flex-grow-1 text-center"><strong v-html="event.titel"></strong> - {{event.topic}}</span>
+			<div id="moodleEventIcon">
+				<moodle-svg></moodle-svg>
+			</div>
+			<span id="moodleEventTitle" class="flex-grow-1 text-center"><strong v-html="event.titel"></strong></span>
+			<span id="moodleEventDelimiter"> - </span>
+			<span id="moodleEventTopic" >{{event.topic}}</span>
 		</div>`,
 };
