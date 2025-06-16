@@ -3,6 +3,7 @@
 	display: grid;
 	grid-template-columns: auto 1fr;
 	grid-template-rows: 1fr;
+	border-bottom: 1px solid var(--bs-border-color);
 }
 
 .monthPageContainer .moodleEventContent #moodleEventIcon {
