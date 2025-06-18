@@ -68,7 +68,7 @@ export default {
 					</tr>
 					<tr>
 						<th>{{$p.t('global','typ')}}:</th>
-						<td><img v-if="event?.activityIcon" class="me-1" :src="event?.activityIcon" />{{event?.purpose}}</td>
+						<td><img v-if="event?.activityIcon" class="me-1 fhc-tertiary" :src="event?.activityIcon" />{{event?.purpose}}</td>
 					</tr>
 					<tr>
 						<th>{{$p.t('fristenmanagement','frist')}}:</th>
