@@ -89,7 +89,7 @@ export default {
 					<tr >
 				    	<th>{{$p.t('lvinfo','moodleLink')}}</th>
 						<td>
-							<a :href="event?.url" target="_blank"><i class="fa fa-arrow-up-right-from-square me-1"></i></a>
+							<a :href="event?.url" target="_blank" :aria-label="$p.t('lvinfo','moodleLink')" :title="$p.t('lvinfo','moodleLink')" ><i class="fa fa-arrow-up-right-from-square me-1" aria-hidden="true"></i></a>
 						</td>
 					</tr>
 				</tbody>
