@@ -39,6 +39,8 @@ if(is_array($events))
 			'type' => 'moodle',
 			'beginn' => $moodle_event_timestart->format('H:i:s'),
 			'ende' => $moodle_event_timeend->format('H:i:s'),
+			'isostart' => $moodle_event_timestart->format('c'),
+			'isoend' => $moodle_event_timeend->format('c'),
 			'allDayEvent' => true,
 			'datum' => $moodle_event_timestart->format('Y-n-j'),
 			'purpose' => $event->purpose,
