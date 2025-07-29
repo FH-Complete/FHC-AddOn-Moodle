@@ -1,7 +1,7 @@
 /* Moodle Events in Month Page */
 .monthPageContainer .moodleEventContent {
 	align-items: center;
-	color: var(--fhc-light);
+	color: var(--fhc-light, #fff);
 	display: grid;
 	grid-template-columns: auto 1fr;
 	justify-items: center;
@@ -31,7 +31,7 @@
 /* Moodle Events in Week Page */
 .weekPageContainer .moodleEventContent {
 	align-items: center;
-	color: var(--fhc-light);
+	color: var(--fhc-light, #fff);
 	display: grid;
 	grid-template-columns: auto 1fr;
 	grid-template-rows: repeat(2, min-content);
@@ -69,7 +69,7 @@
 /* Moodle Events in Day Page */
 .dayPageContainer .moodleEventContent {
 	align-items: center;
-	color: var(--fhc-light);
+	color: var(--fhc-light, #fff);
 	display: grid;
 	grid-template-columns: auto 1fr;
 	grid-template-rows: repeat(2, min-content);
@@ -100,7 +100,7 @@
 /* Moodle Events in List Page */
 .listPageContainer .moodleEventContent {
 	align-items: center;
-	color: var(--fhc-light);
+	color: var(--fhc-light, #fff);
 	display: grid;
 	grid-template-columns: auto 1fr;
 	grid-template-rows: repeat(2, min-content);

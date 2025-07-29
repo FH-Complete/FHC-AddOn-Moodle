@@ -25,26 +25,28 @@ export default {
 				return FHC_JS_DATA_STORAGE_OBJECT.app_root + FHC_JS_DATA_STORAGE_OBJECT.ci_router + `/CisVue/Cms/content/${this.event.ort_content_id}`
 			},
 			start_time: function () {
-				if (!this.event.start) return 'N/A';
-				if (!this.event.start instanceof Date) {
-					return this.event.start;
+			if (!this.event.beginn)
+				return 'N/A';
+			if (!(this.event.beginn instanceof Date)) {
+				return this.event.beginn;
 				}
-				return numberPadding(this.event.start.getHours()) + ":" + numberPadding(this.event.start.getMinutes());
+			return numberPadding(this.event.beginn.getHours()) + ":" + numberPadding(this.event.beginn.getMinutes());
 			},
 			end_time: function () {
-				if (!this.event.end) return 'N/A';
-				if (!this.event.end instanceof Date) {
-					return this.event.end;
+			if (!this.event.ende)
+				return 'N/A';
+			if (!(this.event.ende instanceof Date)) {
+				return this.event.ende;
 				}
-				return numberPadding(this.event.end.getHours()) + ":" + numberPadding(this.event.end.getMinutes());
+			return numberPadding(this.event.ende.getHours()) + ":" + numberPadding(this.event.ende.getMinutes());
 			}
 		},
 		methods: {
 			mehtodNumberPadding: function (number) {
 				return numberPadding(number);
 			},
-			methodFormatDate: function (d) {
-				return formatDate(d);
+		methodFormatDate: function (d) {
+			return formatDate(d);
 			},
 		},
 	template: `
@@ -63,16 +65,16 @@ export default {
 						<td>{{methodFormatDate(event.datum)}}</td>
 					</tr>
 					<tr>
+						<th>{{$p.t('fristenmanagement','frist')}}:</th>
+						<td>{{start_time}}</td>
+					</tr>
+					<tr>
 						<th>{{$p.t('global','aktivitaet')}}:</th>
 						<td v-html="event?.assignment"></td>
 					</tr>
 					<tr>
 						<th>{{$p.t('global','typ')}}:</th>
 						<td><img v-if="event?.activityIcon" class="me-1 fhc-tertiary" :src="event?.activityIcon" />{{event?.purpose}}</td>
-					</tr>
-					<tr>
-						<th>{{$p.t('fristenmanagement','frist')}}:</th>
-						<td>{{start_time}}</td>
 					</tr>
 					<tr v-if="event?.actionname">
 						<th>{{$p.t('lvinfo','actionname')}}:</th>
