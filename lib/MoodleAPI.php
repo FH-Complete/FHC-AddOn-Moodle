@@ -45,6 +45,27 @@ class MoodleAPI extends MoodleClient
 	/**
 	 * 
 	 */
+	public function fhcomplete_events_by_userid($username, $timestart, $timeend, $moodlewssettinglang='de')
+	{
+		return $this->call(
+			'fhcomplete_events_by_userid',
+			MoodleClient::HTTP_GET_METHOD,
+			[
+				'username' => (string)$username,
+				'timestart' => (int)$timestart,
+				'timeend' => (int)$timeend,
+				'moodlewssettinglang' => (string)$moodlewssettinglang
+			]
+		);
+	}
+
+	/**
+	 * 
+	 */
+
+	/**
+	 * 
+	 */
 	public function local_fhtw_std_latest_template($qkCourseId)
 	{
 		return $this->call(

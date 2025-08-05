@@ -1,0 +1,136 @@
+/* Moodle Events in Month Page */
+.monthPageContainer .moodleEventContent {
+	align-items: center;
+	color: var(--fhc-light, #fff);
+	display: grid;
+	grid-template-columns: auto 1fr;
+	justify-items: center;
+}
+
+.monthPageContainer .moodleEventContent #moodleEventIcon {
+	margin: 0 .5rem;
+}
+
+.monthPageContainer .moodleEventContent #moodleEventIcon svg {
+	height: 1em !important;
+	padding-bottom: .15em;
+}
+
+.monthPageContainer .moodleEventContent #moodleEventTitle {
+	display:none;
+}
+
+.monthPageContainer .moodleEventContent #moodleEventDelimiter {
+	display: none;
+}
+
+.monthPageContainer .moodleEventContent #moodleEventTopic {
+	font-weight: bold;
+}
+
+/* Moodle Events in Week Page */
+.weekPageContainer .moodleEventContent {
+	align-items: center;
+	color: var(--fhc-light, #fff);
+	display: grid;
+	grid-template-columns: auto 1fr;
+	grid-template-rows: repeat(2, min-content);
+	justify-items: start;
+}
+
+.weekPageContainer .moodleEventContent #moodleEventIcon {
+	grid-column: 1;
+	grid-row: 1/-1;
+	margin: .5rem;
+}
+
+.weekPageContainer .moodleEventContent #moodleEventTitle {
+	grid-column: 2;
+	grid-row: 1;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	max-width: 100%;
+}
+
+.weekPageContainer .moodleEventContent #moodleEventDelimiter {
+	display: none;
+}
+
+.weekPageContainer .moodleEventContent #moodleEventTopic {
+	grid-row: 2;
+	grid-column: 2;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	max-width: 100%;
+}
+
+/* Moodle Events in Day Page */
+.dayPageContainer .moodleEventContent {
+	align-items: center;
+	color: var(--fhc-light, #fff);
+	display: grid;
+	grid-template-columns: auto 1fr;
+	grid-template-rows: repeat(2, min-content);
+	justify-items: center;
+}
+
+.dayPageContainer .moodleEventContent #moodleEventIcon {
+	grid-column: 1;
+	grid-row: 1/-1;
+	margin: .5rem;
+}
+
+.dayPageContainer .moodleEventContent #moodleEventTitle {
+	grid-column: 2;
+	grid-row: 1;
+}
+
+.dayPageContainer .moodleEventContent #moodleEventDelimiter {
+	display: none;
+}
+
+.dayPageContainer .moodleEventContent #moodleEventTopic {
+	grid-row: 2;
+	grid-column: 2;
+	text-align: center;
+}
+
+/* Moodle Events in List Page */
+.listPageContainer .moodleEventContent {
+	align-items: center;
+	color: var(--fhc-light, #fff);
+	display: grid;
+	grid-template-columns: auto 1fr;
+	grid-template-rows: repeat(2, min-content);
+	justify-items: start;
+}
+
+.listPageContainer .moodleEventContent #moodleEventIcon {
+	grid-column: 1;
+	grid-row: 1/-1;
+	margin: .5rem;
+}
+
+.listPageContainer .moodleEventContent #moodleEventTitle {
+	grid-column: 2;
+	grid-row: 1;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	max-width: 100%;
+}
+
+.listPageContainer .moodleEventContent #moodleEventDelimiter {
+	display: none;
+}
+
+.listPageContainer .moodleEventContent #moodleEventTopic {
+	grid-row: 2;
+	grid-column: 2;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	max-width: 100%;
+}
