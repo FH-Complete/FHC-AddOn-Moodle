@@ -94,8 +94,10 @@ if ($angemeldet)
 								$bezeichnung = $moodleCourse[0]->fullname;
 							else
 								$bezeichnung = '';
-		
-							if ($bezeichnung == '') $bezeichnung = 'Course '.$course->mdl_course_id;
+							
+							if ($bezeichnung == ''){
+								$bezeichnung = 'Course '.$mdl_course['mdl_course_id'];
+							} 
 	
 							array_push($moodleLinks, ["lehrform"=>$bezeichnung,"url"=>LogicCourses::getBaseURL() . '/course/view.php?id=' . urlencode($mdl_course['mdl_course_id'])]); 
 						}
