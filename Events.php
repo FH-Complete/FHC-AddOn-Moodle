@@ -26,6 +26,19 @@ Events::on('lvMenuBuild', function ($menu_reference,$params) {
 	require_once(dirname(__FILE__).'/cis/menu_lv.inc.php');
 });
 
+Events::on('getExternalGrades', function ($grades_reference, $params) {
+
+	// extracts all key=>value pairs of the associative array as variables in the current scope 
+	extract($params);
+
+	require_once(__DIR__ . '/lib/MoodleClientConstants.php');
+	require_once(__DIR__ . '/config/config.php');
+	$GLOBALS['connection'] = $connection;
+	$GLOBALS['activeConnection'] = $activeConnection;
+
+	$grades =& $grades_reference();
+	require_once(dirname(__FILE__).'/cis/grades.inc.php');
+});
 
 Events::on('moodleCalendarEvents', function ($moodle_events_reference, $params) {
 
