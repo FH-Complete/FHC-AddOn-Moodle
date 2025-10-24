@@ -161,6 +161,12 @@ class LogicUsers extends Logic
 				if ($category != null) $moodleCourseCategoryId = $moodleParentCategoryIds[$moodleCourse->categoryid] = $category[0]->parent;
 			}
 
+			if ($moodleCourseCategoryId === 0 || $moodleCourseCategoryId === -42)
+			{
+				Output::printInfo('Skipping course: ' . $moodleCourseId . ' Parentcategory is ' . $moodleCourseCategoryId);
+				continue;
+			}
+
 			Output::printDebug('>>> Syncing '.$moodleCourseId.':'.$moodleCourseDesc.':'.$moodleCourseCategoryId.'" <<<');
 
 			$usersToAssign = array(); // users to assign to the category
