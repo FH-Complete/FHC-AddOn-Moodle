@@ -33,8 +33,7 @@ abstract class Logic
 	{
 		if (!self::_commandLine() && !self::_isAdmin())
 		{
-			Output::printError('To call this script from browser you need "admin" permission!');
-			die();
+			throw new RuntimeException('To call this script from browser you need "admin" permission!');
 		}
 	}
 
@@ -48,8 +47,7 @@ abstract class Logic
 		$currentOrNextStudiensemester = $studiensemester->getAktOrNext();
 		if (!$currentOrNextStudiensemester)
 		{
-			Output::printError('An error occurred while retrieving the current or the next studiensemester');
- 			die();
+			throw new RuntimeException('An error occurred while retrieving the current or the next studiensemester');
 		}
 
 		return $currentOrNextStudiensemester;
@@ -65,8 +63,7 @@ abstract class Logic
 		$NearestStudiensemester = $studiensemester->getNearest();
 		if (!$NearestStudiensemester)
 		{
-			Output::printError('An error occurred while retrieving the nearest studiensemester');
- 			die();
+			throw new RuntimeException('An error occurred while retrieving the nearest studiensemester');
 		}
 
 		return $NearestStudiensemester;
@@ -644,10 +641,8 @@ abstract class Logic
 			$result = call_user_func_array(array($database, $method), $parameters);
 			if ($result == null)
 	 		{
-	 			Output::printError('Database: '.$message);
-				Output::varDumpParameters($parameters);
-	 			die();
-	 		}
+				throw new RuntimeException('Database: '.$message);
+			}
 		}
 
 		return $result;
@@ -669,9 +664,7 @@ abstract class Logic
 			$result = call_user_func_array(array($moodleAPI, $method), $parameters);
 			if ($moodleAPI->isError())
 	 		{
-	 			Output::printError('MoodleAPI: '.$message.': '.$moodleAPI->getError());
-				Output::varDumpParameters($parameters);
-	 			die();
+				throw new RuntimeException('MoodleAPI: '.$message.': '.$moodleAPI->getError());
 	 		}
 		}
 

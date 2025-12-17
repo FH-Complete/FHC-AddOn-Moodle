@@ -3,7 +3,6 @@ if (! defined('BASEPATH')) exit('No direct script access allowed');
 
 use CI3_Events as Events;
 
-//require_once(__DIR__.'/config/config.php');
 Events::on('lvMenuBuild', function ($menu_reference,$params) {
 
 	// extracts all key=>value pairs of the associative array as variables in the current scope 

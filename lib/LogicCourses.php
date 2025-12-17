@@ -142,7 +142,7 @@ class LogicCourses extends Logic
 		// Checks if the course is already present in moodle
 		if (LogicCourses::getCourseByShortname($shortname) != null)
 		{
-			die('Dieser Kurs ist bereits in Moodle vorhanden - This course is already present in moodle');
+			throw new RuntimeException('Dieser Kurs ist bereits in Moodle vorhanden - This course is already present in moodle');
 		}
 
 		$moodleCourseId = LogicCourses::getOrCreateMoodleCourse(
