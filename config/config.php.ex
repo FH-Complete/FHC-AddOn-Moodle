@@ -144,6 +144,9 @@ define('ADDON_MOODLE_VILESCI_MAX_NUMBER_COURSES', 42);
 // ------------------------------------------------------------------------------------------------------------
 // Running options
 
+// Enable or disable integration of Moodle Events with CIS
+define('CIS_LVPLAN_MOODLE_INTEGRATION', true);
+
 // Enable or disable debug messages
 define('ADDON_MOODLE_DEBUG_ENABLED', false);
 
