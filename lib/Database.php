@@ -1038,6 +1038,34 @@ EOABRSQL;
 		return $this->_execQuery($query);
 	}
 
+	/**
+	 *
+	 */
+	public function getFhcGroupUids($gruppe_kurzbz)
+	{
+		$gruppen = implode(', ', array_map(function($el) {
+			return $this->db_add_param($el);
+		}, $gruppe_kurzbz));
+
+		echo $gruppen . PHP_EOL;
+
+		$query = <<<EOGUS
+			SELECT
+				uid
+			FROM
+				public.tbl_benutzergruppe
+			WHERE
+				gruppe_kurzbz IN ({$gruppen})
+			GROUP BY
+				uid
+			ORDER BY
+				uid
+
+EOGUS;
+
+		return $this->_execQuery($query);
+	}
+
 	// --------------------------------------------------------------------------------------------
     // Public static methods
 
