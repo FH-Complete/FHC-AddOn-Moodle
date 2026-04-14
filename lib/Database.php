@@ -1054,7 +1054,7 @@ EOABRSQL;
 				public.tbl_benutzergruppe
 			WHERE
 				gruppe_kurzbz IN ({$gruppen_kurzbzs})
-				AND uid NOT ILIKE \'%dummy%\'
+				AND uid NOT ILIKE '%dummy%'
 			GROUP BY
 				uid
 			ORDER BY
