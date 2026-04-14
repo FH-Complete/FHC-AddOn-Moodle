@@ -1041,13 +1041,11 @@ EOABRSQL;
 	/**
 	 *
 	 */
-	public function getFhcGroupUids($gruppe_kurzbz)
+	public function getFhcGroupUids($gruppen)
 	{
-		$gruppen = implode(', ', array_map(function($el) {
+		$gruppen_kurzbzs = implode(', ', array_map(function($el) {
 			return $this->db_add_param($el);
-		}, $gruppe_kurzbz));
-
-		echo $gruppen . PHP_EOL;
+		}, $gruppen));
 
 		$query = <<<EOGUS
 			SELECT
@@ -1055,7 +1053,7 @@ EOABRSQL;
 			FROM
 				public.tbl_benutzergruppe
 			WHERE
-				gruppe_kurzbz IN ({$gruppen})
+				gruppe_kurzbz IN ({$gruppen_kurzbzs})
 			GROUP BY
 				uid
 			ORDER BY
