@@ -12,16 +12,16 @@ class LogicFhcGroupsToCategories extends Logic
 	 *
 	 */
 	public static function synchronizeFhcGroupToCategory($options) {
-		$gruppe_kurzbz = $options['gruppe_kurzbz'];
+		$gruppen = $options['gruppen'];
 		$roleid = $options['mdl_role_id'];
 		$categoryid = $options['mdl_category_id'];
 
 		Output::printInfo('FhcGroupToCategory:'
-			. ' gruppe_kurzbz ' . $gruppe_kurzbz
+			. ' gruppen ' . implode(', ', $gruppen)
 			. ' category_id ' . $categoryid
 			. ' roleid '. $roleid);
 
-		$uids = self::getDBFhcGroupUidsArray($gruppe_kurzbz);
+		$uids = self::getDBFhcGroupUidsArray($gruppen);
 		$category = self::getCategoryById($categoryid);
 		if(count($category) < 1)
 		{
@@ -142,14 +142,14 @@ class LogicFhcGroupsToCategories extends Logic
 	/**
 	 *
 	 */
-	public static function getDBFhcGroupUidsArray($gruppe_kurzbz)
+	public static function getDBFhcGroupUidsArray($gruppen)
 	{
 		$uIDsArray = array();
 
 		$uIDs = self::_dbCall(
 			'getFhcGroupUids',
-			array($gruppe_kurzbz),
-			'An error occurred while retrieving the uids for groups ' . implode(', ', $gruppe_kurzbz)
+			array($gruppen),
+			'An error occurred while retrieving the uids for groups ' . implode(', ', $gruppen)
 		);
 
 		//
