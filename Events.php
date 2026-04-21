@@ -16,6 +16,10 @@ Events::on('lvMenuBuild', function ($menu_reference,$params) {
 		$p = new phrasen($sprache);
 	}
 
+	// fallback for require_once if event is called in a loop
+	$connection       = $connection       ?? $GLOBALS['connection']       ?? null;
+	$activeConnection = $activeConnection ?? $GLOBALS['activeConnection'] ?? null;
+
 	$GLOBALS['connection'] = $connection;
 	$GLOBALS['activeConnection'] = $activeConnection;
 
@@ -32,7 +36,11 @@ Events::on('moodleCalendarEvents', function ($moodle_events_reference, $params) 
 	if(CIS_LVPLAN_MOODLE_INTEGRATION){
 		// extracts all key=>value pairs of the associative array as variables in the current scope 
 		extract($params);
-	
+
+		// fallback for require_once if event is called in a loop
+		$connection       = $connection       ?? $GLOBALS['connection']       ?? null;
+		$activeConnection = $activeConnection ?? $GLOBALS['activeConnection'] ?? null;
+		
 		$GLOBALS['connection'] = $connection;
 		$GLOBALS['activeConnection'] = $activeConnection;
 		$moodle_events =& $moodle_events_reference();
