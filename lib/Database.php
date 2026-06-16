@@ -1038,6 +1038,33 @@ EOABRSQL;
 		return $this->_execQuery($query);
 	}
 
+	/**
+	 *
+	 */
+	public function getFhcGroupUids($gruppen)
+	{
+		$gruppen_kurzbzs = implode(', ', array_map(function($el) {
+			return $this->db_add_param($el);
+		}, $gruppen));
+
+		$query = <<<EOGUS
+			SELECT
+				uid
+			FROM
+				public.tbl_benutzergruppe
+			WHERE
+				gruppe_kurzbz IN ({$gruppen_kurzbzs})
+				AND uid NOT ILIKE '%dummy%'
+			GROUP BY
+				uid
+			ORDER BY
+				uid
+
+EOGUS;
+
+		return $this->_execQuery($query);
+	}
+
 	// --------------------------------------------------------------------------------------------
     // Public static methods
 
