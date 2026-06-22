@@ -2,8 +2,9 @@
 if (! defined('BASEPATH')) exit('No direct script access allowed');
 
 use CI3_Events as Events;
-
 Events::on('lvMenuBuild', function ($menu_reference,$params) {
+	require_once(__DIR__ . '/lib/MoodleClientConstants.php');
+	require_once(__DIR__ . '/config/config.php');
 
 	// extracts all key=>value pairs of the associative array as variables in the current scope 
 	extract($params);
@@ -15,8 +16,6 @@ Events::on('lvMenuBuild', function ($menu_reference,$params) {
 		$p = new phrasen($sprache);
 	}
 
-	require_once(__DIR__ . '/lib/MoodleClientConstants.php');
-	require_once(__DIR__ . '/config/config.php');
 	$GLOBALS['connection'] = $connection;
 	$GLOBALS['activeConnection'] = $activeConnection;
 
@@ -40,26 +39,32 @@ Events::on('getExternalGrades', function ($grades_reference, $params) {
 });
 
 Events::on('moodleCalendarEvents', function ($moodle_events_reference, $params) {
-
-	// extracts all key=>value pairs of the associative array as variables in the current scope 
-	extract($params);
-
 	require_once(__DIR__ . '/lib/MoodleClientConstants.php');
 	require_once(__DIR__ . '/config/config.php');
-	$GLOBALS['connection'] = $connection;
-	$GLOBALS['activeConnection'] = $activeConnection;
-	$moodle_events =& $moodle_events_reference();
-	require_once(__DIR__ . '/cis/get_events_by_userid.php');
+	
+	if(CIS_LVPLAN_MOODLE_INTEGRATION){
+		// extracts all key=>value pairs of the associative array as variables in the current scope 
+		extract($params);
+	
+		$GLOBALS['connection'] = $connection;
+		$GLOBALS['activeConnection'] = $activeConnection;
+		$moodle_events =& $moodle_events_reference();
+		require_once(__DIR__ . '/cis/get_events_by_userid.php');
+	}
 });
 
 Events::on('loadRenderers', function ($renderers) {
-	$moodle_renderers =& $renderers();
-	$moodle_renderers["moodle"] = array(
-		'calendarEvent' => APP_ROOT.'addons/moodle/renderers/calendarEvent.js',
-		'modalTitle' => APP_ROOT.'addons/moodle/renderers/modalTitle.js',
-		'modalContent' => APP_ROOT.'addons/moodle/renderers/modalContent.js',
-		'calendarEventStyles' => APP_ROOT.'addons/moodle/renderers/moodleStyles.css'
-	);
+	require_once(__DIR__ . '/lib/MoodleClientConstants.php');
+	require_once(__DIR__ . '/config/config.php');
+	if(CIS_LVPLAN_MOODLE_INTEGRATION){
+		$moodle_renderers =& $renderers();
+		$moodle_renderers["moodle"] = array(
+			'calendarEvent' => APP_ROOT.'addons/moodle/renderers/calendarEvent.js',
+			'modalTitle' => APP_ROOT.'addons/moodle/renderers/modalTitle.js',
+			'modalContent' => APP_ROOT.'addons/moodle/renderers/modalContent.js',
+			'calendarEventStyles' => APP_ROOT.'addons/moodle/renderers/moodleStyles.css'
+		);
+	}
 });
 
 

@@ -597,4 +597,19 @@ class MoodleAPI extends MoodleClient
 			)
 		);
 	}
+
+	/**
+	 *
+	 */
+	public function fhcomplete_category_role_users($categoryid, $roleid)
+	{
+		return $this->call(
+			'fhcomplete_category_role_users',
+			MoodleClient::HTTP_GET_METHOD,
+			[
+				'categoryid' => (int)$categoryid,
+				'roleid' => (int)$roleid
+			]
+		);
+	}
 }

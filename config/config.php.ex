@@ -144,6 +144,9 @@ define('ADDON_MOODLE_VILESCI_MAX_NUMBER_COURSES', 42);
 // ------------------------------------------------------------------------------------------------------------
 // Running options
 
+// Enable or disable integration of Moodle Events with CIS
+define('CIS_LVPLAN_MOODLE_INTEGRATION', true);
+
 // Enable or disable debug messages
 define('ADDON_MOODLE_DEBUG_ENABLED', false);
 
@@ -169,6 +172,14 @@ $fhc_synchronize_cohorts = array(
 	)
 );
 
+// config to synchronize fhcomplete groups (permit members of the group(s) with role on moodle coursecategorie)
+$fhc_synchronize_fhcgroups_to_categories = array(
+	array(
+		'gruppen' => array('MDL_QUELLKURSE_RO'), //array of fhcomplete gruppe_kurzbz
+		'mdl_category_id' => 1797, // moodle course category id
+		'mdl_role_id' => 29 // moodle role id
+	),
+);
 // ------------------------------------------------------------------------------------------------------------
 // Connection configuration
 
