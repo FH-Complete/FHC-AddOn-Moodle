@@ -31,6 +31,7 @@ Events::on('getExternalGrades', function ($grades_reference, $params) {
 
 	require_once(__DIR__ . '/lib/MoodleClientConstants.php');
 	require_once(__DIR__ . '/config/config.php');
+	require_once(__DIR__ . '/../../include/lehreinheit.class.php');
 	$GLOBALS['connection'] = $connection;
 	$GLOBALS['activeConnection'] = $activeConnection;
 
