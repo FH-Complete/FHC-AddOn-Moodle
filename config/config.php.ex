@@ -172,6 +172,14 @@ $fhc_synchronize_cohorts = array(
 	)
 );
 
+// config to synchronize fhcomplete groups (permit members of the group(s) with role on moodle coursecategorie)
+$fhc_synchronize_fhcgroups_to_categories = array(
+	array(
+		'gruppen' => array('MDL_QUELLKURSE_RO'), //array of fhcomplete gruppe_kurzbz
+		'mdl_category_id' => 1797, // moodle course category id
+		'mdl_role_id' => 29 // moodle role id
+	),
+);
 // ------------------------------------------------------------------------------------------------------------
 // Connection configuration
 
