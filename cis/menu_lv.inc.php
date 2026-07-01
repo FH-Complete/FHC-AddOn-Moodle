@@ -131,7 +131,7 @@ if ($angemeldet)
 			$text_links = $dom->getElementsByTagName('a');
 			foreach ($text_links as $text_link)
 			{
-				$c4_linkList[] = [$text_link->nodeValue,$text_link->getAttribute('href')];	
+				$c4_linkList[] = [$text_link->nodeValue,preg_replace('#/addons/moodle/#', '/cis.php/Cis/Compat/legacy/addons/moodle/', $text_link->getAttribute('href'))];	
 			}
 		}
 	}
