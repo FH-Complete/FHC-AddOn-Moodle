@@ -61,4 +61,5 @@ $this->phrasen['moodle/form.text.or']='-or-';
 $this->phrasen['moodle/form.btn.show']='show';
 $this->phrasen['moodle/form.btn.save']='save';
 $this->phrasen['moodle/form.btn.back']='back';
+$this->phrasen['moodle/course4LeExists']='A Moodle Course is linked to this Lecture Part.';
 ?>

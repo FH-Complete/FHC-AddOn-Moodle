@@ -54,4 +54,22 @@ Events::on('loadRenderers', function ($renderers) {
 	}
 });
 
+Events::on('lehreinheit_delete_check', function($addError, $lehreinheit_id) {
+	require_once(__DIR__ . '/lib/LogicCourses.php');
+	$res = LogicCourses::coursesLehreinheitExists($lehreinheit_id);
+	$course4LeExists = Database::fetchRow($res);
 
+	if($course4LeExists->count < 1)
+	{
+		return;
+	}
+
+	if(!isset($p))
+	{
+		require_once(FHCPATH.'include/phrasen.class.php');
+		$sprache = getSprache();
+		$p = new phrasen($sprache);
+	}
+
+	$addError($p->t('moodle/course4LeExists'));
+});

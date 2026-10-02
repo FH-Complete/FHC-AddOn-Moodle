@@ -61,4 +61,5 @@ $this->phrasen['moodle/form.text.or']='-oder-';
 $this->phrasen['moodle/form.btn.show']='anzeigen';
 $this->phrasen['moodle/form.btn.save']='speichern';
 $this->phrasen['moodle/form.btn.back']='zurück';
+$this->phrasen['moodle/course4LeExists']='Mit dieser Lehreinheit ist ein Moodlekurs verknüpft.';
 ?>
