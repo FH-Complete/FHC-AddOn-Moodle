@@ -225,6 +225,16 @@ if ($result = @$db->db_query("SELECT conname FROM pg_constraint WHERE conname = 
 	}
 }
 
+// Add column sync_angerechnet_teilnehmer to addon.tbl_moodle
+if (!$result = @$db->db_query('SELECT sync_angerechnet_teilnehmer FROM addon.tbl_moodle LIMIT 1'))
+{
+	$qry = 'ALTER TABLE addon.tbl_moodle ADD COLUMN sync_angerechnet_teilnehmer bool DEFAULT false NOT NULL;';
+	if (!$db->db_query($qry))
+		echo '<strong>addon.tbl_moodle: '.$db->db_last_error().'</strong><br>';
+	else
+		echo '<br>Added column sync_angerechnet_teilnehmer to table addon.tbl_moodle<br>';
+}
+
 echo '<br>Aktualisierung abgeschlossen<br><br>';
 echo '<h2>Gegenprüfung</h2>';
 
@@ -243,7 +253,8 @@ $tabellen = array(
 		'updatevon',
 		'ext_id',
                 'gruppe_kurzbz',
-                'mdl_source_course_id'
+                'mdl_source_course_id',
+		'sync_angerechnet_teilnehmer'
 	),
         'addon.tbl_moodle_quellkurs' => array(
                 'moodle_quellkurs_id',

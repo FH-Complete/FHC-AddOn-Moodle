@@ -439,6 +439,7 @@ EOSQL;
 					n.lkt_ueberschreibbar = FALSE
 					AND z.student_uid NOT ILIKE \'%dummy%\'
 					AND m.mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER).'
+					AND (m.sync_angerechnet_teilnehmer = false or n.positiv = false)
 				UNION
 				SELECT DISTINCT
 							z.student_uid AS student_uid
@@ -450,6 +451,7 @@ EOSQL;
 							n.lkt_ueberschreibbar = FALSE
 							AND z.student_uid NOT ILIKE \'%dummy%\'
 							AND m.mdl_course_id = '.$this->db_add_param($moodleCourseId, FHC_INTEGER).'
+							AND (m.sync_angerechnet_teilnehmer = false or n.positiv = false)
 				ORDER BY
 					student_uid';
 
