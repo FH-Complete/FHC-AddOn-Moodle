@@ -43,7 +43,8 @@ if ($angemeldet)
 {
 	if ($showmoodle)
 	{
-		$link = APP_ROOT."addons/moodle/cis/moodle_choice.php?lvid=".urlencode($lvid)."&stsem=".urlencode($angezeigtes_stsem);
+		$url_prefix = (defined('CIS4') && CIS4 === true) ? APP_ROOT . 'cis.php/Cis/Compat/legacy/' : APP_ROOT;
+		$link = $url_prefix . "addons/moodle/cis/moodle_choice.php?lvid=".urlencode($lvid)."&stsem=".urlencode($angezeigtes_stsem);
 
 		if (Database::rowsNumber($courses) > 0)
 		{

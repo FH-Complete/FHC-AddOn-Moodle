@@ -16,8 +16,14 @@ Events::on('lvMenuBuild', function ($menu_reference,$params) {
 		$p = new phrasen($sprache);
 	}
 
-	$GLOBALS['connection'] = $connection;
-	$GLOBALS['activeConnection'] = $activeConnection;
+	if(isset($connection) && isset($activeConnection)) 
+	{
+		$GLOBALS['connection'] = $connection;
+		$GLOBALS['activeConnection'] = $activeConnection;
+	}
+
+	require_once __DIR__ . '/lib/MoodleClient.php';
+	require_once __DIR__ . '/lib/LogicCourses.php';
 
 	$menu =& $menu_reference();
 	$addon_lvinfo_col = array();
